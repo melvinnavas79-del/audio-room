@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Audio Room</title>
+</head>
+<body>
+
+<h2>Audio Room 🔥</h2>
+
+<button onclick="createRoom()">Crear sala</button>
+<input id="roomId" placeholder="ID sala">
+<button onclick="joinRoom()">Unirse</button>
+
+<p id="status"></p>
+
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+<script>
+const socket = io("http://207.180.235.220:4000");
+
+function createRoom() {
+  socket.emit("create-room");
+
+  socket.on("room-created", (roomId) => {
+    document.getElementById("status").innerText = "Sala creada: " + roomId;
+  });
+}
+
+function joinRoom() {
+  const roomId = document.getElementById("roomId").value;
+  socket.emit("join-room", roomId);
+
+  socket.on("users", (users) => {
+    document.getElementById("status").innerText = "Usuarios: " + users.length;
+  });
+}
+</script>
+
+</body>
+</html>
