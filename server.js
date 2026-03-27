@@ -20,7 +20,6 @@ let users = {};
 io.on("connection", (socket) => {
   console.log("Usuario conectado:", socket.id);
 
-  // 👥 ENTRAR A SALA
   socket.on("join-room", ({ roomId, name }) => {
     socket.join(roomId);
     users[socket.id] = roomId;
@@ -31,14 +30,24 @@ io.on("connection", (socket) => {
     });
   });
 
-  // 🎁 REGALOS
-  socket.on("send-gift", ({ roomId, icon }) => {
-    socket.to(roomId).emit("receive-gift", {
-      icon
-    });
+  // 🔥 WEBRTC
+  socket.on("offer", ({ offer, to }) => {
+    socket.to(to).emit("offer", { offer, from: socket.id });
   });
 
-  // 🔌 DESCONEXIÓN
+  socket.on("answer", ({ answer, to }) => {
+    socket.to(to).emit("answer", { answer, from: socket.id });
+  });
+
+  socket.on("ice-candidate", ({ candidate, to }) => {
+    socket.to(to).emit("ice-candidate", { candidate, from: socket.id });
+  });
+
+  // 🎁 regalos
+  socket.on("send-gift", ({ roomId, icon }) => {
+    socket.to(roomId).emit("receive-gift", { icon });
+  });
+
   socket.on("disconnect", () => {
     const roomId = users[socket.id];
     if (roomId) {
