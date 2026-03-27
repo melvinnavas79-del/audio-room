@@ -3,18 +3,10 @@ const http = require("http");
 const { Server } = require("socket.io");
 
 const app = express();
-
-// Permitir archivos HTML
 app.use(express.static(__dirname));
 
-// Ruta principal
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
-});
-
-// Ruta sala
-app.get("/room.html", (req, res) => {
-  res.sendFile(__dirname + "/room.html");
 });
 
 const server = http.createServer(app);
@@ -22,25 +14,50 @@ const io = new Server(server, {
   cors: { origin: "*" }
 });
 
-let rooms = {};
+// 👇 Guardar usuarios conectados
+let users = {};
 
 io.on("connection", (socket) => {
   console.log("Usuario conectado:", socket.id);
 
+  // 👉 Entrar a sala
   socket.on("join-room", (roomId) => {
     socket.join(roomId);
-
-    if (!rooms[roomId]) {
-      rooms[roomId] = [];
-    }
-
-    rooms[roomId].push(socket.id);
+    users[socket.id] = roomId;
 
     socket.to(roomId).emit("user-connected", socket.id);
+  });
 
-    socket.on("disconnect", () => {
-      socket.to(roomId).emit("user-disconnected", socket.id);
+  // 👉 OFERTA
+  socket.on("offer", ({ offer, userId }) => {
+    socket.to(userId).emit("offer", {
+      offer,
+      userId: socket.id
     });
+  });
+
+  // 👉 RESPUESTA
+  socket.on("answer", ({ answer, userId }) => {
+    socket.to(userId).emit("answer", {
+      answer,
+      userId: socket.id
+    });
+  });
+
+  // 👉 ICE (MUY IMPORTANTE)
+  socket.on("ice-candidate", ({ candidate, userId }) => {
+    socket.to(userId).emit("ice-candidate", {
+      candidate
+    });
+  });
+
+  // 👉 Desconexión
+  socket.on("disconnect", () => {
+    const roomId = users[socket.id];
+    if (roomId) {
+      socket.to(roomId).emit("user-disconnected", socket.id);
+    }
+    delete users[socket.id];
   });
 });
 
