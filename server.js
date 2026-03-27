@@ -14,13 +14,11 @@ const io = new Server(server, {
   cors: { origin: "*" }
 });
 
-// 👇 Guardar usuarios conectados
 let users = {};
 
 io.on("connection", (socket) => {
   console.log("Usuario conectado:", socket.id);
 
-  // 👉 Entrar a sala
   socket.on("join-room", (roomId) => {
     socket.join(roomId);
     users[socket.id] = roomId;
@@ -28,7 +26,6 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("user-connected", socket.id);
   });
 
-  // 👉 OFERTA
   socket.on("offer", ({ offer, userId }) => {
     socket.to(userId).emit("offer", {
       offer,
@@ -36,7 +33,6 @@ io.on("connection", (socket) => {
     });
   });
 
-  // 👉 RESPUESTA
   socket.on("answer", ({ answer, userId }) => {
     socket.to(userId).emit("answer", {
       answer,
@@ -44,14 +40,12 @@ io.on("connection", (socket) => {
     });
   });
 
-  // 👉 ICE (MUY IMPORTANTE)
   socket.on("ice-candidate", ({ candidate, userId }) => {
     socket.to(userId).emit("ice-candidate", {
       candidate
     });
   });
 
-  // 👉 Desconexión
   socket.on("disconnect", () => {
     const roomId = users[socket.id];
     if (roomId) {
