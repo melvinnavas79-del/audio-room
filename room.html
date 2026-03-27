@@ -82,8 +82,10 @@ const params = new URLSearchParams(window.location.search);
 const roomId = params.get("room");
 
 let peer;
+let stream;
 
-navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
+  stream = s;
 
   const myAudio = document.createElement("audio");
   myAudio.srcObject = stream;
@@ -91,54 +93,64 @@ navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
   myAudio.play();
 
   socket.emit("join-room", roomId);
-
-  socket.on("user-connected", async (userId) => {
-
-    peer = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-    });
-
-    stream.getTracks().forEach(track => peer.addTrack(track, stream));
-
-    peer.ontrack = (e) => {
-      const audio = document.createElement("audio");
-      audio.srcObject = e.streams[0];
-      audio.play();
-    };
-
-    const offer = await peer.createOffer();
-    await peer.setLocalDescription(offer);
-
-    socket.emit("offer", { offer, userId });
-  });
-
-  socket.on("offer", async ({ offer, userId }) => {
-
-    peer = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-    });
-
-    stream.getTracks().forEach(track => peer.addTrack(track, stream));
-
-    peer.ontrack = (e) => {
-      const audio = document.createElement("audio");
-      audio.srcObject = e.streams[0];
-      audio.play();
-    };
-
-    await peer.setRemoteDescription(offer);
-
-    const answer = await peer.createAnswer();
-    await peer.setLocalDescription(answer);
-
-    socket.emit("answer", { answer, userId });
-  });
-
-  socket.on("answer", async ({ answer }) => {
-    await peer.setRemoteDescription(answer);
-  });
-
 });
+
+socket.on("user-connected", async (userId) => {
+  peer = createPeer(userId);
+
+  stream.getTracks().forEach(track => peer.addTrack(track, stream));
+
+  const offer = await peer.createOffer();
+  await peer.setLocalDescription(offer);
+
+  socket.emit("offer", { offer, userId });
+});
+
+socket.on("offer", async ({ offer, userId }) => {
+  peer = createPeer(userId);
+
+  stream.getTracks().forEach(track => peer.addTrack(track, stream));
+
+  await peer.setRemoteDescription(offer);
+
+  const answer = await peer.createAnswer();
+  await peer.setLocalDescription(answer);
+
+  socket.emit("answer", { answer, userId });
+});
+
+socket.on("answer", async ({ answer }) => {
+  await peer.setRemoteDescription(answer);
+});
+
+socket.on("ice-candidate", async ({ candidate }) => {
+  if (peer) {
+    await peer.addIceCandidate(candidate);
+  }
+});
+
+function createPeer(userId) {
+  const peer = new RTCPeerConnection({
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+  });
+
+  peer.ontrack = (event) => {
+    const audio = document.createElement("audio");
+    audio.srcObject = event.streams[0];
+    audio.play();
+  };
+
+  peer.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.emit("ice-candidate", {
+        candidate: event.candidate,
+        userId
+      });
+    }
+  };
+
+  return peer;
+}
 </script>
 
 </body>
