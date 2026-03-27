@@ -23,15 +23,16 @@
     }
 
     .user {
-      width: 70px;
-      height: 70px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       background: rgba(255,255,255,0.2);
-      margin: 8px;
+      margin: 10px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 25px;
+      font-size: 12px;
     }
 
     .mic {
@@ -84,13 +85,19 @@ let stream;
 let isMuted = false;
 
 const usersDiv = document.getElementById("users");
+const myName = localStorage.getItem("username") || "User";
 
 // 👥 USUARIOS
-function addUser(id) {
+function addUser(id, name) {
   const div = document.createElement("div");
   div.className = "user";
   div.id = id;
-  div.innerHTML = "👤";
+
+  div.innerHTML = `
+    <div style="font-size:25px;">👤</div>
+    <div>${name}</div>
+  `;
+
   usersDiv.appendChild(div);
 }
 
@@ -103,14 +110,17 @@ function removeUser(id) {
 navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
   stream = s;
 
-  addUser(socket.id);
+  addUser(socket.id, myName);
 
   const myAudio = document.createElement("audio");
   myAudio.srcObject = stream;
   myAudio.muted = true;
   myAudio.play();
 
-  socket.emit("join-room", roomId);
+  socket.emit("join-room", {
+    roomId,
+    name: myName
+  });
 });
 
 // 🔇 MUTE
@@ -125,13 +135,8 @@ function toggleMute() {
 
   const btn = document.getElementById("micBtn");
 
-  if (isMuted) {
-    btn.innerHTML = "🔇";
-    btn.style.background = "gray";
-  } else {
-    btn.innerHTML = "🎤";
-    btn.style.background = "pink";
-  }
+  btn.innerHTML = isMuted ? "🔇" : "🎤";
+  btn.style.background = isMuted ? "gray" : "pink";
 }
 
 // 🔥 PEER
@@ -166,22 +171,20 @@ function createPeer(userId) {
 }
 
 // 👇 EVENTOS
-socket.on("user-connected", async (userId) => {
-  addUser(userId);
+socket.on("user-connected", async ({ id, name }) => {
+  addUser(id, name);
 
-  peer = createPeer(userId);
+  peer = createPeer(id);
 
   stream.getTracks().forEach(track => peer.addTrack(track, stream));
 
   const offer = await peer.createOffer();
   await peer.setLocalDescription(offer);
 
-  socket.emit("offer", { offer, userId });
+  socket.emit("offer", { offer, userId: id });
 });
 
 socket.on("offer", async ({ offer, userId }) => {
-  addUser(userId);
-
   peer = createPeer(userId);
 
   stream.getTracks().forEach(track => peer.addTrack(track, stream));
