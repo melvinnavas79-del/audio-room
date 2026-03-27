@@ -6,14 +6,15 @@
 
 <style>
 body{
+  margin:0;
   font-family:Arial;
   text-align:center;
   background:linear-gradient(135deg,#6a11cb,#ff4ecd);
   color:white;
 }
 
-.user{
-  background:rgba(255,255,255,0.2);
+.card{
+  background:rgba(0,0,0,0.5);
   margin:10px;
   padding:10px;
   border-radius:15px;
@@ -23,14 +24,14 @@ button{
   position:fixed;
   bottom:20px;
   border:none;
-  padding:12px;
+  padding:15px;
   border-radius:50%;
   font-size:18px;
 }
 
 #micBtn{left:20px;background:pink;}
-#giftBtn{right:20px;background:gold;}
 #musicBtn{right:90px;background:#00ffcc;}
+#giftBtn{right:20px;background:gold;}
 
 .menu{
   position:fixed;
@@ -44,36 +45,28 @@ button{
 .giftItem{
   width:25%;
   padding:10px;
-  text-align:center;
-  color:white;
 }
 
-.card{
-  background:rgba(0,0,0,0.5);
-  margin:10px;
-  padding:15px;
-  border-radius:15px;
+.giftItem img{
+  width:50px;
 }
-
 </style>
 </head>
 
 <body>
 
-<h2>AudioRoom PRO 🔥</h2>
+<h2>🎤 AudioRoom PRO</h2>
 
 <h3 id="gold">💰 Oro: 1000</h3>
 <h3 id="vip">👑 VIP: 0</h3>
 <h3 id="svip">💎 SVIP: 0</h3>
 
-<div id="aristo"></div>
+<div id="aristo" class="card"></div>
 
 <div class="card">
 💑 Pareja: <span id="pareja">Ninguna</span><br>
 🏰 Clan: <span id="clan">Ninguno</span>
 </div>
-
-<div id="users"></div>
 
 <button id="micBtn" onclick="toggleMic()">🎤</button>
 <button id="musicBtn" onclick="toggleMusic()">🎶</button>
@@ -83,37 +76,45 @@ button{
 <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
 </audio>
 
+<!-- 🎁 REGALOS PRO -->
 <div class="menu" id="menu">
 
-<!-- 🎁 REGALOS PERSONALIZADOS -->
 <div class="giftItem" onclick="sendGift('rosa')">
-<img src="https://cdn-icons-png.flaticon.com/512/616/616490.png" width="40"><br>Rosa 10
+<img src="https://i.imgur.com/9Xn1FQK.png"><br>Rosa 10
 </div>
 
 <div class="giftItem" onclick="sendGift('beso')">
-<img src="https://cdn-icons-png.flaticon.com/512/742/742751.png" width="40"><br>Beso 20
+<img src="https://i.imgur.com/3ZQ3Z9B.png"><br>Beso 20
 </div>
 
 <div class="giftItem" onclick="sendGift('diamante')">
-<img src="https://cdn-icons-png.flaticon.com/512/616/616554.png" width="40"><br>Diamante 100
+<img src="https://i.imgur.com/mD7xG6p.png"><br>Diamante 100
 </div>
 
 <div class="giftItem" onclick="sendGift('corona')">
-<img src="https://cdn-icons-png.flaticon.com/512/616/616494.png" width="40"><br>Corona 200
+<img src="https://i.imgur.com/Vk6XH7L.png"><br>Corona 200
 </div>
 
-<!-- 🎮 SISTEMA -->
-<div onclick="buyVIP()">👑 VIP</div>
-<div onclick="buySVIP()">💎 SVIP</div>
-<div onclick="crearPareja()">💑 Pareja</div>
-<div onclick="crearClan()">🏰 Clan</div>
+<div class="giftItem" onclick="sendGift('castillo')">
+<img src="https://i.imgur.com/Q6aZ6xP.png"><br>Castillo 500
+</div>
+
+<div class="giftItem" onclick="sendGift('dragon')">
+<img src="https://i.imgur.com/tV6pKQH.png"><br>Dragón 1000
+</div>
+
+<hr>
+
+<div onclick="buyVIP()">👑 Subir VIP</div>
+<div onclick="buySVIP()">💎 Subir SVIP</div>
+<div onclick="crearPareja()">💑 Crear pareja</div>
+<div onclick="crearClan()">🏰 Crear clan</div>
 
 </div>
 
 <script>
 
-const socket = io("http://207.180.235.220:4000");
-
+// 💰 DATOS
 let gold = 1000;
 let vip = 0;
 let svip = 0;
@@ -124,11 +125,24 @@ let clan = localStorage.getItem("clan") || "Ninguno";
 document.getElementById("pareja").innerText = pareja;
 document.getElementById("clan").innerText = clan;
 
+// 👑 ARISTOCRACIA PRO
+let niveles = ["Noble","Caballero","Duque","Principe","Rey","Emperador"];
+let nivel = 0;
+
+function renderAristo(){
+ document.getElementById("aristo").innerHTML =
+ "🏆 " + niveles[nivel];
+}
+renderAristo();
+
+// 🎁 REGALOS
 let gifts = {
- rosa:{price:10,img:"https://cdn-icons-png.flaticon.com/512/616/616490.png"},
- beso:{price:20,img:"https://cdn-icons-png.flaticon.com/512/742/742751.png"},
- diamante:{price:100,img:"https://cdn-icons-png.flaticon.com/512/616/616554.png"},
- corona:{price:200,img:"https://cdn-icons-png.flaticon.com/512/616/616494.png"}
+ rosa:{price:10,img:"https://i.imgur.com/9Xn1FQK.png"},
+ beso:{price:20,img:"https://i.imgur.com/3ZQ3Z9B.png"},
+ diamante:{price:100,img:"https://i.imgur.com/mD7xG6p.png"},
+ corona:{price:200,img:"https://i.imgur.com/Vk6XH7L.png"},
+ castillo:{price:500,img:"https://i.imgur.com/Q6aZ6xP.png"},
+ dragon:{price:1000,img:"https://i.imgur.com/tV6pKQH.png"}
 };
 
 function sendGift(name){
@@ -137,7 +151,7 @@ function sendGift(name){
   return;
  }
  gold -= gifts[name].price;
- document.getElementById("gold").innerText="💰 Oro: "+gold;
+ updateUI();
  showGift(name);
 }
 
@@ -145,19 +159,22 @@ function showGift(name){
  let d=document.createElement("div");
  d.style.position="fixed";
  d.style.left="50%";
- d.style.top="60%";
- d.style.transform="translateX(-50%)";
- d.innerHTML=`<img src="${gifts[name].img}" width="120">`;
+ d.style.top="70%";
+ d.style.transform="translateX(-50%) scale(0.5)";
+ d.style.transition="0.5s";
+ d.innerHTML=`<img src="${gifts[name].img}" width="150">`;
+
  document.body.appendChild(d);
 
- let pos=60;
- let anim=setInterval(()=>{
-  pos--;
-  d.style.top=pos+"%";
-  if(pos<20){clearInterval(anim);d.remove();}
- },20);
+ setTimeout(()=>{
+  d.style.top="30%";
+  d.style.transform="translateX(-50%) scale(1.2)";
+ },100);
+
+ setTimeout(()=>d.remove(),1500);
 }
 
+// 🔧 FUNCIONES
 function toggleMenu(){
  let m=document.getElementById("menu");
  m.style.display=m.style.display=="flex"?"none":"flex";
@@ -165,7 +182,7 @@ function toggleMenu(){
 
 function toggleMusic(){
  let m=document.getElementById("music");
- if(m.paused){m.play();}else{m.pause();}
+ m.paused ? m.play() : m.pause();
 }
 
 function toggleMic(){
@@ -174,12 +191,15 @@ function toggleMic(){
 
 function buyVIP(){
  vip++;
- document.getElementById("vip").innerText="👑 VIP: "+vip;
+ updateUI();
 }
 
 function buySVIP(){
- svip++;
- document.getElementById("svip").innerText="💎 SVIP: "+svip;
+ if(svip < 10){
+  svip++;
+  gold += svip*500;
+ }
+ updateUI();
 }
 
 function crearPareja(){
@@ -200,16 +220,11 @@ function crearClan(){
  }
 }
 
-// 👑 ARISTOCRACIA PRO
-let niveles=["Noble","Duque","Principe","Rey","Emperador"];
-let nivel=0;
-
-function renderAristo(){
- document.getElementById("aristo").innerHTML=
- `<div class="card"><b>🏆 ${niveles[nivel]}</b></div>`;
+function updateUI(){
+ document.getElementById("gold").innerText="💰 Oro: "+gold;
+ document.getElementById("vip").innerText="👑 VIP: "+vip;
+ document.getElementById("svip").innerText="💎 SVIP: "+svip;
 }
-
-renderAristo();
 
 </script>
 
