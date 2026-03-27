@@ -19,11 +19,14 @@ let users = {};
 io.on("connection", (socket) => {
   console.log("Usuario conectado:", socket.id);
 
-  socket.on("join-room", (roomId) => {
+  socket.on("join-room", ({ roomId, name }) => {
     socket.join(roomId);
     users[socket.id] = roomId;
 
-    socket.to(roomId).emit("user-connected", socket.id);
+    socket.to(roomId).emit("user-connected", {
+      id: socket.id,
+      name
+    });
   });
 
   socket.on("offer", ({ offer, userId }) => {
