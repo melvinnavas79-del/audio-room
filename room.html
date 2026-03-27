@@ -13,13 +13,10 @@
       text-align: center;
     }
 
-    h2 {
-      margin-top: 20px;
-    }
+    h2 { margin-top: 20px; }
 
     .users {
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
       margin-top: 20px;
     }
@@ -71,8 +68,6 @@
 <div class="users">
   <div class="user">😀</div>
   <div class="user">😎</div>
-  <div class="user">🔥</div>
-  <div class="user">🎧</div>
 </div>
 
 <div class="mic">🎤</div>
@@ -83,12 +78,12 @@
 
 <script>
 const socket = io();
-
 const params = new URLSearchParams(window.location.search);
 const roomId = params.get("room");
 
-navigator.mediaDevices.getUserMedia({ audio: true })
-.then(stream => {
+let peer;
+
+navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
 
   const myAudio = document.createElement("audio");
   myAudio.srcObject = stream;
@@ -97,39 +92,37 @@ navigator.mediaDevices.getUserMedia({ audio: true })
 
   socket.emit("join-room", roomId);
 
-  const peers = {};
+  socket.on("user-connected", async (userId) => {
 
-  socket.on("user-connected", (userId) => {
-    const peer = new RTCPeerConnection();
-
-    stream.getTracks().forEach(track => {
-      peer.addTrack(track, stream);
+    peer = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
     });
 
-    peer.ontrack = (event) => {
+    stream.getTracks().forEach(track => peer.addTrack(track, stream));
+
+    peer.ontrack = (e) => {
       const audio = document.createElement("audio");
-      audio.srcObject = event.streams[0];
+      audio.srcObject = e.streams[0];
       audio.play();
     };
 
-    peer.createOffer().then(offer => {
-      peer.setLocalDescription(offer);
-      socket.emit("offer", { offer, userId });
-    });
+    const offer = await peer.createOffer();
+    await peer.setLocalDescription(offer);
 
-    peers[userId] = peer;
+    socket.emit("offer", { offer, userId });
   });
 
   socket.on("offer", async ({ offer, userId }) => {
-    const peer = new RTCPeerConnection();
 
-    stream.getTracks().forEach(track => {
-      peer.addTrack(track, stream);
+    peer = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
     });
 
-    peer.ontrack = (event) => {
+    stream.getTracks().forEach(track => peer.addTrack(track, stream));
+
+    peer.ontrack = (e) => {
       const audio = document.createElement("audio");
-      audio.srcObject = event.streams[0];
+      audio.srcObject = e.streams[0];
       audio.play();
     };
 
@@ -139,12 +132,10 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     await peer.setLocalDescription(answer);
 
     socket.emit("answer", { answer, userId });
-
-    peers[userId] = peer;
   });
 
-  socket.on("answer", async ({ answer, userId }) => {
-    await peers[userId].setRemoteDescription(answer);
+  socket.on("answer", async ({ answer }) => {
+    await peer.setRemoteDescription(answer);
   });
 
 });
