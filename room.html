@@ -69,7 +69,23 @@
       border: none;
     }
 
-    #giftAlert {
+    /* 🔥 ANIMACIÓN */
+    .gift-animation {
+      position: fixed;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.5);
+      font-size: 60px;
+      animation: pop 1s ease forwards;
+    }
+
+    @keyframes pop {
+      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+      50% { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+    }
+
+    #giftText {
       position: fixed;
       top: 20px;
       width: 100%;
@@ -85,7 +101,7 @@
 
 <div id="users"></div>
 
-<div id="giftAlert"></div>
+<div id="giftText"></div>
 
 <div class="mic" onclick="toggleMute()" id="micBtn">🎤</div>
 
@@ -161,10 +177,7 @@ function toggleMute() {
 
 // 🎁 REGALO
 function sendGift() {
-  if (gold < 10) {
-    showGift("No tienes oro");
-    return;
-  }
+  if (gold < 10) return;
 
   gold -= 10;
 
@@ -174,20 +187,27 @@ function sendGift() {
     amount: 10
   });
 
-  showGift("Enviaste regalo 🎁");
+  showGift(myName + " envió 🎁");
 }
 
 function showGift(text) {
-  const alert = document.getElementById("giftAlert");
-  alert.innerText = text;
+  const div = document.createElement("div");
+  div.className = "gift-animation";
+  div.innerHTML = "🎁";
+
+  document.body.appendChild(div);
+
+  const txt = document.getElementById("giftText");
+  txt.innerText = text;
 
   setTimeout(() => {
-    alert.innerText = "";
-  }, 2000);
+    div.remove();
+    txt.innerText = "";
+  }, 1000);
 }
 
-socket.on("receive-gift", ({ from, amount }) => {
-  showGift(from + " envió " + amount + " 💰");
+socket.on("receive-gift", ({ from }) => {
+  showGift(from + " envió 🎁");
 });
 
 // 🔥 PEER
