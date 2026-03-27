@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sala</title>
+  <title>Sala Coravox</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
+      margin: 0;
       font-family: Arial;
-      text-align: center;
       background: linear-gradient(135deg, #6a11cb, #ff4ecd);
       color: white;
+      text-align: center;
     }
 
     #users {
@@ -59,21 +60,6 @@
       padding: 10px;
       font-size: 25px;
     }
-
-    .gift-animation {
-      position: fixed;
-      top: 40%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 60px;
-      animation: pop 1s ease;
-    }
-
-    @keyframes pop {
-      0% { opacity: 0; transform: scale(0.5); }
-      50% { opacity: 1; transform: scale(1.5); }
-      100% { opacity: 0; }
-    }
   </style>
 </head>
 
@@ -103,11 +89,12 @@ const roomId = params.get("room");
 const myName = localStorage.getItem("username") || "User";
 
 let stream;
+let peerConnections = {};
 let isMuted = false;
 
 const usersDiv = document.getElementById("users");
 
-// usuarios
+// 👥 usuarios
 function addUser(id, name) {
   const div = document.createElement("div");
   div.className = "user";
@@ -121,7 +108,7 @@ function removeUser(id) {
   if (el) el.remove();
 }
 
-// micro
+// 🎤 obtener audio
 navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
   stream = s;
 
@@ -133,37 +120,101 @@ navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
   });
 });
 
-// mute
+// 🔇 mute
 function toggleMute() {
   isMuted = !isMuted;
   stream.getAudioTracks()[0].enabled = !isMuted;
   document.getElementById("micBtn").innerHTML = isMuted ? "🔇" : "🎤";
 }
 
-// menu
+// 🎁 menú
 function toggleMenu() {
   const m = document.getElementById("menu");
   m.style.display = m.style.display === "flex" ? "none" : "flex";
 }
 
-// regalos
+// 🎁 regalos
 function sendGift(icon) {
   socket.emit("send-gift", { roomId, icon });
-  showGift(icon);
 }
 
-function showGift(icon) {
+socket.on("receive-gift", ({ icon }) => {
   const div = document.createElement("div");
-  div.className = "gift-animation";
+  div.style.position = "fixed";
+  div.style.top = "40%";
+  div.style.left = "50%";
+  div.style.transform = "translate(-50%, -50%)";
+  div.style.fontSize = "60px";
   div.innerHTML = icon;
+
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 1000);
+});
+
+// 🔥 WEBRTC
+function createPeer(userId) {
+  const peer = new RTCPeerConnection({
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+  });
+
+  stream.getTracks().forEach(track => peer.addTrack(track, stream));
+
+  peer.ontrack = (event) => {
+    const audio = document.createElement("audio");
+    audio.srcObject = event.streams[0];
+    audio.play();
+  };
+
+  peer.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.emit("ice-candidate", {
+        candidate: event.candidate,
+        to: userId
+      });
+    }
+  };
+
+  return peer;
 }
 
-socket.on("receive-gift", ({ icon }) => showGift(icon));
+// eventos
+socket.on("user-connected", async ({ id, name }) => {
+  addUser(id, name);
 
-socket.on("user-connected", ({ id, name }) => addUser(id, name));
-socket.on("user-disconnected", id => removeUser(id));
+  const peer = createPeer(id);
+  peerConnections[id] = peer;
+
+  const offer = await peer.createOffer();
+  await peer.setLocalDescription(offer);
+
+  socket.emit("offer", { offer, to: id });
+});
+
+socket.on("offer", async ({ offer, from }) => {
+  const peer = createPeer(from);
+  peerConnections[from] = peer;
+
+  await peer.setRemoteDescription(offer);
+
+  const answer = await peer.createAnswer();
+  await peer.setLocalDescription(answer);
+
+  socket.emit("answer", { answer, to: from });
+});
+
+socket.on("answer", async ({ answer, from }) => {
+  await peerConnections[from].setRemoteDescription(answer);
+});
+
+socket.on("ice-candidate", async ({ candidate, from }) => {
+  if (peerConnections[from]) {
+    await peerConnections[from].addIceCandidate(candidate);
+  }
+});
+
+socket.on("user-disconnected", (id) => {
+  removeUser(id);
+});
 </script>
 
 </body>
