@@ -29,14 +29,22 @@ button {
   border:none;
 }
 
-#micBtn {
-  left:20px;
-  background:pink;
+#micBtn { left:20px; background:pink; }
+#openMenu { right:20px; background:gold; }
+
+.menu {
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:#222;
+  display:none;
+  flex-wrap:wrap;
 }
 
-#giftBtn {
-  right:20px;
-  background:gold;
+.giftItem {
+  width:20%;
+  padding:10px;
+  font-size:25px;
 }
 
 .gift {
@@ -56,7 +64,36 @@ button {
 <div id="users"></div>
 
 <button onclick="mute()" id="micBtn">🎤</button>
-<button onclick="sendGift('🎁')" id="giftBtn">🎁</button>
+<button onclick="toggleMenu()" id="openMenu">🎁</button>
+
+<div class="menu" id="menu">
+
+<!-- 💥 20 REGALOS -->
+<div class="giftItem" onclick="sendGift('🌹')">🌹</div>
+<div class="giftItem" onclick="sendGift('💋')">💋</div>
+<div class="giftItem" onclick="sendGift('❤️')">❤️</div>
+<div class="giftItem" onclick="sendGift('👩‍❤️‍👨')">👩‍❤️‍👨</div>
+<div class="giftItem" onclick="sendGift('💍')">💍</div>
+
+<div class="giftItem" onclick="sendGift('🔥')">🔥</div>
+<div class="giftItem" onclick="sendGift('😂')">😂</div>
+<div class="giftItem" onclick="sendGift('🎤')">🎤</div>
+<div class="giftItem" onclick="sendGift('🎈')">🎈</div>
+<div class="giftItem" onclick="sendGift('🎵')">🎵</div>
+
+<div class="giftItem" onclick="sendGift('💎')">💎</div>
+<div class="giftItem" onclick="sendGift('👑')">👑</div>
+<div class="giftItem" onclick="sendGift('🚗')">🚗</div>
+<div class="giftItem" onclick="sendGift('🛩️')">🛩️</div>
+<div class="giftItem" onclick="sendGift('🏰')">🏰</div>
+
+<div class="giftItem" onclick="sendGift('🐉')">🐉</div>
+<div class="giftItem" onclick="sendGift('🌌')">🌌</div>
+<div class="giftItem" onclick="sendGift('⚡')">⚡</div>
+<div class="giftItem" onclick="sendGift('💥')">💥</div>
+<div class="giftItem" onclick="sendGift('🤑')">🤑</div>
+
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 
@@ -102,12 +139,19 @@ function mute(){
   document.getElementById("micBtn").innerHTML=muted?"🔇":"🎤";
 }
 
-// 🎁 regalos
+// 🎁 menú
+function toggleMenu(){
+  let m=document.getElementById("menu");
+  m.style.display = m.style.display==="flex"?"none":"flex";
+}
+
+// 🎁 enviar regalo
 function sendGift(icon){
   socket.emit("send-gift",{roomId,icon});
   showGift(icon);
 }
 
+// 💥 animación
 function showGift(icon){
   let d=document.createElement("div");
   d.className="gift";
@@ -121,7 +165,7 @@ socket.on("receive-gift",({icon})=>{
   showGift(icon);
 });
 
-// 🔥 WEBRTC AUDIO REAL
+// 🔥 WEBRTC AUDIO
 function createPeer(id){
   let p=new RTCPeerConnection({
     iceServers:[{urls:"stun:stun.l.google.com:19302"}]
