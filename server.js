@@ -10,6 +10,7 @@ app.get("/", (req, res) => {
 });
 
 const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: { origin: "*" }
 });
@@ -19,6 +20,7 @@ let users = {};
 io.on("connection", (socket) => {
   console.log("Usuario conectado:", socket.id);
 
+  // 👥 ENTRAR A SALA
   socket.on("join-room", ({ roomId, name }) => {
     socket.join(roomId);
     users[socket.id] = roomId;
@@ -29,25 +31,14 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("send-gift", ({ roomId, from, amount }) => {
+  // 🎁 REGALOS
+  socket.on("send-gift", ({ roomId, icon }) => {
     socket.to(roomId).emit("receive-gift", {
-      from,
-      amount
+      icon
     });
   });
 
-  socket.on("offer", ({ offer, userId }) => {
-    socket.to(userId).emit("offer", { offer, userId: socket.id });
-  });
-
-  socket.on("answer", ({ answer, userId }) => {
-    socket.to(userId).emit("answer", { answer, userId: socket.id });
-  });
-
-  socket.on("ice-candidate", ({ candidate, userId }) => {
-    socket.to(userId).emit("ice-candidate", { candidate });
-  });
-
+  // 🔌 DESCONEXIÓN
   socket.on("disconnect", () => {
     const roomId = users[socket.id];
     if (roomId) {
