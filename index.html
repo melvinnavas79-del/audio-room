@@ -1,38 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Audio Room</title>
+  <title>Coravox</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: linear-gradient(135deg, #6a11cb, #ff4ecd);
+      color: white;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 20px;
+    }
+
+    .btn {
+      background: #ff4ecd;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 30px;
+      color: white;
+      font-size: 18px;
+      margin: 10px;
+    }
+
+    .box {
+      background: rgba(255,255,255,0.1);
+      margin: 20px;
+      padding: 20px;
+      border-radius: 20px;
+    }
+
+    input {
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      margin: 5px;
+    }
+  </style>
 </head>
+
 <body>
 
-<h2>Audio Room 🔥</h2>
+<h1>🔥 Coravox</h1>
 
-<button onclick="createRoom()">Crear sala</button>
-<input id="roomId" placeholder="ID sala">
-<button onclick="joinRoom()">Unirse</button>
+<div class="box">
+  <button class="btn" onclick="createRoom()">Crear sala</button><br>
+  <input id="roomInput" placeholder="ID sala">
+  <button class="btn" onclick="joinRoom()">Unirse</button>
+</div>
 
-<p id="status"></p>
-
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<div class="box">
+  <h3>🎤 Salas activas</h3>
+  <p>(Pronto aquí aparecerán)</p>
+</div>
 
 <script>
-const socket = io("https://ascogonial-hypertorrid-merry.ngrok-free.app");
-
-function createRoom() {
-  socket.emit("create-room");
-
-  socket.on("room-created", (roomId) => {
-    document.getElementById("status").innerText = "Sala creada: " + roomId;
-  });
+function createRoom(){
+  alert("Sala creada 🔥");
 }
 
-function joinRoom() {
-  const roomId = document.getElementById("roomId").value;
-  socket.emit("join-room", roomId);
-
-  socket.on("users", (users) => {
-    document.getElementById("status").innerText = "Usuarios: " + users.length;
-  });
+function joinRoom(){
+  let room = document.getElementById("roomInput").value;
+  alert("Entrando a sala: " + room);
 }
 </script>
 
