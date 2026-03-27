@@ -58,13 +58,19 @@
 </div>
 
 <script>
+
 function createRoom(){
-  alert("Sala creada 🔥");
+  let roomId = Math.random().toString(36).substring(7);
+  window.location.href = "/room.html?room=" + roomId;
 }
 
 function joinRoom(){
   let room = document.getElementById("roomInput").value;
-  alert("Entrando a sala: " + room);
+  if(room){
+    window.location.href = "/room.html?room=" + room;
+  } else {
+    alert("Escribe un ID de sala");
+  }
 }
 </script>
 
