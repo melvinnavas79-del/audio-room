@@ -24,6 +24,27 @@ body {
 button {
   position:fixed;
   bottom:20px;
+  padding:10px;
+  border-radius:20px;
+  border:none;
+}
+
+#micBtn {
+  left:20px;
+  background:pink;
+}
+
+#giftBtn {
+  right:20px;
+  background:gold;
+}
+
+.gift {
+  position:fixed;
+  top:40%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  font-size:60px;
 }
 </style>
 </head>
@@ -34,7 +55,8 @@ button {
 
 <div id="users"></div>
 
-<button onclick="mute()" id="btn">🎤</button>
+<button onclick="mute()" id="micBtn">🎤</button>
+<button onclick="sendGift('🎁')" id="giftBtn">🎁</button>
 
 <script src="/socket.io/socket.io.js"></script>
 
@@ -48,13 +70,15 @@ let peers = {};
 let muted = false;
 
 const name = localStorage.getItem("username") || "User";
+const usersDiv = document.getElementById("users");
 
+// 👥 usuarios
 function addUser(id,n){
   let d=document.createElement("div");
   d.className="user";
   d.id=id;
   d.innerHTML="👤 "+n;
-  users.appendChild(d);
+  usersDiv.appendChild(d);
 }
 
 function removeUser(id){
@@ -62,6 +86,7 @@ function removeUser(id){
   if(el) el.remove();
 }
 
+// 🎤 audio
 navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
   stream=s;
 
@@ -70,12 +95,33 @@ navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
   socket.emit("join-room",{roomId,name});
 });
 
+// 🔇 mute
 function mute(){
   muted=!muted;
   stream.getAudioTracks()[0].enabled=!muted;
-  btn.innerHTML=muted?"🔇":"🎤";
+  document.getElementById("micBtn").innerHTML=muted?"🔇":"🎤";
 }
 
+// 🎁 regalos
+function sendGift(icon){
+  socket.emit("send-gift",{roomId,icon});
+  showGift(icon);
+}
+
+function showGift(icon){
+  let d=document.createElement("div");
+  d.className="gift";
+  d.innerHTML=icon;
+
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(),1000);
+}
+
+socket.on("receive-gift",({icon})=>{
+  showGift(icon);
+});
+
+// 🔥 WEBRTC AUDIO REAL
 function createPeer(id){
   let p=new RTCPeerConnection({
     iceServers:[{urls:"stun:stun.l.google.com:19302"}]
@@ -98,6 +144,7 @@ function createPeer(id){
   return p;
 }
 
+// conexión
 socket.on("user-connected", async ({id,name})=>{
   addUser(id,name);
 
