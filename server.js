@@ -29,24 +29,23 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("offer", ({ offer, userId }) => {
-    socket.to(userId).emit("offer", {
-      offer,
-      userId: socket.id
+  socket.on("send-gift", ({ roomId, from, amount }) => {
+    socket.to(roomId).emit("receive-gift", {
+      from,
+      amount
     });
+  });
+
+  socket.on("offer", ({ offer, userId }) => {
+    socket.to(userId).emit("offer", { offer, userId: socket.id });
   });
 
   socket.on("answer", ({ answer, userId }) => {
-    socket.to(userId).emit("answer", {
-      answer,
-      userId: socket.id
-    });
+    socket.to(userId).emit("answer", { answer, userId: socket.id });
   });
 
   socket.on("ice-candidate", ({ candidate, userId }) => {
-    socket.to(userId).emit("ice-candidate", {
-      candidate
-    });
+    socket.to(userId).emit("ice-candidate", { candidate });
   });
 
   socket.on("disconnect", () => {
