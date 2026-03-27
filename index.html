@@ -2,73 +2,36 @@
 <html>
 <head>
   <title>Coravox</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      font-family: Arial;
-      text-align: center;
-      background: linear-gradient(135deg, #6a11cb, #ff4ecd);
-      color: white;
-      padding-top: 100px;
-    }
-
-    input {
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      margin: 10px;
-    }
-
-    button {
-      padding: 10px 20px;
-      border-radius: 20px;
-      border: none;
-      background: pink;
-      font-size: 16px;
-      margin: 10px;
-    }
-  </style>
 </head>
 
-<body>
+<body style="text-align:center; margin-top:100px; font-family:Arial;">
 
 <h1>🔥 Coravox</h1>
 
-<input id="username" placeholder="Tu nombre">
+<input id="name" placeholder="Tu nombre"><br><br>
 
-<br>
-
-<button onclick="createRoom()">Crear sala</button>
-<button onclick="joinRoom()">Entrar a sala</button>
+<button onclick="crear()">Crear sala</button>
+<button onclick="entrar()">Entrar</button>
 
 <script>
-function createRoom() {
-  let name = document.getElementById("username").value;
-
-  if (!name) {
-    alert("Escribe tu nombre");
-    return;
-  }
+function crear(){
+  let name = document.getElementById("name").value;
+  if(!name) return alert("Escribe tu nombre");
 
   localStorage.setItem("username", name);
 
-  let roomId = Math.random().toString(36).substring(7);
-  window.location.href = "/room.html?room=" + roomId;
+  let room = Math.random().toString(36).substring(7);
+  window.location = "/room.html?room=" + room;
 }
 
-function joinRoom() {
-  let name = document.getElementById("username").value;
-  let roomId = prompt("Escribe el ID de la sala");
+function entrar(){
+  let name = document.getElementById("name").value;
+  let room = prompt("ID de sala");
 
-  if (!name || !roomId) {
-    alert("Falta nombre o ID");
-    return;
-  }
+  if(!name || !room) return;
 
   localStorage.setItem("username", name);
-
-  window.location.href = "/room.html?room=" + roomId;
+  window.location = "/room.html?room=" + room;
 }
 </script>
 
