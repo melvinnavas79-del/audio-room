@@ -13,8 +13,6 @@
       text-align: center;
     }
 
-    h2 { margin-top: 20px; }
-
     #users {
       display: flex;
       flex-wrap: wrap;
@@ -49,6 +47,16 @@
       font-size: 30px;
     }
 
+    .gift {
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      background: gold;
+      padding: 15px;
+      border-radius: 50%;
+      font-size: 25px;
+    }
+
     .exit {
       position: fixed;
       bottom: 20px;
@@ -60,6 +68,14 @@
       border-radius: 20px;
       border: none;
     }
+
+    #giftAlert {
+      position: fixed;
+      top: 20px;
+      width: 100%;
+      text-align: center;
+      font-size: 20px;
+    }
   </style>
 </head>
 
@@ -69,7 +85,11 @@
 
 <div id="users"></div>
 
+<div id="giftAlert"></div>
+
 <div class="mic" onclick="toggleMute()" id="micBtn">🎤</div>
+
+<div class="gift" onclick="sendGift()">🎁</div>
 
 <button class="exit" onclick="window.location.href='/'">Salir</button>
 
@@ -83,6 +103,7 @@ const roomId = params.get("room");
 let peer;
 let stream;
 let isMuted = false;
+let gold = 100;
 
 const usersDiv = document.getElementById("users");
 const myName = localStorage.getItem("username") || "User";
@@ -134,10 +155,40 @@ function toggleMute() {
   });
 
   const btn = document.getElementById("micBtn");
-
   btn.innerHTML = isMuted ? "🔇" : "🎤";
   btn.style.background = isMuted ? "gray" : "pink";
 }
+
+// 🎁 REGALO
+function sendGift() {
+  if (gold < 10) {
+    showGift("No tienes oro");
+    return;
+  }
+
+  gold -= 10;
+
+  socket.emit("send-gift", {
+    roomId,
+    from: myName,
+    amount: 10
+  });
+
+  showGift("Enviaste regalo 🎁");
+}
+
+function showGift(text) {
+  const alert = document.getElementById("giftAlert");
+  alert.innerText = text;
+
+  setTimeout(() => {
+    alert.innerText = "";
+  }, 2000);
+}
+
+socket.on("receive-gift", ({ from, amount }) => {
+  showGift(from + " envió " + amount + " 💰");
+});
 
 // 🔥 PEER
 function createPeer(userId) {
@@ -170,7 +221,7 @@ function createPeer(userId) {
   return peer;
 }
 
-// 👇 EVENTOS
+// EVENTOS
 socket.on("user-connected", async ({ id, name }) => {
   addUser(id, name);
 
