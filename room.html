@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sala - Coravox</title>
+  <title>Sala</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
-      margin: 0;
       font-family: Arial;
+      text-align: center;
       background: linear-gradient(135deg, #6a11cb, #ff4ecd);
       color: white;
-      text-align: center;
     }
 
     #users {
@@ -28,34 +27,23 @@
       margin: 10px;
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: center;
-      font-size: 12px;
     }
 
-    .mic {
+    .mic, .giftBtn {
       position: fixed;
       bottom: 100px;
-      left: 20px;
       width: 70px;
       height: 70px;
-      background: pink;
       border-radius: 50%;
       display: flex;
-      align-items: center;
       justify-content: center;
-      font-size: 30px;
-    }
-
-    .openMenu {
-      position: fixed;
-      bottom: 100px;
-      right: 20px;
-      background: gold;
-      padding: 15px;
-      border-radius: 50%;
+      align-items: center;
       font-size: 25px;
     }
+
+    .mic { left: 20px; background: pink; }
+    .giftBtn { right: 20px; background: gold; }
 
     .menu {
       position: fixed;
@@ -64,7 +52,6 @@
       background: #222;
       display: none;
       flex-wrap: wrap;
-      padding: 10px;
     }
 
     .giftItem {
@@ -77,56 +64,34 @@
       position: fixed;
       top: 40%;
       left: 50%;
-      transform: translate(-50%, -50%) scale(0.5);
+      transform: translate(-50%, -50%);
       font-size: 60px;
-      animation: pop 1s ease forwards;
+      animation: pop 1s ease;
     }
 
     @keyframes pop {
-      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-      50% { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
-      100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+      0% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 1; transform: scale(1.5); }
+      100% { opacity: 0; }
     }
   </style>
 </head>
 
 <body>
 
-<h2>🎤 Sala de voz</h2>
+<h2>🎤 Sala</h2>
 
 <div id="users"></div>
 
 <div class="mic" onclick="toggleMute()" id="micBtn">🎤</div>
-
-<div class="openMenu" onclick="toggleMenu()">🎁</div>
+<div class="giftBtn" onclick="toggleMenu()">🎁</div>
 
 <div class="menu" id="menu">
-
-<!-- 💥 20 REGALOS -->
-<div class="giftItem" onclick="sendGift('🌹')">🌹</div>
-<div class="giftItem" onclick="sendGift('💋')">💋</div>
-<div class="giftItem" onclick="sendGift('❤️')">❤️</div>
-<div class="giftItem" onclick="sendGift('👩‍❤️‍👨')">👩‍❤️‍👨</div>
-<div class="giftItem" onclick="sendGift('💍')">💍</div>
-
-<div class="giftItem" onclick="sendGift('🔥')">🔥</div>
-<div class="giftItem" onclick="sendGift('😂')">😂</div>
-<div class="giftItem" onclick="sendGift('🎤')">🎤</div>
-<div class="giftItem" onclick="sendGift('🎈')">🎈</div>
-<div class="giftItem" onclick="sendGift('🎵')">🎵</div>
-
-<div class="giftItem" onclick="sendGift('💎')">💎</div>
-<div class="giftItem" onclick="sendGift('👑')">👑</div>
-<div class="giftItem" onclick="sendGift('🚗')">🚗</div>
-<div class="giftItem" onclick="sendGift('🛩️')">🛩️</div>
-<div class="giftItem" onclick="sendGift('🏰')">🏰</div>
-
-<div class="giftItem" onclick="sendGift('🐉')">🐉</div>
-<div class="giftItem" onclick="sendGift('🌌')">🌌</div>
-<div class="giftItem" onclick="sendGift('⚡')">⚡</div>
-<div class="giftItem" onclick="sendGift('💥')">💥</div>
-<div class="giftItem" onclick="sendGift('🤑')">🤑</div>
-
+  <div class="giftItem" onclick="sendGift('💋')">💋</div>
+  <div class="giftItem" onclick="sendGift('❤️')">❤️</div>
+  <div class="giftItem" onclick="sendGift('🌹')">🌹</div>
+  <div class="giftItem" onclick="sendGift('💎')">💎</div>
+  <div class="giftItem" onclick="sendGift('👑')">👑</div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -135,47 +100,32 @@
 const socket = io();
 const params = new URLSearchParams(window.location.search);
 const roomId = params.get("room");
+const myName = localStorage.getItem("username") || "User";
 
 let stream;
 let isMuted = false;
-const myName = localStorage.getItem("username") || "User";
 
-function toggleMenu() {
-  const menu = document.getElementById("menu");
-  menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-}
+const usersDiv = document.getElementById("users");
 
-// 🎁 ENVIAR REGALO
-function sendGift(icon) {
-  socket.emit("send-gift", {
-    roomId,
-    from: myName,
-    icon
-  });
-
-  showGift(icon);
-}
-
-// 💥 ANIMACIÓN
-function showGift(icon) {
+// usuarios
+function addUser(id, name) {
   const div = document.createElement("div");
-  div.className = "gift-animation";
-  div.innerHTML = icon;
-
-  document.body.appendChild(div);
-
-  setTimeout(() => {
-    div.remove();
-  }, 1000);
+  div.className = "user";
+  div.id = id;
+  div.innerHTML = "👤<br>" + name;
+  usersDiv.appendChild(div);
 }
 
-socket.on("receive-gift", ({ icon }) => {
-  showGift(icon);
-});
+function removeUser(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
 
-// 🎤 MICRO
+// micro
 navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
   stream = s;
+
+  addUser(socket.id, myName);
 
   socket.emit("join-room", {
     roomId,
@@ -183,19 +133,37 @@ navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
   });
 });
 
-// 🔇 MUTE
+// mute
 function toggleMute() {
-  if (!stream) return;
-
   isMuted = !isMuted;
-
-  stream.getAudioTracks().forEach(track => {
-    track.enabled = !isMuted;
-  });
-
-  const btn = document.getElementById("micBtn");
-  btn.innerHTML = isMuted ? "🔇" : "🎤";
+  stream.getAudioTracks()[0].enabled = !isMuted;
+  document.getElementById("micBtn").innerHTML = isMuted ? "🔇" : "🎤";
 }
+
+// menu
+function toggleMenu() {
+  const m = document.getElementById("menu");
+  m.style.display = m.style.display === "flex" ? "none" : "flex";
+}
+
+// regalos
+function sendGift(icon) {
+  socket.emit("send-gift", { roomId, icon });
+  showGift(icon);
+}
+
+function showGift(icon) {
+  const div = document.createElement("div");
+  div.className = "gift-animation";
+  div.innerHTML = icon;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 1000);
+}
+
+socket.on("receive-gift", ({ icon }) => showGift(icon));
+
+socket.on("user-connected", ({ id, name }) => addUser(id, name));
+socket.on("user-disconnected", id => removeUser(id));
 </script>
 
 </body>
