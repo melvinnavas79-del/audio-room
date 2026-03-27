@@ -2,228 +2,215 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
 <style>
-body {
-  text-align:center;
+body{
   font-family:Arial;
-  background: linear-gradient(135deg,#6a11cb,#ff4ecd);
+  text-align:center;
+  background:linear-gradient(135deg,#6a11cb,#ff4ecd);
   color:white;
 }
 
-#users {
-  display:flex;
-  justify-content:center;
-  flex-wrap:wrap;
-}
-
-.user {
+.user{
+  background:rgba(255,255,255,0.2);
   margin:10px;
+  padding:10px;
+  border-radius:15px;
 }
 
-button {
+button{
   position:fixed;
   bottom:20px;
-  padding:10px;
-  border-radius:20px;
   border:none;
+  padding:12px;
+  border-radius:50%;
+  font-size:18px;
 }
 
-#micBtn { left:20px; background:pink; }
-#openMenu { right:20px; background:gold; }
+#micBtn{left:20px;background:pink;}
+#giftBtn{right:20px;background:gold;}
+#musicBtn{right:90px;background:#00ffcc;}
 
-.menu {
+.menu{
   position:fixed;
   bottom:0;
   width:100%;
-  background:#222;
+  background:#111;
   display:none;
   flex-wrap:wrap;
 }
 
-.giftItem {
-  width:20%;
+.giftItem{
+  width:25%;
   padding:10px;
-  font-size:25px;
+  text-align:center;
+  color:white;
 }
 
-.gift {
-  position:fixed;
-  top:40%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  font-size:60px;
+.card{
+  background:rgba(0,0,0,0.5);
+  margin:10px;
+  padding:15px;
+  border-radius:15px;
 }
+
 </style>
 </head>
 
 <body>
 
-<h2>🎤 Sala</h2>
+<h2>AudioRoom PRO 🔥</h2>
+
+<h3 id="gold">💰 Oro: 1000</h3>
+<h3 id="vip">👑 VIP: 0</h3>
+<h3 id="svip">💎 SVIP: 0</h3>
+
+<div id="aristo"></div>
+
+<div class="card">
+💑 Pareja: <span id="pareja">Ninguna</span><br>
+🏰 Clan: <span id="clan">Ninguno</span>
+</div>
 
 <div id="users"></div>
 
-<button onclick="mute()" id="micBtn">🎤</button>
-<button onclick="toggleMenu()" id="openMenu">🎁</button>
+<button id="micBtn" onclick="toggleMic()">🎤</button>
+<button id="musicBtn" onclick="toggleMusic()">🎶</button>
+<button id="giftBtn" onclick="toggleMenu()">🎁</button>
+
+<audio id="music" loop>
+<source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
+</audio>
 
 <div class="menu" id="menu">
 
-<!-- 💥 20 REGALOS -->
-<div class="giftItem" onclick="sendGift('🌹')">🌹</div>
-<div class="giftItem" onclick="sendGift('💋')">💋</div>
-<div class="giftItem" onclick="sendGift('❤️')">❤️</div>
-<div class="giftItem" onclick="sendGift('👩‍❤️‍👨')">👩‍❤️‍👨</div>
-<div class="giftItem" onclick="sendGift('💍')">💍</div>
+<!-- 🎁 REGALOS PERSONALIZADOS -->
+<div class="giftItem" onclick="sendGift('rosa')">
+<img src="https://cdn-icons-png.flaticon.com/512/616/616490.png" width="40"><br>Rosa 10
+</div>
 
-<div class="giftItem" onclick="sendGift('🔥')">🔥</div>
-<div class="giftItem" onclick="sendGift('😂')">😂</div>
-<div class="giftItem" onclick="sendGift('🎤')">🎤</div>
-<div class="giftItem" onclick="sendGift('🎈')">🎈</div>
-<div class="giftItem" onclick="sendGift('🎵')">🎵</div>
+<div class="giftItem" onclick="sendGift('beso')">
+<img src="https://cdn-icons-png.flaticon.com/512/742/742751.png" width="40"><br>Beso 20
+</div>
 
-<div class="giftItem" onclick="sendGift('💎')">💎</div>
-<div class="giftItem" onclick="sendGift('👑')">👑</div>
-<div class="giftItem" onclick="sendGift('🚗')">🚗</div>
-<div class="giftItem" onclick="sendGift('🛩️')">🛩️</div>
-<div class="giftItem" onclick="sendGift('🏰')">🏰</div>
+<div class="giftItem" onclick="sendGift('diamante')">
+<img src="https://cdn-icons-png.flaticon.com/512/616/616554.png" width="40"><br>Diamante 100
+</div>
 
-<div class="giftItem" onclick="sendGift('🐉')">🐉</div>
-<div class="giftItem" onclick="sendGift('🌌')">🌌</div>
-<div class="giftItem" onclick="sendGift('⚡')">⚡</div>
-<div class="giftItem" onclick="sendGift('💥')">💥</div>
-<div class="giftItem" onclick="sendGift('🤑')">🤑</div>
+<div class="giftItem" onclick="sendGift('corona')">
+<img src="https://cdn-icons-png.flaticon.com/512/616/616494.png" width="40"><br>Corona 200
+</div>
+
+<!-- 🎮 SISTEMA -->
+<div onclick="buyVIP()">👑 VIP</div>
+<div onclick="buySVIP()">💎 SVIP</div>
+<div onclick="crearPareja()">💑 Pareja</div>
+<div onclick="crearClan()">🏰 Clan</div>
 
 </div>
 
-<script src="/socket.io/socket.io.js"></script>
-
 <script>
-const socket = io();
-const params = new URLSearchParams(location.search);
-const roomId = params.get("room");
 
-let stream;
-let peers = {};
-let muted = false;
+const socket = io("http://207.180.235.220:4000");
 
-const name = localStorage.getItem("username") || "User";
-const usersDiv = document.getElementById("users");
+let gold = 1000;
+let vip = 0;
+let svip = 0;
 
-// 👥 usuarios
-function addUser(id,n){
-  let d=document.createElement("div");
-  d.className="user";
-  d.id=id;
-  d.innerHTML="👤 "+n;
-  usersDiv.appendChild(d);
+let pareja = localStorage.getItem("pareja") || "Ninguna";
+let clan = localStorage.getItem("clan") || "Ninguno";
+
+document.getElementById("pareja").innerText = pareja;
+document.getElementById("clan").innerText = clan;
+
+let gifts = {
+ rosa:{price:10,img:"https://cdn-icons-png.flaticon.com/512/616/616490.png"},
+ beso:{price:20,img:"https://cdn-icons-png.flaticon.com/512/742/742751.png"},
+ diamante:{price:100,img:"https://cdn-icons-png.flaticon.com/512/616/616554.png"},
+ corona:{price:200,img:"https://cdn-icons-png.flaticon.com/512/616/616494.png"}
+};
+
+function sendGift(name){
+ if(gold < gifts[name].price){
+  alert("No tienes oro");
+  return;
+ }
+ gold -= gifts[name].price;
+ document.getElementById("gold").innerText="💰 Oro: "+gold;
+ showGift(name);
 }
 
-function removeUser(id){
-  let el=document.getElementById(id);
-  if(el) el.remove();
+function showGift(name){
+ let d=document.createElement("div");
+ d.style.position="fixed";
+ d.style.left="50%";
+ d.style.top="60%";
+ d.style.transform="translateX(-50%)";
+ d.innerHTML=`<img src="${gifts[name].img}" width="120">`;
+ document.body.appendChild(d);
+
+ let pos=60;
+ let anim=setInterval(()=>{
+  pos--;
+  d.style.top=pos+"%";
+  if(pos<20){clearInterval(anim);d.remove();}
+ },20);
 }
 
-// 🎤 audio
-navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
-  stream=s;
-
-  addUser(socket.id,name);
-
-  socket.emit("join-room",{roomId,name});
-});
-
-// 🔇 mute
-function mute(){
-  muted=!muted;
-  stream.getAudioTracks()[0].enabled=!muted;
-  document.getElementById("micBtn").innerHTML=muted?"🔇":"🎤";
-}
-
-// 🎁 menú
 function toggleMenu(){
-  let m=document.getElementById("menu");
-  m.style.display = m.style.display==="flex"?"none":"flex";
+ let m=document.getElementById("menu");
+ m.style.display=m.style.display=="flex"?"none":"flex";
 }
 
-// 🎁 enviar regalo
-function sendGift(icon){
-  socket.emit("send-gift",{roomId,icon});
-  showGift(icon);
+function toggleMusic(){
+ let m=document.getElementById("music");
+ if(m.paused){m.play();}else{m.pause();}
 }
 
-// 💥 animación
-function showGift(icon){
-  let d=document.createElement("div");
-  d.className="gift";
-  d.innerHTML=icon;
-
-  document.body.appendChild(d);
-  setTimeout(()=>d.remove(),1000);
+function toggleMic(){
+ alert("Micrófono activo 🎤");
 }
 
-socket.on("receive-gift",({icon})=>{
-  showGift(icon);
-});
-
-// 🔥 WEBRTC AUDIO
-function createPeer(id){
-  let p=new RTCPeerConnection({
-    iceServers:[{urls:"stun:stun.l.google.com:19302"}]
-  });
-
-  stream.getTracks().forEach(t=>p.addTrack(t,stream));
-
-  p.ontrack=e=>{
-    let a=new Audio();
-    a.srcObject=e.streams[0];
-    a.play();
-  };
-
-  p.onicecandidate=e=>{
-    if(e.candidate){
-      socket.emit("ice-candidate",{candidate:e.candidate,to:id});
-    }
-  };
-
-  return p;
+function buyVIP(){
+ vip++;
+ document.getElementById("vip").innerText="👑 VIP: "+vip;
 }
 
-// conexión
-socket.on("user-connected", async ({id,name})=>{
-  addUser(id,name);
+function buySVIP(){
+ svip++;
+ document.getElementById("svip").innerText="💎 SVIP: "+svip;
+}
 
-  let p=createPeer(id);
-  peers[id]=p;
+function crearPareja(){
+ let n=prompt("Nombre pareja");
+ if(n){
+  pareja=n;
+  localStorage.setItem("pareja",n);
+  document.getElementById("pareja").innerText=n;
+ }
+}
 
-  let offer=await p.createOffer();
-  await p.setLocalDescription(offer);
+function crearClan(){
+ let n=prompt("Nombre clan");
+ if(n){
+  clan=n;
+  localStorage.setItem("clan",n);
+  document.getElementById("clan").innerText=n;
+ }
+}
 
-  socket.emit("offer",{offer,to:id});
-});
+// 👑 ARISTOCRACIA PRO
+let niveles=["Noble","Duque","Principe","Rey","Emperador"];
+let nivel=0;
 
-socket.on("offer", async ({offer,from})=>{
-  let p=createPeer(from);
-  peers[from]=p;
+function renderAristo(){
+ document.getElementById("aristo").innerHTML=
+ `<div class="card"><b>🏆 ${niveles[nivel]}</b></div>`;
+}
 
-  await p.setRemoteDescription(offer);
+renderAristo();
 
-  let answer=await p.createAnswer();
-  await p.setLocalDescription(answer);
-
-  socket.emit("answer",{answer,to:from});
-});
-
-socket.on("answer", async ({answer,from})=>{
-  await peers[from].setRemoteDescription(answer);
-});
-
-socket.on("ice-candidate", async ({candidate,from})=>{
-  if(peers[from]){
-    await peers[from].addIceCandidate(candidate);
-  }
-});
-
-socket.on("user-disconnected", id=>removeUser(id));
 </script>
 
 </body>
