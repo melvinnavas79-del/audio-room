@@ -64,7 +64,7 @@
   <div class="user">😎</div>
 </div>
 
-<div class="mic">🎤</div>
+<div class="mic" onclick="toggleMute()" id="micBtn">🎤</div>
 
 <button class="exit" onclick="window.location.href='/'">Salir</button>
 
@@ -77,7 +77,9 @@ const roomId = params.get("room");
 
 let peer;
 let stream;
+let isMuted = false;
 
+// 🎤 MICROFONO
 navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
   stream = s;
 
@@ -88,6 +90,27 @@ navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
 
   socket.emit("join-room", roomId);
 });
+
+// 🔇 MUTE
+function toggleMute() {
+  if (!stream) return;
+
+  isMuted = !isMuted;
+
+  stream.getAudioTracks().forEach(track => {
+    track.enabled = !isMuted;
+  });
+
+  const btn = document.getElementById("micBtn");
+
+  if (isMuted) {
+    btn.innerHTML = "🔇";
+    btn.style.background = "gray";
+  } else {
+    btn.innerHTML = "🎤";
+    btn.style.background = "pink";
+  }
+}
 
 // 🔥 CREAR PEER
 function createPeer(userId) {
@@ -146,7 +169,7 @@ socket.on("offer", async ({ offer, userId }) => {
   socket.emit("answer", { answer, userId });
 });
 
-// 👇 RECIBIR RESPUESTA
+// 👇 RESPUESTA
 socket.on("answer", async ({ answer }) => {
   await peer.setRemoteDescription(answer);
 });
