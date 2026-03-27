@@ -26,6 +26,7 @@
       border: none;
       background: pink;
       font-size: 16px;
+      margin: 10px;
     }
   </style>
 </head>
@@ -39,6 +40,7 @@
 <br>
 
 <button onclick="createRoom()">Crear sala</button>
+<button onclick="joinRoom()">Entrar a sala</button>
 
 <script>
 function createRoom() {
@@ -52,6 +54,20 @@ function createRoom() {
   localStorage.setItem("username", name);
 
   let roomId = Math.random().toString(36).substring(7);
+  window.location.href = "/room.html?room=" + roomId;
+}
+
+function joinRoom() {
+  let name = document.getElementById("username").value;
+  let roomId = prompt("Escribe el ID de la sala");
+
+  if (!name || !roomId) {
+    alert("Falta nombre o ID");
+    return;
+  }
+
+  localStorage.setItem("username", name);
+
   window.location.href = "/room.html?room=" + roomId;
 }
 </script>
