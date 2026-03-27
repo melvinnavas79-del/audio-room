@@ -3,6 +3,7 @@
 <head>
   <title>Sala - Coravox</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
       margin: 0;
@@ -26,33 +27,39 @@
     .user {
       width: 80px;
       height: 80px;
+      border-radius: 50%;
       background: rgba(255,255,255,0.2);
-      border-radius: 50%;
       margin: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .mic {
-      margin-top: 40px;
-      background: #ff4ecd;
-      border-radius: 50%;
-      width: 80px;
-      height: 80px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 30px;
     }
 
-    .btn {
-      margin-top: 20px;
+    .mic {
+      position: fixed;
+      bottom: 100px;
+      left: 20px;
+      width: 70px;
+      height: 70px;
+      background: pink;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+    }
+
+    .exit {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      color: black;
       padding: 10px 20px;
       border-radius: 20px;
       border: none;
-      background: white;
-      color: black;
     }
   </style>
 </head>
@@ -70,12 +77,77 @@
 
 <div class="mic">🎤</div>
 
-<button class="btn" onclick="goBack()">Salir</button>
+<button class="exit" onclick="window.location.href='/'">Salir</button>
+
+<script src="/socket.io/socket.io.js"></script>
 
 <script>
-function goBack(){
-  window.location.href = "/";
-}
+const socket = io();
+
+const params = new URLSearchParams(window.location.search);
+const roomId = params.get("room");
+
+navigator.mediaDevices.getUserMedia({ audio: true })
+.then(stream => {
+
+  const myAudio = document.createElement("audio");
+  myAudio.srcObject = stream;
+  myAudio.muted = true;
+  myAudio.play();
+
+  socket.emit("join-room", roomId);
+
+  const peers = {};
+
+  socket.on("user-connected", (userId) => {
+    const peer = new RTCPeerConnection();
+
+    stream.getTracks().forEach(track => {
+      peer.addTrack(track, stream);
+    });
+
+    peer.ontrack = (event) => {
+      const audio = document.createElement("audio");
+      audio.srcObject = event.streams[0];
+      audio.play();
+    };
+
+    peer.createOffer().then(offer => {
+      peer.setLocalDescription(offer);
+      socket.emit("offer", { offer, userId });
+    });
+
+    peers[userId] = peer;
+  });
+
+  socket.on("offer", async ({ offer, userId }) => {
+    const peer = new RTCPeerConnection();
+
+    stream.getTracks().forEach(track => {
+      peer.addTrack(track, stream);
+    });
+
+    peer.ontrack = (event) => {
+      const audio = document.createElement("audio");
+      audio.srcObject = event.streams[0];
+      audio.play();
+    };
+
+    await peer.setRemoteDescription(offer);
+
+    const answer = await peer.createAnswer();
+    await peer.setLocalDescription(answer);
+
+    socket.emit("answer", { answer, userId });
+
+    peers[userId] = peer;
+  });
+
+  socket.on("answer", async ({ answer, userId }) => {
+    await peers[userId].setRemoteDescription(answer);
+  });
+
+});
 </script>
 
 </body>
