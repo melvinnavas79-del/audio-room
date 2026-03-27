@@ -3,10 +3,20 @@ const http = require("http");
 const { Server } = require("socket.io");
 
 const app = express();
+
+// Permitir archivos HTML
 app.use(express.static(__dirname));
+
+// Ruta principal
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
+
+// Ruta sala
+app.get("/room.html", (req, res) => {
+  res.sendFile(__dirname + "/room.html");
+});
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" }
