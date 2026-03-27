@@ -3,41 +3,29 @@
 <head>
   <title>Coravox</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
-      margin: 0;
       font-family: Arial;
+      text-align: center;
       background: linear-gradient(135deg, #6a11cb, #ff4ecd);
       color: white;
-      text-align: center;
-    }
-
-    h1 {
-      margin-top: 20px;
-    }
-
-    .btn {
-      background: #ff4ecd;
-      border: none;
-      padding: 15px 30px;
-      border-radius: 30px;
-      color: white;
-      font-size: 18px;
-      margin: 10px;
-    }
-
-    .box {
-      background: rgba(255,255,255,0.1);
-      margin: 20px;
-      padding: 20px;
-      border-radius: 20px;
+      padding-top: 100px;
     }
 
     input {
       padding: 10px;
       border-radius: 10px;
       border: none;
-      margin: 5px;
+      margin: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border-radius: 20px;
+      border: none;
+      background: pink;
+      font-size: 16px;
     }
   </style>
 </head>
@@ -46,31 +34,25 @@
 
 <h1>🔥 Coravox</h1>
 
-<div class="box">
-  <button class="btn" onclick="createRoom()">Crear sala</button><br>
-  <input id="roomInput" placeholder="ID sala">
-  <button class="btn" onclick="joinRoom()">Unirse</button>
-</div>
+<input id="username" placeholder="Tu nombre">
 
-<div class="box">
-  <h3>🎤 Salas activas</h3>
-  <p>(Pronto aquí aparecerán)</p>
-</div>
+<br>
+
+<button onclick="createRoom()">Crear sala</button>
 
 <script>
+function createRoom() {
+  let name = document.getElementById("username").value;
 
-function createRoom(){
+  if (!name) {
+    alert("Escribe tu nombre");
+    return;
+  }
+
+  localStorage.setItem("username", name);
+
   let roomId = Math.random().toString(36).substring(7);
   window.location.href = "/room.html?room=" + roomId;
-}
-
-function joinRoom(){
-  let room = document.getElementById("roomInput").value;
-  if(room){
-    window.location.href = "/room.html?room=" + room;
-  } else {
-    alert("Escribe un ID de sala");
-  }
 }
 </script>
 
