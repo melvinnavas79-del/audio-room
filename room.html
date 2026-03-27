@@ -15,19 +15,13 @@
 
     h2 { margin-top: 20px; }
 
-    .users {
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
-    }
-
     .user {
       width: 80px;
       height: 80px;
       border-radius: 50%;
       background: rgba(255,255,255,0.2);
       margin: 10px;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       font-size: 30px;
@@ -65,7 +59,7 @@
 
 <h2>🎤 Sala de voz</h2>
 
-<div class="users">
+<div>
   <div class="user">😀</div>
   <div class="user">😎</div>
 </div>
@@ -95,43 +89,17 @@ navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
   socket.emit("join-room", roomId);
 });
 
-socket.on("user-connected", async (userId) => {
-  peer = createPeer(userId);
-
-  stream.getTracks().forEach(track => peer.addTrack(track, stream));
-
-  const offer = await peer.createOffer();
-  await peer.setLocalDescription(offer);
-
-  socket.emit("offer", { offer, userId });
-});
-
-socket.on("offer", async ({ offer, userId }) => {
-  peer = createPeer(userId);
-
-  stream.getTracks().forEach(track => peer.addTrack(track, stream));
-
-  await peer.setRemoteDescription(offer);
-
-  const answer = await peer.createAnswer();
-  await peer.setLocalDescription(answer);
-
-  socket.emit("answer", { answer, userId });
-});
-
-socket.on("answer", async ({ answer }) => {
-  await peer.setRemoteDescription(answer);
-});
-
-socket.on("ice-candidate", async ({ candidate }) => {
-  if (peer) {
-    await peer.addIceCandidate(candidate);
-  }
-});
-
+// 🔥 CREAR PEER
 function createPeer(userId) {
   const peer = new RTCPeerConnection({
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+    iceServers: [
+      { urls: "stun:stun.l.google.com:19302" },
+      {
+        urls: "turn:openrelay.metered.ca:80",
+        username: "openrelayproject",
+        credential: "openrelayproject"
+      }
+    ]
   });
 
   peer.ontrack = (event) => {
@@ -151,6 +119,44 @@ function createPeer(userId) {
 
   return peer;
 }
+
+// 👇 CUANDO ALGUIEN SE CONECTA
+socket.on("user-connected", async (userId) => {
+  peer = createPeer(userId);
+
+  stream.getTracks().forEach(track => peer.addTrack(track, stream));
+
+  const offer = await peer.createOffer();
+  await peer.setLocalDescription(offer);
+
+  socket.emit("offer", { offer, userId });
+});
+
+// 👇 RECIBIR OFERTA
+socket.on("offer", async ({ offer, userId }) => {
+  peer = createPeer(userId);
+
+  stream.getTracks().forEach(track => peer.addTrack(track, stream));
+
+  await peer.setRemoteDescription(offer);
+
+  const answer = await peer.createAnswer();
+  await peer.setLocalDescription(answer);
+
+  socket.emit("answer", { answer, userId });
+});
+
+// 👇 RECIBIR RESPUESTA
+socket.on("answer", async ({ answer }) => {
+  await peer.setRemoteDescription(answer);
+});
+
+// 👇 ICE
+socket.on("ice-candidate", async ({ candidate }) => {
+  if (peer) {
+    await peer.addIceCandidate(candidate);
+  }
+});
 </script>
 
 </body>
