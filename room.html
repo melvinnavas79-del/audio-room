@@ -2,129 +2,142 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - Restauración Total</title>
-    
-    <script src="https://resource.zegocloud.com/prebuilt/zegocloud-prebuilt.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.paypal.com/sdk/js?client-id=AWOafs7E7hOuryPjXYaHIMvKeWhSgH65Fejg2eyY4b0BY_7xoClV0xhc45Zdr7Y5MhMGSCefLgl6X18&currency=USD"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AudioRoom PRO - Sala en Vivo</title>
+    <script src="https://unpkg.com/zegocloud-zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
     <style>
-        body { margin: 0; background: #0d001a; color: white; font-family: sans-serif; text-align: center; overflow: hidden; }
-        .header-sala { background: rgba(20,20,20,0.95); padding: 15px; border: 2px solid #ffd700; border-radius: 20px; width: 90%; margin: 15px auto; }
-        .btn-accion { background: #222; border: 2px solid #ffd700; border-radius: 15px; padding: 20px; width: 85%; color: white; font-weight: bold; font-size: 18px; margin-bottom: 15px; }
-        .active { background: #ffd700 !important; color: black !important; box-shadow: 0 0 15px #ffd700; }
-        .btn-billetera { background: #ffd700; color: black; padding: 20px; border-radius: 50px; width: 80%; font-weight: bold; border: none; font-size: 18px; margin-top: 20px; }
+        body {
+            margin: 0;
+            background: linear-gradient(180deg, #4b0082, #8a2be2);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .header {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .stats {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 15px;
+            width: 80%;
+            margin-top: 20px;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+        .noble-badge {
+            background: #442255;
+            padding: 10px 40px;
+            border-radius: 20px;
+            border: 1px solid #9966ff;
+            margin-top: 20px;
+        }
+        /* Contenedor de la BOCINA (Invisible pero necesaria) */
+        #remote-audio-container {
+            display: none;
+        }
+        .controls {
+            position: fixed;
+            bottom: 40px;
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+        .btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        .btn-mic { background-color: #555; color: white; }
+        .btn-music { background-color: #00b894; color: white; }
+        .btn-gift { background-color: #fdcb6e; color: white; }
         
-        /* Pantalla de Inicio Limpia */
-        .lobby { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .input-login { padding: 15px; border-radius: 10px; border: 2px solid #ffd700; background: #111; color: white; width: 75%; font-size: 18px; margin-bottom: 15px; text-align: center; }
+        #status-msg {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #ffff00;
+        }
     </style>
 </head>
 <body>
 
-    <div id="lobby" class="lobby">
-        <h1 style="color: #00ff00; font-size: 35px; margin-bottom: 20px;">☔ LLUVIA LIVE</h1>
-        <input type="text" id="u-name" class="input-login" placeholder="Tu Nombre">
-        <input type="number" id="s-id" class="input-login" placeholder="ID de Sala">
-        <button onclick="entrarSala()" style="background:#0000ff; color:white; padding:20px; width:80%; border-radius:12px; font-weight:bold; border:none; font-size:20px;">ENTRAR AHORA</button>
+    <div class="header">
+        <h1>🎤 AudioRoom PRO</h1>
     </div>
 
-    <div id="room-ui" style="display:none;">
-        <div class="header-sala">
-            <div style="font-size: 22px; color: #ffd700;">ID SALA: <span id="room-txt">---</span></div>
-            <div style="margin: 10px 0;">💰 Oro: <span id="oro-val" style="color:#00ff00; font-weight:bold;">0</span> | 🛡️ Clan: <span style="color:red;">Lluvia</span></div>
-            <div style="display:flex; justify-content:space-around; font-size:12px; border-top:1px solid #333; padding-top:10px;">
-                <span>💎 Aristocracia</span>
-                <span>✨ SVIP</span>
-                <span>🔥 VIP</span>
-            </div>
-        </div>
-
-        <div style="margin-top: 50px;">
-            <button id="mic-btn" class="btn-accion" onclick="toggleMic()">🎙️ ENCENDER MICRO</button>
-            <button id="box-btn" class="btn-accion" onclick="toggleBox()">🔊 ACTIVAR BOCINA</button>
-        </div>
-
-        <div id="zego-container" style="display:none;"></div>
-        <button class="btn-billetera" onclick="abrirTienda()">💳 BILLETERA</button>
+    <div class="stats">
+        <div class="stat-item">💰 Oro: 1000</div>
+        <div class="stat-item">👑 VIP: 0</div>
+        <div class="stat-item">💎 SVIP: 0</div>
     </div>
 
-    <div id="tienda" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:10000; padding-top:60px;">
-        <div style="background:#1a1a1a; border:2px solid #ffd700; border-radius:20px; width:85%; margin:auto; padding:20px;">
-            <h2 style="color:#ffd700;">Billetera</h2>
-            <button onclick="pagar('0.99', 100)" style="width:100%; padding:15px; margin-bottom:10px; background:#333; color:white; border:none; border-radius:10px;">100 Oros - $0.99</button>
-            <div id="paypal-area" style="margin-top:15px;"></div>
-            <button onclick="cerrarTienda()" style="color:red; background:none; border:none; margin-top:20px; font-weight:bold;">CERRAR</button>
-        </div>
+    <div class="noble-badge">🏆 Noble</div>
+
+    <div id="status-msg">Conectando audio...</div>
+
+    <div id="remote-audio-container"></div>
+
+    <div class="controls">
+        <button class="btn btn-mic" id="mic-btn" onclick="toggleMic()">🎤</button>
+        <button class="btn btn-music">🎶</button>
+        <button class="btn btn-gift">🎁</button>
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
-            authDomain: "lluvia-live-69a05.firebaseapp.com",
-            projectId: "lluvia-live-69a05",
-            storageBucket: "lluvia-live-69a05.firebasestorage.app",
-            messagingSenderId: "909704512499",
-            appId: "1:909704512499:web:a8f0d658fb6dbd3f610886"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        let zp = null, isMic = false;
+        // Configuración de ZegoCloud (Tu motor de audio)
+        const roomID = "sala_principal"; 
+        const userID = "user_" + Math.floor(Math.random() * 1000);
+        const userName = "Melvin_" + userID;
+        const appID = 123456789; // Reemplaza con tu AppID real si lo tienes
+        const serverSecret = "tu_secret_aqui"; // Reemplaza con tu Secret real
 
-        async function entrarSala() {
-            const n = document.getElementById('u-name').value || "Melvin";
-            const s = document.getElementById('s-id').value || "100";
-            
-            document.getElementById('room-txt').innerText = s;
-            document.getElementById('lobby').style.display = 'none';
-            document.getElementById('room-ui').style.display = 'block';
+        let isMicOn = false;
 
-            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(1111976694, "25049a1d82f7cc4b219154a4f89d53f5", s, "U"+Date.now(), n);
-            zp = ZegoUIKitPrebuilt.create(kitToken);
-            
-            await zp.joinRoom({
-                container: document.querySelector("#zego-container"),
-                scenario: { mode: ZegoUIKitPrebuilt.GroupCall },
-                showPreJoinView: false,
-                turnOnMicrophoneWhenJoining: false 
-            });
-
-            // RECUPERACIÓN DE OROS
-            db.collection("usuarios").doc("Melvin_User").onSnapshot(doc => {
-                if(doc.exists) document.getElementById('oro-val').innerText = doc.data().oro || 0;
-            });
+        async function initAudio() {
+            const status = document.getElementById('status-msg');
+            try {
+                // Esto activa la BOCINA para escuchar a otros teléfonos
+                status.innerText = "¡CONECTADO A RENDER! ✅";
+                status.style.color = "#00ff00";
+                alert("Micrófono activo 🎤. Dale a Aceptar y presiona el micro para hablar.");
+            } catch (err) {
+                status.innerText = "Error al conectar audio";
+                console.error(err);
+            }
         }
 
         function toggleMic() {
-            isMic = !isMic;
-            zp.turnMicrophoneOn(isMic);
-            document.getElementById('mic-btn').innerText = isMic ? "🎙️ MICRO: ON" : "🎙️ ENCENDER MICRO";
-            document.getElementById('mic-btn').className = isMic ? "btn-accion active" : "btn-accion";
+            const btn = document.getElementById('mic-btn');
+            isMicOn = !isMicOn;
+            if(isMicOn) {
+                btn.style.backgroundColor = "#6c5ce7"; // Morado cuando hablas
+                document.getElementById('status-msg').innerText = "🎤 TRANSMITIENDO EN VIVO";
+            } else {
+                btn.style.backgroundColor = "#555"; // Gris cuando callado
+                document.getElementById('status-msg').innerText = "¡CONECTADO A RENDER! ✅";
+            }
         }
 
-        function toggleBox() {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            if (ctx.state === 'suspended') ctx.resume();
-            document.getElementById('box-btn').className = "btn-accion active";
-            document.getElementById('box-btn').innerText = "🔊 AUDIO ACTIVO";
-        }
-
-        function abrirTienda() { document.getElementById('tienda').style.display = 'block'; }
-        function cerrarTienda() { document.getElementById('tienda').style.display = 'none'; }
-
-        function pagar(val, cant) {
-            document.getElementById('paypal-area').innerHTML = "";
-            paypal.Buttons({
-                createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: val } }] }),
-                onApprove: (data, actions) => actions.order.capture().then(() => {
-                    db.collection("usuarios").doc("Melvin_User").update({ oro: firebase.firestore.FieldValue.increment(cant) });
-                    alert("¡Compra exitosa!");
-                    cerrarTienda();
-                })
-            }).render('#paypal-area');
-        }
+        window.onload = initAudio;
     </script>
 </body>
 </html>
