@@ -12,50 +12,53 @@
     <style>
         body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; overflow-x: hidden; }
         
-        /* Diseño de la Sala (Arriba) */
-        .header-sala { background: rgba(0,0,0,0.5); padding: 10px; border: 2px solid #ffd700; border-radius: 15px; width: 90%; margin: 10px auto; box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+        /* Diseño de la Sala */
+        .header-sala { background: rgba(0,0,0,0.5); padding: 10px; border: 2px solid #ffd700; border-radius: 15px; width: 90%; margin: 10px auto; }
         .info-row { display: flex; justify-content: space-around; font-size: 14px; margin-top: 5px; }
-        .aristocracia-tag { color: #00ffff; font-weight: bold; text-shadow: 0 0 5px #00ffff; }
+        .aristocracia-tag { color: #00ffff; font-weight: bold; text-shadow: 0 0 5px #00ffff; display: flex; align-items: center; gap: 5px; }
         
-        /* Micrófono Central */
-        .controls { margin-top: 40px; display: flex; justify-content: center; }
-        .mic-btn { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #ffd700; background: #331a4d; cursor: pointer; font-size: 35px; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-        .mic-on { background: #ffd700; color: black; box-shadow: 0 0 25px #ffd700; transform: scale(1.1); }
+        /* Micrófono y Controles */
+        .controls { margin-top: 30px; display: flex; justify-content: center; gap: 20px; }
+        .mic-btn { width: 85px; height: 85px; border-radius: 50%; border: 3px solid #ffd700; background: #331a4d; cursor: pointer; font-size: 35px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+        .mic-on { background: #ffd700; color: black; box-shadow: 0 0 25px #ffd700; }
 
-        /* Billetera (Modal emergente) */
-        .wallet-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 0, 20, 0.98); z-index: 100; overflow-y: auto; padding-top: 30px; }
-        .wallet-card { background: #222; border: 2px solid #ffd700; border-radius: 25px; width: 85%; margin: auto; padding: 25px; box-sizing: border-box; }
+        /* Billetera */
+        .wallet-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26, 0, 51, 0.98); z-index: 100; overflow-y: auto; padding-top: 20px; }
+        .wallet-card { background: #222; border: 2px solid #ffd700; border-radius: 20px; width: 90%; margin: auto; padding: 25px; box-sizing: border-box; }
         .pack-btn { background: #333; border: 1px solid #ffd700; border-radius: 12px; padding: 18px; margin-bottom: 12px; cursor: pointer; display: flex; justify-content: space-between; width: 100%; color: white; font-size: 16px; }
         
-        /* Botón Billetera (Abajo) */
-        .btn-abrir-billetera { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 18px 40px; border-radius: 35px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 0 20px #ffd700; font-size: 16px; z-index: 50; }
+        /* Botón Billetera Amarillo */
+        .btn-abrir-billetera { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 15px 40px; border-radius: 30px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 0 20px #ffd700; font-size: 16px; }
     </style>
 </head>
 <body>
 
     <div class="header-sala">
-        <div style="font-size: 20px; font-weight: bold; color: #ffd700;">👤 <span id="user-count">100</span></div>
+        <div style="font-size: 20px; font-weight: bold; color: #ffd700; margin-bottom: 5px;">👤 <span id="user-count">100</span></div>
         <div class="info-row">
             <span>💰 Oro: <span id="oro-txt" style="color:#ffd700; font-weight: bold;">...</span></span>
             <span>🛡️ Clan: <span style="color:#ff4444; font-weight: bold;">Lluvia</span></span>
         </div>
-        <div class="info-row" style="margin-top: 10px;">
-            <span class="aristocracia-tag">💎 Aristocracia: Speed</span>
-            <span style="color: #00ff00;">📍 Sala: 100</span>
+        <div class="info-row" style="margin-top: 12px;">
+            <span class="aristocracia-tag">💎 Aristocracia: <span style="color: #00ffff;">Speed</span></span>
+            <span style="color: #00ff00; font-weight: bold;">📍 Sala: 100</span>
         </div>
     </div>
 
     <div class="controls">
         <div id="btn-mic" class="mic-btn" onclick="toggleMic()">🎙️</div>
     </div>
-    <p id="status-audio" style="margin-top: 15px; color: #aaa; font-style: italic;">Audio conectado</p>
 
-    <button class="btn-abrir-billetera" onclick="abrirBilletera()">💳 IR A BILLETERA</button>
+    <div style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <span style="font-size: 24px;">🔊</span> 
+        <p id="status-audio" style="color: #aaa; margin: 0; font-size: 16px;">Audio conectado</p>
+    </div>
+
+    <button class="btn-abrir-billetera" onclick="abrirBilletera()">💳 Billetera</button>
 
     <div id="modal-billetera" class="wallet-container">
         <div class="wallet-card">
-            <h2 style="color: #ffd700; margin-bottom: 20px;">Recargar Oro</h2>
-            
+            <h2 style="color: #ffd700;">Recargar Oro</h2>
             <button class="pack-btn" onclick="prepararPago('0.99', 100)">
                 <span>🪙 100 Oros</span> <b style="color:#00ff00;">$0.99</b>
             </button>
@@ -68,12 +71,11 @@
             
             <div id="paypal-button-container" style="margin-top: 25px; min-height: 150px;"></div>
             
-            <button onclick="cerrarBilletera()" style="margin-top: 20px; background: none; border: 1px solid #ff4444; color: #ff4444; padding: 12px; border-radius: 10px; width: 100%;">Cancelar / Cerrar</button>
+            <button onclick="cerrarBilletera()" style="margin-top: 25px; background: none; border: 1px solid #ff4444; color: #ff4444; padding: 12px; border-radius: 10px; width: 100%;">Cerrar</button>
         </div>
     </div>
 
     <script>
-        // CONFIGURACIÓN FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
             authDomain: "lluvia-live-69a05.firebaseapp.com",
@@ -84,16 +86,12 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        let userId = "Melvin_User"; // Tu ID de usuario
+        let userId = "Melvin_User";
 
-        // LEER ORO EN TIEMPO REAL
         db.collection("usuarios").doc(userId).onSnapshot(doc => {
-            if(doc.exists) {
-                document.getElementById('oro-txt').innerText = doc.data().oro || 0;
-            }
+            if(doc.exists) document.getElementById('oro-txt').innerText = doc.data().oro || 0;
         });
 
-        // FUNCIONES DEL MICRÓFONO
         let micOn = false;
         function toggleMic() {
             micOn = !micOn;
@@ -101,7 +99,7 @@
             const status = document.getElementById('status-audio');
             if(micOn) {
                 btn.classList.add('mic-on');
-                status.innerText = "Transmitiendo en vivo...";
+                status.innerText = "Transmitiendo...";
                 status.style.color = "#ffd700";
             } else {
                 btn.classList.remove('mic-on');
@@ -110,38 +108,28 @@
             }
         }
 
-        // FUNCIONES DE LA BILLETERA
         function abrirBilletera() { document.getElementById('modal-billetera').style.display = 'block'; }
         function cerrarBilletera() { 
             document.getElementById('modal-billetera').style.display = 'none'; 
-            document.getElementById('paypal-button-container').innerHTML = ""; // Limpiar botón al cerrar
+            document.getElementById('paypal-button-container').innerHTML = "";
         }
 
-        // CARGAR BOTÓN DE PAYPAL REAL
         function prepararPago(monto, cantidad) {
-            document.getElementById('paypal-button-container').innerHTML = "<p style='color: #ffd700;'>Cargando PayPal...</p>";
-            
+            document.getElementById('paypal-button-container').innerHTML = "<p style='color:#ffd700;'>Cargando PayPal...</p>";
             paypal.Buttons({
                 createOrder: (data, actions) => {
                     return actions.order.create({
-                        purchase_units: [{ 
-                            description: "Compra de " + cantidad + " Oros - Lluvia Live",
-                            amount: { value: monto } 
-                        }]
+                        purchase_units: [{ description: "Oros Lluvia Live", amount: { value: monto } }]
                     });
                 },
                 onApprove: (data, actions) => {
                     return actions.order.capture().then(details => {
-                        // SUMAR ORO EN FIREBASE AL TERMINAR EL PAGO
                         db.collection("usuarios").doc(userId).update({
                             oro: firebase.firestore.FieldValue.increment(cantidad)
                         });
-                        alert("¡Gracias Melvin! Se han añadido " + cantidad + " oros a tu cuenta.");
+                        alert("¡Éxito! Recargaste " + cantidad + " oros.");
                         cerrarBilletera();
                     });
-                },
-                onError: (err) => {
-                    alert("Error en la conexión. Asegúrate de tener saldo o que la tarjeta sea válida.");
                 }
             }).render('#paypal-button-container');
         }
