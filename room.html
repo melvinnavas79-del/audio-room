@@ -3,47 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - Audio Real Fix</title>
+    <title>Lluvia Live - Recuperado</title>
     
     <script src="https://resource.zegocloud.com/prebuilt/zegocloud-prebuilt.js"></script>
-    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.paypal.com/sdk/js?client-id=AWOafs7E7hOuryPjXYaHIMvKeWhSgH65Fejg2eyY4b0BY_7xoClV0xhc45Zdr7Y5MhMGSCefLgl6X18&currency=USD"></script>
 
     <style>
         body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
+        
+        /* Encabezado con Rangos */
         .header-sala { background: rgba(0,0,0,0.9); padding: 15px; border: 2px solid #ffd700; border-radius: 20px; width: 92%; margin: 15px auto; }
         .rango-row { display: flex; justify-content: space-around; border-top: 1px solid #444; padding-top: 10px; margin-top: 10px; font-size: 13px; }
         
-        /* Botones de Audio Estilo Melvin */
-        .btn-audio { background: #222; border: 2px solid #ffd700; border-radius: 15px; padding: 20px; width: 85%; color: white; font-weight: bold; font-size: 18px; margin-bottom: 15px; box-shadow: 0 0 10px rgba(255,215,0,0.2); }
-        .btn-audio.active { background: #ffd700; color: black; box-shadow: 0 0 20px #ffd700; }
+        /* Botón de Activación (Paso obligado para iPhone) */
+        .btn-activar { background: #ffd700; color: black; padding: 25px; border-radius: 20px; width: 85%; font-weight: bold; font-size: 20px; border: none; margin-top: 40px; box-shadow: 0 0 30px #ffd700; }
+        
+        /* Tus botones de control */
+        .btn-control { background: #222; border: 2px solid #ffd700; border-radius: 15px; padding: 20px; width: 85%; color: white; font-weight: bold; margin-bottom: 15px; display: none; }
+        .btn-control.on { background: #ffd700; color: black; box-shadow: 0 0 15px #ffd700; }
 
-        .btn-wallet { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 18px 50px; border-radius: 40px; font-weight: bold; border: none; font-size: 18px; box-shadow: 0 0 20px #ffd700; }
+        .btn-wallet { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 18px 50px; border-radius: 40px; font-weight: bold; border: none; font-size: 18px; }
         
         .pantalla-inicio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a0033; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .input-sala { padding: 15px; border-radius: 12px; border: 2px solid #ffd700; background: #222; color: white; width: 80%; font-size: 18px; margin-bottom: 15px; text-align: center; }
-        
-        /* Contenedor invisible para que Zego trabaje por detrás */
-        #zego-hidden { display: none; }
+        #zego-hidden { width: 1px; height: 1px; opacity: 0; }
     </style>
 </head>
 <body>
 
     <div id="lobby" class="pantalla-inicio">
         <h1 style="color: #ffd700;">LLUVIA LIVE</h1>
-        <input type="number" id="input-sala-id" class="input-sala" placeholder="ID de Sala (Ej: 2205)">
-        <button onclick="conectarTodo()" style="background:#ffd700; color:black; padding:18px; width:85%; border-radius:12px; font-weight:bold; border:none; font-size:18px;">ENTRAR A LA SALA</button>
+        <input type="number" id="room-input" class="input-sala" placeholder="ID de Sala">
+        <button onclick="entrarApp()" style="background:#ffd700; color:black; padding:18px; width:85%; border-radius:12px; font-weight:bold; border:none;">ENTRAR</button>
     </div>
 
     <div id="app" style="display:none;">
         <div class="header-sala">
-            <div style="font-size: 22px; color: #ffd700; margin-bottom: 10px;">ID SALA: <span id="id-final">---</span></div>
-            <div style="display: flex; justify-content: space-around; margin-bottom: 10px;">
-                <span>💰 Oro: <span id="oro-txt" style="color:#ffd700;">0</span></span>
-                <span>🛡️ Clan: <span style="color:#ff4444;">Lluvia</span></span>
-            </div>
+            <div style="font-size: 22px; color: #ffd700;">SALA: <span id="id-txt">---</span></div>
+            <div style="margin-top:10px;">💰 Oro: <span id="oro-txt">0</span> | 🛡️ Clan: <span style="color:#ff4444;">Lluvia</span></div>
             <div class="rango-row">
                 <span style="color:#ffd700;">💎 Aristocracia</span>
                 <span style="color:#ff00ff;">✨ SVIP</span>
@@ -51,28 +50,28 @@
             </div>
         </div>
 
-        <div style="margin-top: 30px;">
-            <img src="https://cdn-icons-png.flaticon.com/512/708/708892.png" width="80" style="margin-bottom: 20px; filter: invert(1);">
-            <button id="btn-bocina" class="btn-audio" onclick="toggleBocina()">🔊 BOCINA: OFF</button>
-            <button id="btn-micro" class="btn-audio" onclick="toggleMicro()">🎙️ MICRO: OFF</button>
+        <button id="btn-conectar" class="btn-activar" onclick="conectarAudio()">🎙️ TOCAR PARA HABLAR</button>
+
+        <div id="panel-controles" style="margin-top: 30px;">
+            <button id="btn-m" class="btn-control" onclick="toggleMicro()">🎙️ MICRO: OFF</button>
+            <button id="btn-b" class="btn-control" onclick="toggleBocina()">🔊 BOCINA: OFF</button>
         </div>
 
         <div id="zego-hidden"></div>
-
-        <button class="btn-wallet" onclick="document.getElementById('modal-tienda').style.display='block'">💳 BILLETERA</button>
+        <button class="btn-wallet" onclick="document.getElementById('tienda').style.display='block'">💳 BILLETERA</button>
     </div>
 
-    <div id="modal-tienda" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:5000; padding-top:40px;">
+    <div id="tienda" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:5000; padding-top:40px;">
         <div style="background:#222; border:2px solid #ffd700; border-radius:20px; width:85%; margin:auto; padding:20px;">
-            <h3 style="color:#ffd700;">Comprar Oros</h3>
-            <button onclick="pagar('0.99', 100)" style="width:100%; padding:15px; margin-bottom:10px; background:#333; color:white; border:1px solid #ffd700; border-radius:10px;">100 Oros - $0.99</button>
-            <button onclick="pagar('49.99', 6000)" style="width:100%; padding:15px; margin-bottom:10px; background:#333; color:white; border:1px solid #ffd700; border-radius:10px;">6000 Oros - $49.99</button>
+            <h3 style="color:#ffd700;">Tienda de Oros</h3>
+            <button onclick="pago('0.99', 100)" style="width:100%; padding:15px; margin-bottom:10px; background:#444; color:white; border:none; border-radius:10px;">100 Oros - $0.99</button>
             <div id="paypal-area"></div>
-            <button onclick="document.getElementById('modal-tienda').style.display='none'" style="color:red; background:none; border:none; margin-top:15px;">CERRAR</button>
+            <button onclick="document.getElementById('tienda').style.display='none'" style="color:red; background:none; border:none; margin-top:10px;">CERRAR</button>
         </div>
     </div>
 
     <script>
+        // Configuración Firebase (Melvin, asegúrate que tus IDs sean estos)
         const firebaseConfig = {
             apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
             authDomain: "lluvia-live-69a05.firebaseapp.com",
@@ -84,60 +83,61 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         let zp = null;
-        let microOn = false;
-        let bocinaOn = false;
+        let microActivo = false;
+        let bocinaActiva = false;
 
-        async function conectarTodo() {
-            const salaID = document.getElementById('input-sala-id').value || "100";
-            document.getElementById('id-final').innerText = salaID;
+        function entrarApp() {
+            const salaID = document.getElementById('room-input').value || "100";
+            document.getElementById('id-txt').innerText = salaID;
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('app').style.display = 'block';
-
-            // Configurar Zego por detrás
-            const appID = 1111976694; 
-            const serverSecret = "25049a1d82f7cc4b219154a4f89d53f5";
-            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, salaID, "user_" + Math.floor(Math.random()*100), "Melvin");
             
-            zp = ZegoUIKitPrebuilt.create(kitToken);
-            zp.joinRoom({
-                container: document.querySelector("#zego-hidden"),
-                scenario: { mode: ZegoUIKitPrebuilt.GroupCall },
-                showPreJoinView: false,
-                turnOnMicrophoneWhenJoining: false,
-                turnOnCameraWhenJoining: false,
-                showMyCameraToggleButton: false,
-                showAudioVideoSettingsButton: false,
-                showLayoutButton: false
-            });
-
             db.collection("usuarios").doc("Melvin_User").onSnapshot(doc => {
                 document.getElementById('oro-txt').innerText = doc.exists ? (doc.data().oro || 0) : 0;
             });
         }
 
+        async function conectarAudio() {
+            const salaID = document.getElementById('id-txt').innerText;
+            const appID = 1111976694; 
+            const serverSecret = "25049a1d82f7cc4b219154a4f89d53f5";
+            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, salaID, "User_" + Date.now(), "Melvin");
+            
+            zp = ZegoUIKitPrebuilt.create(kitToken);
+            await zp.joinRoom({
+                container: document.querySelector("#zego-hidden"),
+                scenario: { mode: ZegoUIKitPrebuilt.GroupCall },
+                showPreJoinView: false,
+                turnOnMicrophoneWhenJoining: true, // Esto pide el permiso al iPhone
+            });
+
+            document.getElementById('btn-conectar').style.display = 'none';
+            document.getElementById('btn-m').style.display = 'block';
+            document.getElementById('btn-b').style.display = 'block';
+        }
+
         function toggleMicro() {
-            microOn = !microOn;
-            zp.turnMicrophoneOn(microOn);
-            const btn = document.getElementById('btn-micro');
-            btn.innerText = microOn ? "🎙️ MICRO: ON" : "🎙️ MICRO: OFF";
-            btn.className = microOn ? "btn-audio active" : "btn-audio";
+            microActivo = !microActivo;
+            zp.turnMicrophoneOn(microActivo);
+            const b = document.getElementById('btn-m');
+            b.innerText = microActivo ? "🎙️ MICRO: ON" : "🎙️ MICRO: OFF";
+            b.className = microActivo ? "btn-control on" : "btn-control";
         }
 
         function toggleBocina() {
-            bocinaOn = !bocinaOn;
-            // En web, activar la bocina es básicamente darle permiso al navegador para reproducir audio
-            const btn = document.getElementById('btn-bocina');
-            btn.innerText = bocinaOn ? "🔊 BOCINA: ON" : "🔊 BOCINA: OFF";
-            btn.className = bocinaOn ? "btn-audio active" : "btn-audio";
+            bocinaActiva = !bocinaActiva;
+            const b = document.getElementById('btn-b');
+            b.innerText = bocinaActiva ? "🔊 BOCINA: ON" : "🔊 BOCINA: OFF";
+            b.className = bocinaActiva ? "btn-control on" : "btn-control";
         }
 
-        function pagar(val, cant) {
+        function pago(val, cant) {
             document.getElementById('paypal-area').innerHTML = "";
             paypal.Buttons({
                 createOrder: (d, a) => a.order.create({ purchase_units: [{ amount: { value: val } }] }),
                 onApprove: (d, a) => a.order.capture().then(() => {
                     db.collection("usuarios").doc("Melvin_User").update({ oro: firebase.firestore.FieldValue.increment(cant) });
-                    alert("¡Oros cargados!");
+                    alert("¡Oros Recargados!");
                 })
             }).render('#paypal-area');
         }
