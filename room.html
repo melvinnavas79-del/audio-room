@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - Fix Total</title>
+    <title>Lluvia Live - Final Fix</title>
     
     <script src="https://resource.zegocloud.com/prebuilt/zegocloud-prebuilt.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -14,57 +14,51 @@
         body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
         .header-sala { background: rgba(0,0,0,0.9); padding: 15px; border: 2px solid #ffd700; border-radius: 20px; width: 92%; margin: 15px auto; }
         
-        /* Botones Melvin */
         .btn-melvin { background: #222; border: 2px solid #ffd700; border-radius: 15px; padding: 20px; width: 85%; color: white; font-weight: bold; font-size: 18px; margin-bottom: 15px; }
         .active { background: #ffd700 !important; color: black !important; box-shadow: 0 0 20px #ffd700; }
 
-        /* Rangos */
-        .rango-row { display: flex; justify-content: space-around; border-top: 1px solid #444; padding-top: 10px; margin-top: 10px; font-size: 12px; }
-        .aristocracia { color: #ffd700; font-weight: bold; }
-        .svip { color: #ff00ff; font-weight: bold; }
-        .vip { color: #00ffff; font-weight: bold; }
-
-        .btn-wallet { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 15px 45px; border-radius: 40px; font-weight: bold; border: none; font-size: 18px; }
+        .btn-wallet { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 18px 50px; border-radius: 40px; font-weight: bold; border: none; font-size: 18px; }
         
-        .lobby { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a0033; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .input-sala { padding: 15px; border-radius: 12px; border: 2px solid #ffd700; background: #222; color: white; width: 75%; text-align: center; font-size: 18px; margin-bottom: 20px; }
+        /* Pantalla de inicio única */
+        .lobby { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .input-sala { padding: 15px; border-radius: 12px; border: 2px solid #ffd700; background: #222; color: white; width: 80%; font-size: 18px; margin-bottom: 20px; text-align: center; }
     </style>
 </head>
 <body>
 
     <div id="lobby" class="lobby">
-        <h1 style="color: #ffd700;">LLUVIA LIVE</h1>
-        <input type="number" id="sala-id" class="input-sala" placeholder="ID de Sala">
-        <button onclick="iniciarApp()" style="background:#ffd700; color:black; padding:18px; width:80%; border-radius:12px; font-weight:bold; border:none;">ENTRAR AHORA</button>
+        <h1 style="color: #00ff00; font-size: 40px;">☔ Lluvia Live</h1>
+        <input type="text" id="user-name" class="input-sala" placeholder="Tu Nombre (Ej: Josue)">
+        <input type="number" id="sala-id" class="input-sala" placeholder="ID de Sala (Ej: 100)">
+        <button onclick="entrarDirecto()" style="background:#0000ff; color:white; padding:20px; width:85%; border-radius:12px; font-weight:bold; border:none; font-size:18px;">ENTRAR AHORA</button>
     </div>
 
     <div id="app" style="display:none;">
         <div class="header-sala">
-            <div style="font-size: 22px; color: #ffd700;">SALA: <span id="id-txt">---</span></div>
-            <div style="margin: 10px 0;">💰 Oro: <span id="oro-txt">0</span> | 🛡️ Lluvia</div>
-            <div class="rango-row">
-                <span class="aristocracia">💎 Aristocracia</span>
-                <span class="svip">✨ SVIP</span>
-                <span class="vip">🔥 VIP</span>
+            <div style="font-size: 22px; color: #ffd700;">ID SALA: <span id="id-txt">---</span></div>
+            <div style="margin: 10px 0;">💰 Oro: <span id="oro-txt">0</span> | 🛡️ Clan: <span style="color:#ff4444;">Lluvia</span></div>
+            <div style="display:flex; justify-content:space-around; font-size:12px; border-top:1px solid #333; padding-top:10px;">
+                <span style="color:#ffd700;">💎 Aristocracia</span>
+                <span style="color:#ff00ff;">✨ SVIP</span>
+                <span style="color:#00ffff;">🔥 VIP</span>
             </div>
         </div>
 
-        <div style="margin-top: 40px;">
-            <button id="btn-bocina" class="btn-melvin" onclick="activarBocina()">🔊 ACTIVAR BOCINA</button>
-            <button id="btn-micro" class="btn-melvin" onclick="activarMicro()">🎙️ ENCENDER MICRO</button>
+        <div style="margin-top: 50px;">
+            <button id="btn-bocina" class="btn-melvin" onclick="toggleBocina()">🔊 ACTIVAR BOCINA</button>
+            <button id="btn-micro" class="btn-melvin" onclick="toggleMicro()">🎙️ ENCENDER MICRO</button>
         </div>
 
         <div id="zego-hidden" style="display:none;"></div>
         <button class="btn-wallet" onclick="abrirTienda()">💳 BILLETERA</button>
     </div>
 
-    <div id="tienda" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:5000; padding-top:40px;">
+    <div id="tienda" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:5000; padding-top:50px;">
         <div style="background:#222; border:2px solid #ffd700; border-radius:20px; width:85%; margin:auto; padding:20px;">
-            <h3 style="color:#ffd700;">Recarga Oros</h3>
-            <button onclick="compra('0.99', 100)" style="width:100%; padding:15px; margin-bottom:10px; background:#444; color:white; border:none; border-radius:10px;">🪙 100 Oros - $0.99</button>
-            <button onclick="compra('9.99', 1100)" style="width:100%; padding:15px; margin-bottom:10px; background:#444; color:white; border:none; border-radius:10px;">🪙 1100 Oros - $9.99</button>
-            <div id="paypal-area" style="margin-top:15px;"></div>
-            <button onclick="cerrarTienda()" style="color:red; background:none; border:none; margin-top:15px;">CERRAR</button>
+            <h3 style="color:#ffd700;">Comprar Oros</h3>
+            <button onclick="comprar('0.99', 100)" style="width:100%; padding:15px; margin-bottom:10px; background:#444; color:white; border:none; border-radius:10px;">100 Oros - $0.99</button>
+            <div id="paypal-button-container"></div>
+            <button onclick="cerrarTienda()" style="color:red; background:none; border:none; margin-top:20px;">CERRAR</button>
         </div>
     </div>
 
@@ -79,15 +73,18 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        let zp = null, mic = false, box = false;
+        let zp = null, micOn = false, boxOn = false;
 
-        async function iniciarApp() {
-            const id = document.getElementById('sala-id').value || "100";
-            document.getElementById('id-txt').innerText = id;
+        async function entrarDirecto() {
+            const nombre = document.getElementById('user-name').value || "Usuario";
+            const sala = document.getElementById('sala-id').value || "100";
+            
+            document.getElementById('id-txt').innerText = sala;
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('app').style.display = 'block';
 
-            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(1111976694, "25049a1d82f7cc4b219154a4f89d53f5", id, "U"+Date.now(), "Melvin");
+            // Iniciar Zego de una vez
+            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(1111976694, "25049a1d82f7cc4b219154a4f89d53f5", sala, "U"+Date.now(), nombre);
             zp = ZegoUIKitPrebuilt.create(kitToken);
             
             await zp.joinRoom({
@@ -102,36 +99,35 @@
             });
         }
 
-        function activarBocina() {
-            box = !box;
-            const b = document.getElementById('btn-bocina');
-            b.innerText = box ? "🔊 BOCINA: ON" : "🔊 ACTIVAR BOCINA";
-            b.className = box ? "btn-melvin active" : "btn-melvin";
-            // Forzar desbloqueo de audio en iOS
-            new (window.AudioContext || window.webkitAudioContext)().resume();
+        function toggleBocina() {
+            boxOn = !boxOn;
+            document.getElementById('btn-bocina').className = boxOn ? "btn-melvin active" : "btn-melvin";
+            document.getElementById('btn-bocina').innerText = boxOn ? "🔊 BOCINA: ON" : "🔊 ACTIVAR BOCINA";
+            // Desbloquea el audio en iPhone
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        function activarMicro() {
-            mic = !mic;
-            zp.turnMicrophoneOn(mic);
-            const b = document.getElementById('btn-micro');
-            b.innerText = mic ? "🎙️ MICRO: ON" : "🎙️ ENCENDER MICRO";
-            b.className = mic ? "btn-melvin active" : "btn-melvin";
+        function toggleMicro() {
+            micOn = !micOn;
+            zp.turnMicrophoneOn(micOn);
+            document.getElementById('btn-micro').className = micOn ? "btn-melvin active" : "btn-melvin";
+            document.getElementById('btn-micro').innerText = micOn ? "🎙️ MICRO: ON" : "🎙️ ENCENDER MICRO";
         }
 
         function abrirTienda() { document.getElementById('tienda').style.display = 'block'; }
-        function cerrarTienda() { document.getElementById('tienda').style.display = 'none'; document.getElementById('paypal-area').innerHTML = ""; }
+        function cerrarTienda() { document.getElementById('tienda').style.display = 'none'; }
 
-        function compra(monto, cant) {
-            document.getElementById('paypal-area').innerHTML = "";
+        function comprar(monto, cantidad) {
+            document.getElementById('paypal-button-container').innerHTML = "";
             paypal.Buttons({
                 createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: monto } }] }),
                 onApprove: (data, actions) => actions.order.capture().then(() => {
-                    db.collection("usuarios").doc("Melvin_User").update({ oro: firebase.firestore.FieldValue.increment(cant) });
-                    alert("¡Oros cargados!");
+                    db.collection("usuarios").doc("Melvin_User").update({ oro: firebase.firestore.FieldValue.increment(cantidad) });
+                    alert("¡Compra exitosa!");
                     cerrarTienda();
                 })
-            }).render('#paypal-area');
+            }).render('#paypal-button-container');
         }
     </script>
 </body>
