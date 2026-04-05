@@ -3,130 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudioRoom PRO - Clan & Aristocracia</title>
+    <title>Lluvia Live - PRO</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { 
-            margin: 0; background: linear-gradient(180deg, #1a0033, #3d0066); 
-            color: white; font-family: 'Segoe UI', sans-serif; text-align: center; height: 100vh;
-        }
-        /* Panel Superior de Lujo */
-        .header-panel {
-            background: rgba(0,0,0,0.7); width: 92%; margin: 15px auto;
-            padding: 15px; border-radius: 20px; border: 1.5px solid #ffd700;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-        }
-        .stats-row { display: flex; justify-content: space-around; font-size: 0.85rem; margin-bottom: 10px; }
-        
-        /* Etiquetas Especiales */
-        .clan-tag { color: #00ffcc; font-weight: bold; text-shadow: 0 0 5px #00ffcc; }
-        .aristocracia-banner {
-            background: linear-gradient(90deg, #ffd700, #ff8c00);
-            color: black; font-weight: bold; padding: 6px 25px;
-            border-radius: 20px; display: inline-block; margin: 5px 0;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        /* Sala y Estado */
+        body { margin: 0; background: linear-gradient(180deg, #1a0033, #3d0066); color: white; font-family: sans-serif; text-align: center; height: 100vh; }
+        .header-panel { background: rgba(0,0,0,0.7); width: 90%; margin: 15px auto; padding: 15px; border-radius: 20px; border: 1.5px solid #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.3); }
+        .stats { display: flex; justify-content: space-around; font-size: 0.9rem; margin-bottom: 10px; }
+        .aristocracia { background: linear-gradient(90deg, #ffd700, #ff8c00); color: black; font-weight: bold; padding: 8px 25px; border-radius: 20px; display: inline-block; }
         .room-info { color: #ffd700; margin: 15px 0; font-weight: bold; }
-        .btn-pink { background: #ff0066; color: white; padding: 10px 20px; border: none; border-radius: 10px; font-weight: bold; margin: 10px; }
-
-        /* Controles de Audio Circular */
-        .controls-main { display: flex; justify-content: center; gap: 35px; margin-top: 30px; }
-        .circle-btn {
-            width: 70px; height: 70px; border-radius: 50%; border: none;
-            font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.6); transition: 0.3s;
-        }
+        .btn-pink { background: #ff0066; color: white; padding: 10px 20px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .controls { display: flex; justify-content: center; gap: 35px; margin-top: 30px; }
+        .circle-btn { width: 75px; height: 75px; border-radius: 50%; border: none; font-size: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.6); }
         .btn-on { background: #00ff00; color: black; border: 3px solid white; }
-        .btn-off { background: #ff3333; color: white; border: 3px solid #444; }
-
-        /* Botones VIP y Regalo */
-        .bottom-actions { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-around; }
-        .action-icon { width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
+        .btn-off { background: #ff3333; color: white; }
+        .footer { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-around; }
+        .gift-btn { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(45deg, #ff0066, #ffcc00); border: none; font-size: 25px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="header-panel">
-        <div class="stats-row">
-            <span>💰 Oro: 1000</span>
-            <span class="clan-tag">🛡️ Clan: Melvin PRO</span>
-            <span>💎 SVIP: 0</span>
+        <div class="stats">
+            <span>💰 Oro: <b id="user-oro">...</b></span>
+            <span style="color: #00ffcc;">🛡️ Clan: Lluvia</span>
         </div>
-        <div class="aristocracia-banner">🏆 Noble (Aristocracia)</div>
+        <div class="aristocracia">🏆 Noble (Aristocracia)</div>
     </div>
 
-    <div class="room-info" id="room-display">📍 Sala ID: Cargando...</div>
-    <button class="btn-pink" onclick="activarAudio()">🔊 ACTIVAR SONIDO</button>
+    <div class="room-info" id="room-display">📍 Conectando...</div>
+    <button class="btn-pink" onclick="unmuteAudio()">🔊 1. CLIC PARA ESCUCHAR</button>
 
-    <div class="controls-main">
-        <div>
-            <button id="mic-btn" class="circle-btn btn-off" onclick="toggleMic()">🎙️</button>
-            <p style="font-size: 0.8rem; margin-top: 5px;">Micro</p>
-        </div>
-        <div>
-            <button id="spk-btn" class="circle-btn btn-on" onclick="toggleSpeaker()">🔊</button>
-            <p style="font-size: 0.8rem; margin-top: 5px;">Bocina</p>
-        </div>
+    <div class="controls">
+        <div><button id="mic-btn" class="circle-btn btn-off" onclick="toggleMic()">🎙️</button><p>Micro</p></div>
+        <div><button id="spk-btn" class="circle-btn btn-on" onclick="toggleSpeaker()">🔊</button><p>Bocina</p></div>
     </div>
 
-    <h3 id="status-text" style="color: #00ffcc; margin-top: 20px; font-size: 1rem;">MUDO</h3>
-
-    <div class="bottom-actions">
-        <div class="action-icon" style="background: #00d2ff;">VIP</div>
-        <div class="action-icon" style="background: linear-gradient(45deg, #ff0066, #ffcc00);">🎁</div>
-        <div class="action-icon" style="background: #8a2be2;">SVIP</div>
+    <div class="footer">
+        <button class="gift-btn" onclick="enviarRegalo()">🎁</button>
     </div>
 
     <audio id="remote-audio" autoplay playsinline></audio>
 
     <script>
-        const roomID = prompt("Ingresa el ID de la sala:") || "100";
-        document.getElementById('room-display').innerText = "📍 Sala ID: " + roomID;
+        // --- CONFIGURACIÓN DE FIREBASE (Tus llaves reales) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
+            authDomain: "lluvia-live-69a05.firebaseapp.com",
+            projectId: "lluvia-live-69a05",
+            storageBucket: "lluvia-live-69a05.firebasestorage.app",
+            messagingSenderId: "909704512499",
+            appId: "1:909704512499:web:a8f0d658fb6dbd3f610886"
+        };
 
-        const peer = new Peer('melvin-lux-' + roomID + (Math.random() > 0.5 ? 'A' : 'B'));
-        let myStream;
-        let micOn = false;
-        let spkOn = true;
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const userId = "melvin_user_1"; // Aquí luego pondremos login real
 
-        function activarAudio() {
-            document.getElementById('remote-audio').play();
-            alert("¡Audio activado!");
+        // Leer Oro de Firebase en tiempo real
+        db.collection("usuarios").doc(userId).onSnapshot((doc) => {
+            if (doc.exists) {
+                document.getElementById('user-oro').innerText = doc.data().oro;
+            } else {
+                db.collection("usuarios").doc(userId).set({ oro: 1000, rango: "Noble" });
+            }
+        });
+
+        // Función para enviar regalo y restar Oro de verdad
+        function enviarRegalo() {
+            const ref = db.collection("usuarios").doc(userId);
+            ref.update({ oro: firebase.firestore.FieldValue.increment(-10) });
+            alert("¡Regalo enviado! -10 de Oro");
         }
 
+        // --- LÓGICA DE AUDIO (PEERJS) ---
+        const roomID = prompt("ID de Sala:") || "100";
+        document.getElementById('room-display').innerText = "📍 Sala: " + roomID;
+        const peer = new Peer('lluvia-' + roomID + (Math.random() > 0.5 ? 'A' : 'B'));
+        let myStream, mic = false, spk = true;
+
+        function unmuteAudio() { document.getElementById('remote-audio').play(); }
+
         async function toggleMic() {
-            const btn = document.getElementById('mic-btn');
             if (!myStream) {
-                try {
-                    myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    iniciarPeer();
-                } catch (e) { alert("Permite el micro"); return; }
+                myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                peer.on('call', c => { c.answer(myStream); c.on('stream', s => document.getElementById('remote-audio').srcObject = s); });
+                const call = peer.call('lluvia-' + roomID + (peer.id.endsWith('A') ? 'B' : 'A'), myStream);
+                if(call) call.on('stream', s => document.getElementById('remote-audio').srcObject = s);
             }
-            micOn = !micOn;
-            myStream.getAudioTracks()[0].enabled = micOn;
-            btn.className = micOn ? "circle-btn btn-on" : "circle-btn btn-off";
-            btn.innerText = micOn ? "🎙️" : "🔇";
-            document.getElementById('status-text').innerText = micOn ? "¡ESTÁS EN VIVO!" : "MUDO";
+            mic = !mic;
+            myStream.getAudioTracks()[0].enabled = mic;
+            document.getElementById('mic-btn').className = mic ? "circle-btn btn-on" : "circle-btn btn-off";
         }
 
         function toggleSpeaker() {
-            const btn = document.getElementById('spk-btn');
-            const audio = document.getElementById('remote-audio');
-            spkOn = !spkOn;
-            audio.muted = !spkOn;
-            btn.className = spkOn ? "circle-btn btn-on" : "circle-btn btn-off";
-            btn.innerText = spkOn ? "🔊" : "🔈";
-        }
-
-        function iniciarPeer() {
-            peer.on('call', call => {
-                call.answer(myStream);
-                call.on('stream', rem => { document.getElementById('remote-audio').srcObject = rem; });
-            });
-            const target = peer.id.endsWith('A') ? 'B' : 'A';
-            const call = peer.call('melvin-lux-' + roomID + target, myStream);
-            if(call) { call.on('stream', rem => { document.getElementById('remote-audio').srcObject = rem; }); }
+            spk = !spk;
+            document.getElementById('remote-audio').muted = !spk;
+            document.getElementById('spk-btn').className = spk ? "circle-btn btn-on" : "circle-btn btn-off";
         }
     </script>
 </body>
