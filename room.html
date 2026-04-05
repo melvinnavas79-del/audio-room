@@ -3,61 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live - Pago Real</title>
+    <title>Lluvia Live - Billetera Real</title>
+    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="https://www.paypal.com/sdk/js?client-id=AfHuBVaA8_T6bxvMRwYfG&currency=USD"></script>
+    
+    <script src="https://www.paypal.com/sdk/js?client-id=AfHuBVaA8_T6bxvMRwYfG&currency=USD&intent=capture"></script>
 
     <style>
-        body { margin: 0; background: linear-gradient(180deg, #1a0033, #3d0066); color: white; font-family: sans-serif; text-align: center; height: 100vh; overflow: hidden; }
-        .header-panel { background: rgba(0,0,0,0.8); width: 92%; margin: 10px auto; padding: 15px; border-radius: 25px; border: 2px solid #ffd700; }
+        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
+        .header-panel { background: rgba(0,0,0,0.8); width: 92%; margin: 10px auto; padding: 15px; border-radius: 20px; border: 2px solid #ffd700; }
         .user-name { color: #ffd700; font-size: 1.2rem; font-weight: bold; }
-        .stats { display: flex; justify-content: space-around; font-size: 0.9rem; margin-top: 8px; border-top: 1px solid #444; padding-top: 8px; }
         
-        /* Modal Billetera mejorado para que quepa PayPal */
-        #wallet-modal { display: none; position: fixed; top: 10%; left: 5%; width: 90%; background: #222; border: 3px solid #ffd700; border-radius: 30px; padding: 20px; z-index: 1000; box-shadow: 0 0 100px black; box-sizing: border-box; }
-        .wallet-title { color: #ffd700; font-size: 1.5rem; margin-bottom: 15px; text-transform: uppercase; }
+        /* Contenedor de la Billetera */
+        #wallet-modal { display: block; width: 90%; margin: 20px auto; background: #222; border: 3px solid #ffd700; border-radius: 25px; padding: 20px; box-sizing: border-box; }
+        .wallet-title { color: #ffd700; font-size: 1.4rem; margin-bottom: 20px; }
         
-        /* Contenedor donde PayPal pondrá el botón */
-        #paypal-button-container { margin: 20px 0; min-height: 50px; }
-        
-        .pack-info { background: #333; padding: 10px; border-radius: 10px; border: 1px solid #ffd700; margin-bottom: 10px; display: flex; justify-content: space-between; }
-        .cancel-btn { background: #ff3333; color: white; border: none; padding: 12px; border-radius: 15px; width: 100%; font-weight: bold; margin-top: 10px; }
+        /* Aquí se dibujará el botón amarillo */
+        #paypal-button-container { 
+            margin-top: 20px; 
+            min-height: 150px; 
+            background: rgba(255,255,255,0.05); 
+            border-radius: 10px;
+            padding: 10px;
+        }
 
-        .footer-actions { position: fixed; bottom: 25px; width: 100%; display: flex; justify-content: space-evenly; }
-        .circle-btn-action { width: 65px; height: 65px; border-radius: 50%; border: 2px solid white; font-weight: bold; cursor: pointer; }
-        .wallet-btn { background: #ffd700; color: black; }
+        .pack-price { color: #00ff00; font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header-panel">
         <span class="user-name" id="display-name">Cargando...</span>
-        <div class="stats">
-            <span>💰 Oro: <b id="user-oro">...</b></span>
-            <span>🛡️ Clan: Lluvia</span>
-        </div>
+        <div>💰 Oro: <b id="user-oro">...</b></div>
     </div>
-
-    <div style="margin-top: 20px; color: #ffd700; font-weight: bold;">📍 Sala: 100</div>
 
     <div id="wallet-modal">
         <h3 class="wallet-title">💳 RECARGA ORO</h3>
-        
-        <div class="pack-info"><span>🪙 5500 Oros</span> <span style="color: #00ff00;">$49.99</span></div>
+        <div class="pack-price">5500 Oros por $49.99</div>
         
         <div id="paypal-button-container"></div>
-        
-        <button class="cancel-btn" onclick="cerrarWallet()">CANCELAR</button>
-    </div>
-
-    <div class="footer-actions">
-        <button class="circle-btn-action wallet-btn" onclick="abrirWallet()">💳<br>Billetera</button>
     </div>
 
     <script>
-        // Configuración de Firebase sacada de tu foto
+        // Configuración Firebase (la de tu foto)
         const firebaseConfig = {
             apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
             authDomain: "lluvia-live-69a05.firebaseapp.com",
@@ -70,50 +59,35 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let nombreUsuario = localStorage.getItem('nombre_lluvia') || "Usuario_" + Math.floor(Math.random()*1000);
-        localStorage.setItem('nombre_lluvia', nombreUsuario);
-        document.getElementById('display-name').innerText = "👤 " + nombreUsuario;
+        // Identidad
+        let user = localStorage.getItem('nombre_lluvia') || "Melvin_Tester";
+        document.getElementById('display-name').innerText = "👤 " + user;
 
-        // Actualizar Oro en pantalla
-        db.collection("usuarios").doc(nombreUsuario).onSnapshot((doc) => {
-            if (doc.exists) document.getElementById('user-oro').innerText = doc.data().oro;
-            else db.collection("usuarios").doc(nombreUsuario).set({ oro: 1000 });
+        // Saldo
+        db.collection("usuarios").doc(user).onSnapshot(doc => {
+            if(doc.exists) document.getElementById('user-oro').innerText = doc.data().oro;
         });
 
-        function abrirWallet() {
-            document.getElementById('wallet-modal').style.display = 'block';
-            renderizarPaypal();
-        }
-
-        function cerrarWallet() {
-            document.getElementById('wallet-modal').style.display = 'none';
-        }
-
-        // Esta función es la que crea el botón de PayPal real
-        function renderizarPaypal() {
-            document.getElementById('paypal-button-container').innerHTML = ""; // Limpiar
+        // FUNCION PARA CARGAR EL BOTÓN INMEDIATAMENTE
+        function initPayPal() {
             paypal.Buttons({
                 createOrder: function(data, actions) {
                     return actions.order.create({
-                        purchase_units: [{
-                            description: "Pack 5500 Oros - Lluvia Live",
-                            amount: { value: '49.99' }
-                        }]
+                        purchase_units: [{ amount: { value: '49.99' } }]
                     });
                 },
                 onApprove: function(data, actions) {
                     return actions.order.capture().then(function(details) {
-                        // Sumar el oro si el pago es exitoso
-                        db.collection("usuarios").doc(nombreUsuario).update({
+                        db.collection("usuarios").doc(user).update({
                             oro: firebase.firestore.FieldValue.increment(5500)
-                        }).then(() => {
-                            alert("¡Pago Exitoso! Se agregaron 5500 Oros.");
-                            cerrarWallet();
-                        });
+                        }).then(() => alert("¡Pago con éxito!"));
                     });
                 }
             }).render('#paypal-button-container');
         }
+
+        // Ejecutar PayPal al cargar la página
+        window.onload = initPayPal;
     </script>
 </body>
 </html>
