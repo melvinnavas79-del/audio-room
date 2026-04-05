@@ -3,50 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live - Billetera Real</title>
+    <title>Lluvia Live - Sala & Billetera</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    
     <script src="https://www.paypal.com/sdk/js?client-id=AWOafs7E7hOuryPjXYaHIMvKeWhSgH65Fejg2eyY4b0BY_7xoClV0xhc45Zdr7Y5MhMGSCefLgl6X18&currency=USD"></script>
 
     <style>
-        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
-        .header { background: rgba(0,0,0,0.8); padding: 15px; border-bottom: 2px solid #ffd700; }
-        .wallet-card { background: #222; border: 3px solid #ffd700; border-radius: 25px; width: 92%; margin: 20px auto; padding: 20px; box-sizing: border-box; }
-        .pack-btn { background: #333; border: 2px solid #ffd700; border-radius: 15px; padding: 15px; margin-bottom: 12px; cursor: pointer; display: flex; justify-content: space-between; width: 100%; color: white; font-weight: bold; font-size: 16px; }
-        #paypal-button-container { margin-top: 20px; min-height: 150px; }
-        .instrucciones { font-size: 12px; color: #aaa; margin-top: 10px; }
+        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; overflow-x: hidden; }
+        
+        /* Diseño de la Sala */
+        .header-sala { background: rgba(0,0,0,0.5); padding: 10px; border: 2px solid #ffd700; border-radius: 15px; width: 90%; margin: 10px auto; }
+        .info-row { display: flex; justify-content: space-around; font-size: 14px; margin-top: 5px; }
+        .aristocracia-tag { color: #00ffff; font-weight: bold; text-shadow: 0 0 5px #00ffff; }
+        
+        /* Micrófono y Controles */
+        .controls { margin-top: 30px; display: flex; justify-content: center; gap: 20px; }
+        .mic-btn { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #ffd700; background: #331a4d; cursor: pointer; font-size: 30px; display: flex; align-items: center; justify-content: center; }
+        .mic-on { background: #ffd700; color: black; box-shadow: 0 0 20px #ffd700; }
+
+        /* Billetera */
+        .wallet-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26, 0, 51, 0.95); z-index: 100; overflow-y: auto; padding-top: 20px; }
+        .wallet-card { background: #222; border: 2px solid #ffd700; border-radius: 20px; width: 90%; margin: auto; padding: 20px; box-sizing: border-box; }
+        .pack-btn { background: #333; border: 1px solid #ffd700; border-radius: 10px; padding: 15px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; width: 100%; color: white; }
+        
+        /* Botón Billetera Flotante */
+        .btn-abrir-billetera { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 15px 30px; border-radius: 30px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 0 15px #ffd700; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div style="color: #ffd700; font-weight: bold;">💎 Lluvia Live 💎</div>
-        <div style="margin-top: 10px;">💰 Mi Oro: <span id="oro-txt" style="color: #ffd700; font-size: 20px;">...</span></div>
+    <div class="header-sala">
+        <div style="font-size: 18px; font-weight: bold;">👤 <span id="user-count">100</span></div>
+        <div class="info-row">
+            <span>💰 Oro: <span id="oro-txt" style="color:#ffd700;">...</span></span>
+            <span>🛡️ Clan: <span style="color:#ff4444;">Lluvia</span></span>
+        </div>
+        <div class="info-row" style="margin-top: 10px;">
+            <span class="aristocracia-tag">💎 Aristocracia: Speed</span>
+            <span style="color: #00ff00;">📍 Sala: 100</span>
+        </div>
     </div>
 
-    <div class="wallet-card">
-        <h3 style="color: #ffd700; margin-top: 0;">💳 RECARGAR ORO</h3>
-        <p class="instrucciones">Selecciona un paquete para activar el pago</p>
-        
-        <button class="pack-btn" onclick="prepararPago('0.99', 100)">
-            <span>🪙 100 Oros</span> <span style="color:#00ff00;">$0.99</span>
-        </button>
-        
-        <button class="pack-btn" onclick="prepararPago('9.99', 1100)">
-            <span>🪙 1100 Oros</span> <span style="color:#00ff00;">$9.99</span>
-        </button>
-        
-        <button class="pack-btn" onclick="prepararPago('49.99', 5500)">
-            <span>🪙 5500 Oros</span> <span style="color:#00ff00;">$49.99</span>
-        </button>
+    <div class="controls">
+        <div id="btn-mic" class="mic-btn" onclick="toggleMic()">🎙️</div>
+    </div>
 
-        <div id="paypal-button-container"></div>
+    <p id="status-audio" style="margin-top: 15px; color: #aaa;">Audio conectado</p>
+
+    <button class="btn-abrir-billetera" onclick="abrirBilletera()">💳 Billetera</button>
+
+    <div id="modal-billetera" class="wallet-container">
+        <div class="wallet-card">
+            <h2 style="color: #ffd700;">Recargar Oro</h2>
+            <button class="pack-btn" onclick="prepararPago('0.99', 100)">
+                <span>🪙 100 Oros</span> <b>$0.99</b>
+            </button>
+            <button class="pack-btn" onclick="prepararPago('9.99', 1100)">
+                <span>🪙 1100 Oros</span> <b>$9.99</b>
+            </button>
+            <button class="pack-btn" onclick="prepararPago('49.99', 5500)">
+                <span>🪙 5500 Oros</span> <b>$49.99</b>
+            </button>
+            
+            <div id="paypal-button-container" style="margin-top: 20px;"></div>
+            
+            <button onclick="cerrarBilletera()" style="margin-top: 20px; background: none; border: 1px solid white; color: white; padding: 10px; border-radius: 10px;">Cerrar</button>
+        </div>
     </div>
 
     <script>
-        // Configuración de Firebase para Lluvia Live
+        // Configuración Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
             authDomain: "lluvia-live-69a05.firebaseapp.com",
@@ -55,46 +82,49 @@
             messagingSenderId: "909704512499",
             appId: "1:909704512499:web:a8f0d658fb6dbd3f610886"
         };
-        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        
-        // ID de usuario para la prueba (Melvin)
-        let userId = "Melvin_User"; 
+        let userId = "Melvin_User";
 
-        // Escuchar cambios en el oro en tiempo real
+        // Actualizar Oro en pantalla
         db.collection("usuarios").doc(userId).onSnapshot(doc => {
-            if(doc.exists) {
-                document.getElementById('oro-txt').innerText = doc.data().oro || 0;
-            }
+            if(doc.exists) document.getElementById('oro-txt').innerText = doc.data().oro || 0;
         });
 
-        function prepararPago(monto, cantidadOro) {
-            // Limpiamos el contenedor para refrescar el botón
-            document.getElementById('paypal-button-container').innerHTML = ""; 
-            
+        // Funciones de la Sala
+        let micOn = false;
+        function toggleMic() {
+            micOn = !micOn;
+            const btn = document.getElementById('btn-mic');
+            if(micOn) {
+                btn.classList.add('mic-on');
+                document.getElementById('status-audio').innerText = "Transmitiendo...";
+            } else {
+                btn.classList.remove('mic-on');
+                document.getElementById('status-audio').innerText = "Audio en pausa";
+            }
+        }
+
+        // Funciones Billetera
+        function abrirBilletera() { document.getElementById('modal-billetera').style.display = 'block'; }
+        function cerrarBilletera() { document.getElementById('modal-billetera').style.display = 'none'; }
+
+        function prepararPago(monto, cantidad) {
+            document.getElementById('paypal-button-container').innerHTML = "";
             paypal.Buttons({
                 createOrder: (data, actions) => {
                     return actions.order.create({
-                        purchase_units: [{
-                            description: "Compra de " + cantidadOro + " Oros - Lluvia Live",
-                            amount: { value: monto }
-                        }]
+                        purchase_units: [{ description: "Oros Lluvia Live", amount: { value: monto } }]
                     });
                 },
                 onApprove: (data, actions) => {
                     return actions.order.capture().then(details => {
-                        // Si el pago es exitoso, sumamos el oro en Firebase
                         db.collection("usuarios").doc(userId).update({
-                            oro: firebase.firestore.FieldValue.increment(cantidadOro)
-                        }).then(() => {
-                            alert("¡Felicidades Melvin! Recargaste " + cantidadOro + " oros con éxito.");
+                            oro: firebase.firestore.FieldValue.increment(cantidad)
                         });
+                        alert("¡Compra exitosa! Se sumaron " + cantidad + " oros.");
+                        cerrarBilletera();
                     });
-                },
-                onError: (err) => {
-                    console.error("Error en PayPal:", err);
-                    alert("Hubo un problema con la conexión de PayPal.");
                 }
             }).render('#paypal-button-container');
         }
