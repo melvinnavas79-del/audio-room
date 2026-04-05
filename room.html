@@ -3,82 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudioRoom PRO - Final Fix</title>
+    <title>AudioRoom PRO - Control Total</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
         .user-panel { background: rgba(0,0,0,0.6); width: 90%; margin: 20px auto; padding: 15px; border-radius: 20px; border: 1px solid #ffd700; }
         .aristocracia-tag { background: linear-gradient(90deg, #ffd700, #ff8c00); color: #000; font-weight: bold; padding: 5px 20px; border-radius: 15px; margin: 10px 0; display: inline-block; }
-        .btn-mic { width: 80px; height: 80px; border-radius: 50%; border: none; font-size: 35px; cursor: pointer; background: #444; color: white; }
-        .btn-active { background: #00ff00; border: 4px solid white; box-shadow: 0 0 20px #00ff00; }
-        .btn-audio { background: #ff0066; color: white; padding: 15px; border-radius: 10px; border: none; margin: 10px; font-weight: bold; }
-        .bocina-icon { font-size: 60px; margin: 10px; }
+        
+        .controls-row { display: flex; justify-content: center; gap: 40px; margin-top: 30px; }
+        .btn-circle { 
+            width: 75px; height: 75px; border-radius: 50%; border: none; font-size: 30px; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.3s;
+        }
+
+        /* Colores de estado */
+        .btn-on { background: #00ff00; color: black; border: 3px solid white; }
+        .btn-off { background: #ff3333; color: white; border: 3px solid #555; }
+        
+        .btn-audio { background: #ff0066; color: white; padding: 12px; border-radius: 10px; border: none; margin: 10px; font-weight: bold; }
+        #status-msg { margin-top: 15px; color: #00ffcc; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="user-panel">
-        <div>💰 Oro: 1000 | 👑 VIP: 0</div>
-        <div class="aristocracia-tag">🏆 Noble (Aristocracia)</div>
+        <div>💰 Oro: 1000 | 👑 Noble (Aristocracia)</div>
+        <div class="aristocracia-tag">🏆 Rango: Noble</div>
     </div>
 
-    <div id="room-display" style="font-size: 1.1rem;">📍 Sala ID: Cargando...</div>
-    
-    <button class="btn-audio" onclick="activarBocina()">🔊 1. CLIC AQUÍ PARA ACTIVAR SONIDO</button>
+    <div id="room-display">📍 Sala: Cargando...</div>
+    <button class="btn-audio" onclick="desbloquearSonido()">🔊 1. CLIC AQUÍ AL ENTRAR</button>
 
-    <div class="bocina-icon">🔊</div>
-    <p id="status">Paso 2: Toca el micro abajo</p>
+    <div class="controls-row">
+        <div>
+            <button id="mic-btn" class="btn-circle btn-off" onclick="toggleMic()">🎙️</button>
+            <p>Micro</p>
+        </div>
+        <div>
+            <button id="spk-btn" class="btn-circle btn-on" onclick="toggleSpeaker()">🔊</button>
+            <p>Bocina</p>
+        </div>
+    </div>
 
-    <button class="btn-mic" id="main-btn" onclick="conectarAudio()">🎤</button>
-
+    <p id="status-msg">Pulsa el botón rosa y luego el Micro</p>
     <audio id="remote-audio" autoplay playsinline></audio>
 
     <script>
         const roomID = prompt("Ingresa el ID de la sala:") || "100";
         document.getElementById('room-display').innerText = "📍 Sala ID: " + roomID;
 
-        // Servidores gratuitos para saltar bloqueos de internet
-        const config = {
-            'iceServers': [
-                { 'urls': 'stun:stun.l.google.com:19302' },
-                { 'urls': 'stun:stun1.l.google.com:19302' }
-            ]
-        };
+        const peer = new Peer('melvin-pro-' + roomID + (Math.random() > 0.5 ? 'A' : 'B'));
+        let localStream;
+        let micActivo = false;
+        let bocinaActiva = true;
 
-        const peer = new Peer('melvin-live-' + roomID + (Math.random() > 0.5 ? 'A' : 'B'), { config: config });
-
-        function activarBocina() {
-            const audio = document.getElementById('remote-audio');
-            audio.play().then(() => alert("🔊 Sonido listo. Ahora dale al micro.")).catch(() => alert("Toca de nuevo el botón rosa"));
+        function desbloquearSonido() {
+            document.getElementById('remote-audio').play();
+            alert("🔊 Sonido listo.");
         }
 
-        function conectarAudio() {
-            const btn = document.getElementById('main-btn');
-            btn.classList.add('btn-active');
-            document.getElementById('status').innerText = "🎤 CONECTADO - HABLA";
+        async function toggleMic() {
+            const btn = document.getElementById('mic-btn');
+            
+            if (!localStream) {
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    iniciarConexion();
+                } catch (e) { alert("Permite el micro en Chrome"); return; }
+            }
 
-            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-                // RECIBIR LLAMADA
-                peer.on('call', call => {
-                    call.answer(stream);
-                    call.on('stream', remoteStream => {
-                        const ra = document.getElementById('remote-audio');
-                        ra.srcObject = remoteStream;
-                        ra.play();
-                    });
+            micActivo = !micActivo;
+            localStream.getAudioTracks()[0].enabled = micActivo;
+
+            if (micActivo) {
+                btn.className = "btn-circle btn-on";
+                btn.innerText = "🎙️";
+                document.getElementById('status-msg').innerText = "✅ HABLANDO...";
+            } else {
+                btn.className = "btn-circle btn-off";
+                btn.innerText = "🔇";
+                document.getElementById('status-msg').innerText = "🔇 MICRO SILENCIADO";
+            }
+        }
+
+        function toggleSpeaker() {
+            const btn = document.getElementById('spk-btn');
+            const audio = document.getElementById('remote-audio');
+            bocinaActiva = !bocinaActiva;
+            audio.muted = !bocinaActiva;
+
+            if (bocinaActiva) {
+                btn.className = "btn-circle btn-on";
+                btn.innerText = "🔊";
+            } else {
+                btn.className = "btn-circle btn-off";
+                btn.innerText = "🔈";
+            }
+        }
+
+        function iniciarConexion() {
+            peer.on('call', call => {
+                call.answer(localStream);
+                call.on('stream', remStream => {
+                    document.getElementById('remote-audio').srcObject = remStream;
                 });
-
-                // LLAMAR AL OTRO
-                const target = peer.id.endsWith('A') ? 'B' : 'A';
-                const call = peer.call('melvin-live-' + roomID + target, stream);
-                if (call) {
-                    call.on('stream', remoteStream => {
-                        const ra = document.getElementById('remote-audio');
-                        ra.srcObject = remoteStream;
-                        ra.play();
-                    });
-                }
             });
+
+            const target = peer.id.endsWith('A') ? 'B' : 'A';
+            const call = peer.call('melvin-pro-' + roomID + target, localStream);
+            if (call) {
+                call.on('stream', remStream => {
+                    document.getElementById('remote-audio').srcObject = remStream;
+                });
+            }
         }
     </script>
 </body>
