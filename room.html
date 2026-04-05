@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - Audio Real</title>
+    <title>Lluvia Live - Audio Fix</title>
     
-    <script src="https://resource.zegocloud.com/prebuilt/crypto-js.js"></script>
     <script src="https://resource.zegocloud.com/prebuilt/zegocloud-prebuilt.js"></script>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -13,18 +12,27 @@
     <script src="https://www.paypal.com/sdk/js?client-id=AWOafs7E7hOuryPjXYaHIMvKeWhSgH65Fejg2eyY4b0BY_7xoClV0xhc45Zdr7Y5MhMGSCefLgl6X18&currency=USD"></script>
 
     <style>
-        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
-        .pantalla-inicio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a0033; z-index: 20000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .input-sala { padding: 15px; border-radius: 12px; border: 2px solid #ffd700; background: #222; color: white; width: 80%; font-size: 18px; margin-bottom: 15px; text-align: center; }
-        .btn-principal { background: #ffd700; color: black; padding: 18px; border-radius: 12px; font-weight: bold; border: none; width: 85%; font-size: 18px; cursor: pointer; }
-
-        .header-sala { background: rgba(0,0,0,0.9); padding: 15px; border: 2px solid #ffd700; border-radius: 20px; width: 92%; margin: 15px auto; }
-        .rango-row { display: flex; justify-content: space-around; border-top: 1px solid #444; padding-top: 10px; margin-top: 10px; font-size: 13px; }
+        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; overflow: hidden; }
         
-        /* Contenedor del Audio Real (Invisible para que no estorbe el diseño) */
-        #contenedor-audio-real { width: 1px; height: 1px; opacity: 0; }
+        /* Contenedor de la Sala */
+        .header-sala { background: rgba(0,0,0,0.9); padding: 15px; border: 2px solid #ffd700; border-radius: 20px; width: 92%; margin: 10px auto; z-index: 10; position: relative; }
+        .rango-row { display: flex; justify-content: space-around; border-top: 1px solid #444; padding-top: 10px; margin-top: 10px; font-size: 13px; }
 
-        .btn-wallet-fixed { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 18px 50px; border-radius: 40px; font-weight: bold; border: none; font-size: 18px; box-shadow: 0 0 20px #ffd700; }
+        /* PANEL DE AUDIO (IMPORTANTE) */
+        #contenedor-audio { 
+            width: 90%; 
+            height: 350px; 
+            margin: 20px auto; 
+            background: #222; 
+            border-radius: 20px; 
+            border: 1px solid #444;
+            overflow: hidden;
+        }
+
+        .btn-wallet { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 15px 40px; border-radius: 40px; font-weight: bold; border: none; font-size: 18px; z-index: 100; box-shadow: 0 0 20px #ffd700; }
+        
+        .pantalla-inicio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a0033; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .input-sala { padding: 15px; border-radius: 12px; border: 2px solid #ffd700; background: #222; color: white; width: 80%; font-size: 18px; margin-bottom: 15px; text-align: center; }
     </style>
 </head>
 <body>
@@ -32,14 +40,12 @@
     <div id="lobby" class="pantalla-inicio">
         <h1 style="color: #ffd700;">LLUVIA LIVE</h1>
         <input type="number" id="input-sala-id" class="input-sala" placeholder="ID de Sala">
-        <button class="btn-principal" onclick="iniciarSala()">ENTRAR / CREAR SALA</button>
+        <button onclick="iniciarSala()" style="background:#ffd700; color:black; padding:18px; width:85%; border-radius:12px; font-weight:bold; border:none; font-size:18px;">ENTRAR A LA SALA</button>
     </div>
 
     <div id="app" style="display:none;">
         <div class="header-sala">
-            <div style="font-size: 20px; color: #ffd700; margin-bottom: 10px;">
-                SALA ID: <span id="id-final">---</span>
-            </div>
+            <div style="font-size: 20px; color: #ffd700; margin-bottom: 10px;">SALA ID: <span id="id-final">---</span></div>
             <div style="display: flex; justify-content: space-around; margin-bottom: 10px;">
                 <span>💰 Oro: <span id="oro-txt" style="color:#ffd700;">0</span></span>
                 <span>🛡️ Clan: <span style="color:#ff4444;">Lluvia</span></span>
@@ -51,27 +57,24 @@
             </div>
         </div>
 
-        <div id="contenedor-audio-real"></div>
+        <div id="contenedor-audio"></div>
 
-        <div style="margin-top: 50px;">
-            <p style="color: #00ff00;">● Audio Conectado en Vivo</p>
-            <p style="font-size: 12px; color: #888;">Usa los controles del panel de Zego para hablar</p>
-        </div>
-
-        <button class="btn-wallet-fixed" onclick="verTienda()">💳 BILLETERA</button>
+        <button class="btn-wallet" onclick="document.getElementById('tienda').style.display='block'">💳 BILLETERA</button>
     </div>
 
-    <div id="modal-tienda" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#1a0033; z-index:30000; padding-top:20px;">
-        <div style="background:#222; border:2px solid #ffd700; border-radius:25px; width:90%; margin:auto; padding:25px;">
-            <h2 style="color:#ffd700;">Recarga</h2>
-            <button onclick="pago('0.99', 100)" style="width:100%; padding:15px; margin-bottom:10px; background:#333; color:white; border:1px solid #ffd700; border-radius:10px;">🪙 100 Oros - $0.99</button>
-            <button onclick="pago('49.99', 6000)" style="width:100%; padding:15px; margin-bottom:10px; background:#333; color:white; border:1px solid #ffd700; border-radius:10px;">🪙 6000 Oros - $49.99</button>
-            <div id="paypal-area" style="margin-top:15px;"></div>
-            <button onclick="document.getElementById('modal-tienda').style.display='none'" style="margin-top:20px; color:#ff4444; background:none; border:none; text-decoration:underline;">Cerrar</button>
+    <div id="tienda" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:5000; padding-top:40px;">
+        <div style="background:#222; border:2px solid #ffd700; border-radius:20px; width:85%; margin:auto; padding:20px;">
+            <h3 style="color:#ffd700;">Recargar Oros</h3>
+            <button onclick="pago('0.99', 100)" style="width:100%; padding:15px; margin-bottom:10px; background:#333; color:white; border:1px border-radius:10px;">100 Oros - $0.99</button>
+            <button onclick="pago('49.99', 6000)" style="width:100%; padding:15px; margin-bottom:10px; background:#333; color:white; border:1px border-radius:10px;">6000 Oros - $49.99</button>
+            <div id="paypal-area"></div>
+            <br>
+            <button onclick="document.getElementById('tienda').style.display='none'" style="color:red; background:none; border:none;">CERRAR</button>
         </div>
     </div>
 
     <script>
+        // Configuración Firebase (La tuya de siempre)
         const firebaseConfig = {
             apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
             authDomain: "lluvia-live-69a05.firebaseapp.com",
@@ -82,7 +85,6 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        let userId = "User_" + Math.floor(Math.random() * 1000);
 
         async function iniciarSala() {
             const salaID = document.getElementById('input-sala-id').value || "100";
@@ -90,46 +92,39 @@
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('app').style.display = 'block';
 
-            // CONFIGURACIÓN DE AUDIO REAL (ZEGOCLOUD)
-            const appID = 1111976694; // Tu ID de Zego
-            const serverSecret = "25049a1d82f7cc4b219154a4f89d53f5"; // Tu Secret
-            
-            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, salaID, userId, "Melvin_User");
+            // ZEGOCLOUD CON BOTONES VISIBLES
+            const appID = 1111976694; 
+            const serverSecret = "25049a1d82f7cc4b219154a4f89d53f5";
+            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, salaID, "user_" + Math.floor(Math.random()*100), "Melvin");
 
             const zp = ZegoUIKitPrebuilt.create(kitToken);
             zp.joinRoom({
-                container: document.querySelector("#contenedor-audio-real"),
-                scenario: {
-                    mode: ZegoUIKitPrebuilt.GroupCall, // Modo de audio en grupo
-                },
-                showPreJoinView: false, // Entra directo a la sala
-                turnOnMicrophoneWhenJoining: true, // Micro prendido al entrar
-                showMyCameraToggleButton: false, // Sin cámara, solo audio
+                container: document.querySelector("#contenedor-audio"),
+                scenario: { mode: ZegoUIKitPrebuilt.GroupCall },
+                showPreJoinView: false,
+                showScreenSharingButton: false,
+                showMyCameraToggleButton: false, // Solo audio
                 showAudioVideoSettingsButton: true,
+                showTextChat: false,
+                showUserList: false,
+                maxUsers: 10,
                 layout: "Grid",
                 showLayoutButton: false
             });
 
-            // Leer Oros de Firebase
             db.collection("usuarios").doc("Melvin_User").onSnapshot(doc => {
                 document.getElementById('oro-txt').innerText = doc.exists ? (doc.data().oro || 0) : 0;
             });
         }
 
-        function verTienda() { document.getElementById('modal-tienda').style.display = 'block'; }
-        
         function pago(val, cant) {
             document.getElementById('paypal-area').innerHTML = "";
             paypal.Buttons({
-                style: { layout: 'vertical', color: 'gold', shape: 'pill' },
-                createOrder: (data, actions) => { return actions.order.create({ purchase_units: [{ amount: { value: val } }] }); },
-                onApprove: (data, actions) => {
-                    return actions.order.capture().then(() => {
-                        db.collection("usuarios").doc("Melvin_User").update({ oro: firebase.firestore.FieldValue.increment(cant) });
-                        alert("¡Recarga lista!");
-                        document.getElementById('modal-tienda').style.display = 'none';
-                    });
-                }
+                createOrder: (d, a) => a.order.create({ purchase_units: [{ amount: { value: val } }] }),
+                onApprove: (d, a) => a.order.capture().then(() => {
+                    db.collection("usuarios").doc("Melvin_User").update({ oro: firebase.firestore.FieldValue.increment(cant) });
+                    alert("¡Éxito!");
+                })
             }).render('#paypal-area');
         }
     </script>
