@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - Final Fix</title>
+    <title>Lluvia Live - Recuperado</title>
     
     <script src="https://resource.zegocloud.com/prebuilt/zegocloud-prebuilt.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -11,33 +11,37 @@
     <script src="https://www.paypal.com/sdk/js?client-id=AWOafs7E7hOuryPjXYaHIMvKeWhSgH65Fejg2eyY4b0BY_7xoClV0xhc45Zdr7Y5MhMGSCefLgl6X18&currency=USD"></script>
 
     <style>
-        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
-        .header-sala { background: rgba(0,0,0,0.9); padding: 15px; border: 2px solid #ffd700; border-radius: 20px; width: 92%; margin: 15px auto; }
+        body { margin: 0; background: #0a001a; color: white; font-family: sans-serif; text-align: center; }
         
-        .btn-melvin { background: #222; border: 2px solid #ffd700; border-radius: 15px; padding: 20px; width: 85%; color: white; font-weight: bold; font-size: 18px; margin-bottom: 15px; }
-        .active { background: #ffd700 !important; color: black !important; box-shadow: 0 0 20px #ffd700; }
+        /* Diseño de la Sala */
+        .header-sala { background: rgba(0,0,0,0.9); padding: 15px; border: 2px solid #ffd700; border-radius: 20px; width: 90%; margin: 15px auto; }
+        .rango-row { display: flex; justify-content: space-around; border-top: 1px solid #333; padding-top: 10px; margin-top: 10px; font-size: 12px; }
 
-        .btn-wallet { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 18px 50px; border-radius: 40px; font-weight: bold; border: none; font-size: 18px; }
+        /* Botones de Control */
+        .btn-accion { background: #222; border: 2px solid #ffd700; border-radius: 15px; padding: 20px; width: 85%; color: white; font-weight: bold; font-size: 18px; margin-bottom: 15px; transition: 0.3s; }
+        .btn-accion.active { background: #ffd700; color: black; box-shadow: 0 0 20px #ffd700; }
+
+        .btn-billetera { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 15px 50px; border-radius: 40px; font-weight: bold; border: none; font-size: 18px; box-shadow: 0 5px 15px rgba(255,215,0,0.4); }
         
-        /* Pantalla de inicio única */
-        .lobby { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .input-sala { padding: 15px; border-radius: 12px; border: 2px solid #ffd700; background: #222; color: white; width: 80%; font-size: 18px; margin-bottom: 20px; text-align: center; }
+        /* Pantalla de Inicio Limpia */
+        .lobby { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .input-estilo { padding: 15px; border-radius: 10px; border: 2px solid #ffd700; background: #111; color: white; width: 75%; font-size: 18px; margin-bottom: 15px; text-align: center; }
     </style>
 </head>
 <body>
 
     <div id="lobby" class="lobby">
-        <h1 style="color: #00ff00; font-size: 40px;">☔ Lluvia Live</h1>
-        <input type="text" id="user-name" class="input-sala" placeholder="Tu Nombre (Ej: Josue)">
-        <input type="number" id="sala-id" class="input-sala" placeholder="ID de Sala (Ej: 100)">
-        <button onclick="entrarDirecto()" style="background:#0000ff; color:white; padding:20px; width:85%; border-radius:12px; font-weight:bold; border:none; font-size:18px;">ENTRAR AHORA</button>
+        <h1 style="color: #00ff00; font-size: 35px; margin-bottom: 30px;">☔ LLUVIA LIVE</h1>
+        <input type="text" id="nombre-usuario" class="input-estilo" placeholder="Tu Nombre">
+        <input type="number" id="id-sala" class="input-estilo" placeholder="Número de Sala">
+        <button onclick="conectarTodo()" style="background:#0000ff; color:white; padding:18px; width:80%; border-radius:10px; font-weight:bold; border:none; font-size:18px;">ENTRAR A LA SALA</button>
     </div>
 
-    <div id="app" style="display:none;">
+    <div id="sala-audio" style="display:none;">
         <div class="header-sala">
-            <div style="font-size: 22px; color: #ffd700;">ID SALA: <span id="id-txt">---</span></div>
+            <div style="font-size: 20px; color: #ffd700;">ID SALA: <span id="display-id">---</span></div>
             <div style="margin: 10px 0;">💰 Oro: <span id="oro-txt">0</span> | 🛡️ Clan: <span style="color:#ff4444;">Lluvia</span></div>
-            <div style="display:flex; justify-content:space-around; font-size:12px; border-top:1px solid #333; padding-top:10px;">
+            <div class="rango-row">
                 <span style="color:#ffd700;">💎 Aristocracia</span>
                 <span style="color:#ff00ff;">✨ SVIP</span>
                 <span style="color:#00ffff;">🔥 VIP</span>
@@ -45,20 +49,20 @@
         </div>
 
         <div style="margin-top: 50px;">
-            <button id="btn-bocina" class="btn-melvin" onclick="toggleBocina()">🔊 ACTIVAR BOCINA</button>
-            <button id="btn-micro" class="btn-melvin" onclick="toggleMicro()">🎙️ ENCENDER MICRO</button>
+            <button id="btn-mic" class="btn-accion" onclick="toggleMic()">🎙️ ENCENDER MICRO</button>
+            <button id="btn-box" class="btn-accion" onclick="toggleBox()">🔊 ACTIVAR BOCINA</button>
         </div>
 
-        <div id="zego-hidden" style="display:none;"></div>
-        <button class="btn-wallet" onclick="abrirTienda()">💳 BILLETERA</button>
+        <div id="zego-container" style="display:none;"></div>
+        <button class="btn-billetera" onclick="verTienda()">💳 BILLETERA</button>
     </div>
 
-    <div id="tienda" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:5000; padding-top:50px;">
-        <div style="background:#222; border:2px solid #ffd700; border-radius:20px; width:85%; margin:auto; padding:20px;">
-            <h3 style="color:#ffd700;">Comprar Oros</h3>
-            <button onclick="comprar('0.99', 100)" style="width:100%; padding:15px; margin-bottom:10px; background:#444; color:white; border:none; border-radius:10px;">100 Oros - $0.99</button>
-            <div id="paypal-button-container"></div>
-            <button onclick="cerrarTienda()" style="color:red; background:none; border:none; margin-top:20px;">CERRAR</button>
+    <div id="modal-tienda" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; padding-top:60px;">
+        <div style="background:#1a1a1a; border:2px solid #ffd700; border-radius:20px; width:85%; margin:auto; padding:20px;">
+            <h2 style="color:#ffd700;">Recargar Oros</h2>
+            <button onclick="comprarOros('0.99', 100)" style="width:100%; padding:15px; margin-bottom:10px; background:#333; color:white; border:none; border-radius:10px;">100 Oros - $0.99</button>
+            <div id="paypal-container" style="margin-top:15px;"></div>
+            <button onclick="cerrarTienda()" style="color:red; background:none; border:none; margin-top:20px; font-weight:bold;">CERRAR</button>
         </div>
     </div>
 
@@ -73,61 +77,64 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        let zp = null, micOn = false, boxOn = false;
+        let zp = null, microStatus = false, boxStatus = false;
 
-        async function entrarDirecto() {
-            const nombre = document.getElementById('user-name').value || "Usuario";
-            const sala = document.getElementById('sala-id').value || "100";
+        async function conectarTodo() {
+            const nombre = document.getElementById('nombre-usuario').value || "Melvin";
+            const sala = document.getElementById('id-sala').value || "100";
             
-            document.getElementById('id-txt').innerText = sala;
+            document.getElementById('display-id').innerText = sala;
             document.getElementById('lobby').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
+            document.getElementById('sala-audio').style.display = 'block';
 
-            // Iniciar Zego de una vez
-            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(1111976694, "25049a1d82f7cc4b219154a4f89d53f5", sala, "U"+Date.now(), nombre);
+            // Configurar ZegoCloud
+            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(1111976694, "25049a1d82f7cc4b219154a4f89d53f5", sala, "User_" + Date.now(), nombre);
             zp = ZegoUIKitPrebuilt.create(kitToken);
             
             await zp.joinRoom({
-                container: document.querySelector("#zego-hidden"),
+                container: document.querySelector("#zego-container"),
                 scenario: { mode: ZegoUIKitPrebuilt.GroupCall },
                 showPreJoinView: false,
                 turnOnMicrophoneWhenJoining: false 
             });
 
+            // Escuchar el Oro en tiempo real
             db.collection("usuarios").doc("Melvin_User").onSnapshot(doc => {
                 document.getElementById('oro-txt').innerText = doc.exists ? (doc.data().oro || 0) : 0;
             });
         }
 
-        function toggleBocina() {
-            boxOn = !boxOn;
-            document.getElementById('btn-bocina').className = boxOn ? "btn-melvin active" : "btn-melvin";
-            document.getElementById('btn-bocina').innerText = boxOn ? "🔊 BOCINA: ON" : "🔊 ACTIVAR BOCINA";
-            // Desbloquea el audio en iPhone
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+        function toggleMic() {
+            microStatus = !microStatus;
+            zp.turnMicrophoneOn(microStatus);
+            const btn = document.getElementById('btn-mic');
+            btn.innerText = microStatus ? "🎙️ MICRO: ON" : "🎙️ ENCENDER MICRO";
+            btn.className = microStatus ? "btn-accion active" : "btn-accion";
         }
 
-        function toggleMicro() {
-            micOn = !micOn;
-            zp.turnMicrophoneOn(micOn);
-            document.getElementById('btn-micro').className = micOn ? "btn-melvin active" : "btn-melvin";
-            document.getElementById('btn-micro').innerText = micOn ? "🎙️ MICRO: ON" : "🎙️ ENCENDER MICRO";
+        function toggleBox() {
+            boxStatus = !boxStatus;
+            const btn = document.getElementById('btn-box');
+            btn.innerText = boxStatus ? "🔊 BOCINA: ON" : "🔊 ACTIVAR BOCINA";
+            btn.className = boxStatus ? "btn-accion active" : "btn-accion";
+            // Esto ayuda a que el iPhone suelte el sonido
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (ctx.state === 'suspended') ctx.resume();
         }
 
-        function abrirTienda() { document.getElementById('tienda').style.display = 'block'; }
-        function cerrarTienda() { document.getElementById('tienda').style.display = 'none'; }
+        function verTienda() { document.getElementById('modal-tienda').style.display = 'block'; }
+        function cerrarTienda() { document.getElementById('modal-tienda').style.display = 'none'; }
 
-        function comprar(monto, cantidad) {
-            document.getElementById('paypal-button-container').innerHTML = "";
+        function comprarOros(precio, cantidad) {
+            document.getElementById('paypal-container').innerHTML = "";
             paypal.Buttons({
-                createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: monto } }] }),
+                createOrder: (data, actions) => actions.order.create({ purchase_units: [{ amount: { value: precio } }] }),
                 onApprove: (data, actions) => actions.order.capture().then(() => {
                     db.collection("usuarios").doc("Melvin_User").update({ oro: firebase.firestore.FieldValue.increment(cantidad) });
-                    alert("¡Compra exitosa!");
+                    alert("¡Oros cargados con éxito!");
                     cerrarTienda();
                 })
-            }).render('#paypal-button-container');
+            }).render('#paypal-container');
         }
     </script>
 </body>
