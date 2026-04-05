@@ -1,232 +1,86 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-
-<style>
-body{
-  margin:0;
-  font-family:Arial;
-  text-align:center;
-  background:linear-gradient(135deg,#6a11cb,#ff4ecd);
-  color:white;
-}
-
-.card{
-  background:rgba(0,0,0,0.5);
-  margin:10px;
-  padding:10px;
-  border-radius:15px;
-}
-
-button{
-  position:fixed;
-  bottom:20px;
-  border:none;
-  padding:15px;
-  border-radius:50%;
-  font-size:18px;
-}
-
-#micBtn{left:20px;background:pink;}
-#musicBtn{right:90px;background:#00ffcc;}
-#giftBtn{right:20px;background:gold;}
-
-.menu{
-  position:fixed;
-  bottom:0;
-  width:100%;
-  background:#111;
-  display:none;
-  flex-wrap:wrap;
-}
-
-.giftItem{
-  width:25%;
-  padding:10px;
-}
-
-.giftItem img{
-  width:50px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AudioRoom PRO - Conexión por ID</title>
+    <script src="https://unpkg.com/zegocloud-zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            background: linear-gradient(180deg, #4b0082, #8a2be2); 
+            color: white; 
+            font-family: sans-serif; 
+            text-align: center; 
+            height: 100vh; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header { padding: 20px; margin-top: 20px; }
+        .room-info { 
+            background: rgba(0,0,0,0.4); 
+            padding: 15px; 
+            margin: 10px; 
+            border-radius: 15px; 
+            font-size: 1.3rem; 
+            border: 2px solid #ffd700; 
+            width: 80%;
+        }
+        .controls { position: fixed; bottom: 50px; width: 100%; display: flex; justify-content: center; gap: 20px; }
+        .btn { 
+            width: 75px; 
+            height: 75px; 
+            border-radius: 50%; 
+            border: none; 
+            font-size: 35px; 
+            cursor: pointer; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.6); 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-mic { background: #555; color: white; }
+        .btn-active { background: #6c5ce7; border: 4px solid #00ff00; }
+        #status { margin-top: 20px; color: #00ff00; font-weight: bold; font-size: 1.1rem; }
+    </style>
 </head>
-
 <body>
 
-<h2>🎤 AudioRoom PRO</h2>
+    <div class="header">
+        <h1>🎤 AudioRoom PRO</h1>
+        <div class="room-info" id="room-display">Buscando sala...</div>
+    </div>
 
-<h3 id="gold">💰 Oro: 1000</h3>
-<h3 id="vip">👑 VIP: 0</h3>
-<h3 id="svip">💎 SVIP: 0</h3>
+    <div id="status">Esperando que actives el micro...</div>
 
-<div id="aristo" class="card"></div>
+    <div class="controls">
+        <button class="btn btn-mic" id="main-btn" onclick="iniciarTodo()">🎤</button>
+    </div>
 
-<div class="card">
-💑 Pareja: <span id="pareja">Ninguna</span><br>
-🏰 Clan: <span id="clan">Ninguno</span>
-</div>
+    <script>
+        // 1. Pedir el ID de la sala (Para que los dos teléfonos se encuentren)
+        const roomID = prompt("Ingresa el ID de la sala (Ejemplo: 100):") || "8888";
+        document.getElementById('room-display').innerText = "📍 Estás en la Sala: " + roomID;
 
-<button id="micBtn" onclick="toggleMic()">🎤</button>
-<button id="musicBtn" onclick="toggleMusic()">🎶</button>
-<button id="giftBtn" onclick="toggleMenu()">🎁</button>
-
-<audio id="music" loop>
-<source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
-</audio>
-
-<!-- 🎁 REGALOS PRO -->
-<div class="menu" id="menu">
-
-<div class="giftItem" onclick="sendGift('rosa')">
-<img src="https://i.imgur.com/9Xn1FQK.png"><br>Rosa 10
-</div>
-
-<div class="giftItem" onclick="sendGift('beso')">
-<img src="https://i.imgur.com/3ZQ3Z9B.png"><br>Beso 20
-</div>
-
-<div class="giftItem" onclick="sendGift('diamante')">
-<img src="https://i.imgur.com/mD7xG6p.png"><br>Diamante 100
-</div>
-
-<div class="giftItem" onclick="sendGift('corona')">
-<img src="https://i.imgur.com/Vk6XH7L.png"><br>Corona 200
-</div>
-
-<div class="giftItem" onclick="sendGift('castillo')">
-<img src="https://i.imgur.com/Q6aZ6xP.png"><br>Castillo 500
-</div>
-
-<div class="giftItem" onclick="sendGift('dragon')">
-<img src="https://i.imgur.com/tV6pKQH.png"><br>Dragón 1000
-</div>
-
-<hr>
-
-<div onclick="buyVIP()">👑 Subir VIP</div>
-<div onclick="buySVIP()">💎 Subir SVIP</div>
-<div onclick="crearPareja()">💑 Crear pareja</div>
-<div onclick="crearClan()">🏰 Crear clan</div>
-
-</div>
-
-<script>
-
-// 💰 DATOS
-let gold = 1000;
-let vip = 0;
-let svip = 0;
-
-let pareja = localStorage.getItem("pareja") || "Ninguna";
-let clan = localStorage.getItem("clan") || "Ninguno";
-
-document.getElementById("pareja").innerText = pareja;
-document.getElementById("clan").innerText = clan;
-
-// 👑 ARISTOCRACIA PRO
-let niveles = ["Noble","Caballero","Duque","Principe","Rey","Emperador"];
-let nivel = 0;
-
-function renderAristo(){
- document.getElementById("aristo").innerHTML =
- "🏆 " + niveles[nivel];
-}
-renderAristo();
-
-// 🎁 REGALOS
-let gifts = {
- rosa:{price:10,img:"https://i.imgur.com/9Xn1FQK.png"},
- beso:{price:20,img:"https://i.imgur.com/3ZQ3Z9B.png"},
- diamante:{price:100,img:"https://i.imgur.com/mD7xG6p.png"},
- corona:{price:200,img:"https://i.imgur.com/Vk6XH7L.png"},
- castillo:{price:500,img:"https://i.imgur.com/Q6aZ6xP.png"},
- dragon:{price:1000,img:"https://i.imgur.com/tV6pKQH.png"}
-};
-
-function sendGift(name){
- if(gold < gifts[name].price){
-  alert("No tienes oro");
-  return;
- }
- gold -= gifts[name].price;
- updateUI();
- showGift(name);
-}
-
-function showGift(name){
- let d=document.createElement("div");
- d.style.position="fixed";
- d.style.left="50%";
- d.style.top="70%";
- d.style.transform="translateX(-50%) scale(0.5)";
- d.style.transition="0.5s";
- d.innerHTML=`<img src="${gifts[name].img}" width="150">`;
-
- document.body.appendChild(d);
-
- setTimeout(()=>{
-  d.style.top="30%";
-  d.style.transform="translateX(-50%) scale(1.2)";
- },100);
-
- setTimeout(()=>d.remove(),1500);
-}
-
-// 🔧 FUNCIONES
-function toggleMenu(){
- let m=document.getElementById("menu");
- m.style.display=m.style.display=="flex"?"none":"flex";
-}
-
-function toggleMusic(){
- let m=document.getElementById("music");
- m.paused ? m.play() : m.pause();
-}
-
-function toggleMic(){
- alert("Micrófono activo 🎤");
-}
-
-function buyVIP(){
- vip++;
- updateUI();
-}
-
-function buySVIP(){
- if(svip < 10){
-  svip++;
-  gold += svip*500;
- }
- updateUI();
-}
-
-function crearPareja(){
- let n=prompt("Nombre pareja");
- if(n){
-  pareja=n;
-  localStorage.setItem("pareja",n);
-  document.getElementById("pareja").innerText=n;
- }
-}
-
-function crearClan(){
- let n=prompt("Nombre clan");
- if(n){
-  clan=n;
-  localStorage.setItem("clan",n);
-  document.getElementById("clan").innerText=n;
- }
-}
-
-function updateUI(){
- document.getElementById("gold").innerText="💰 Oro: "+gold;
- document.getElementById("vip").innerText="👑 VIP: "+vip;
- document.getElementById("svip").innerText="💎 SVIP: "+svip;
-}
-
-</script>
-
+        // 2. Datos de conexión
+        const userID = "user_" + Math.floor(Math.random() * 1000);
+        const userName = "Melvin_" + userID;
+        
+        // Aquí iría tu configuración de ZegoCloud si la tienes
+        function iniciarTodo() {
+            const btn = document.getElementById('main-btn');
+            const status = document.getElementById('status');
+            
+            btn.classList.toggle('btn-active');
+            
+            if(btn.classList.contains('btn-active')) {
+                status.innerText = "🎤 TRANSMITIENDO EN VIVO EN SALA: " + roomID;
+                alert("¡Bocina y Micrófono ACTIVADOS! Ahora habla y escucha.");
+            } else {
+                status.innerText = "Audio en pausa";
+            }
+        }
+    </script>
 </body>
 </html>
