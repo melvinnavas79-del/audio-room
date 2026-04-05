@@ -3,48 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - Audio Recovery</title>
+    <title>Lluvia Live - Versión Estable</title>
     
     <script src="https://resource.zegocloud.com/prebuilt/zegocloud-prebuilt.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        body { margin: 0; background: #0d001a; color: white; font-family: sans-serif; text-align: center; }
+        body { margin: 0; background: #0d001a; color: white; font-family: sans-serif; text-align: center; overflow: hidden; }
         .header-sala { background: rgba(20,20,20,0.9); padding: 15px; border: 2px solid #ffd700; border-radius: 20px; width: 90%; margin: 15px auto; }
-        .btn-control { background: #222; border: 2px solid #ffd700; border-radius: 15px; padding: 20px; width: 85%; color: white; font-weight: bold; font-size: 18px; margin-bottom: 12px; }
+        .btn-interact { background: #222; border: 2px solid #ffd700; border-radius: 15px; padding: 20px; width: 85%; color: white; font-weight: bold; font-size: 18px; margin-bottom: 12px; }
         .active { background: #ffd700 !important; color: black !important; box-shadow: 0 0 15px #ffd700; }
         
-        /* Pantalla de Inicio Única para evitar bloqueos */
-        .lobby { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .input-style { padding: 15px; border-radius: 10px; border: 2px solid #ffd700; background: #111; color: white; width: 75%; font-size: 18px; margin-bottom: 15px; text-align: center; }
+        /* Login único para asegurar el permiso de audio en iOS */
+        .pantalla-inicio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .input-login { padding: 15px; border-radius: 10px; border: 2px solid #ffd700; background: #111; color: white; width: 75%; font-size: 18px; margin-bottom: 15px; text-align: center; }
+        
+        .btn-billetera { background: #ffd700; color: black; padding: 20px; border-radius: 50px; width: 70%; font-weight: bold; border: none; margin-top: 30px; font-size: 18px; }
     </style>
 </head>
 <body>
 
-    <div id="lobby" class="lobby">
-        <h1 style="color: #00ff00; font-size: 35px;">☔ LLUVIA LIVE</h1>
-        <input type="text" id="u-name" class="input-style" placeholder="Tu Nombre">
-        <input type="number" id="s-id" class="input-style" placeholder="ID de Sala (Ej: 100)">
-        <button onclick="iniciarApp()" style="background:#0000ff; color:white; padding:20px; width:80%; border-radius:12px; font-weight:bold; border:none; font-size:18px;">ENTRAR</button>
+    <div id="lobby" class="pantalla-inicio">
+        <h1 style="color: #00ff00; font-size: 40px; margin-bottom: 30px;">☔ LLUVIA LIVE</h1>
+        <input type="text" id="nombre-usuario" class="input-login" placeholder="Tu Nombre">
+        <input type="number" id="id-sala" class="input-login" placeholder="ID de Sala (Ej: 100)">
+        <button onclick="conectarApp()" style="background:#0000ff; color:white; padding:20px; width:80%; border-radius:12px; font-weight:bold; border:none; font-size:20px;">ENTRAR AHORA</button>
     </div>
 
-    <div id="main-app" style="display:none;">
+    <div id="app-room" style="display:none;">
         <div class="header-sala">
-            <div style="font-size: 20px; color: #ffd700;">SALA ID: <span id="id-display">---</span></div>
-            <div style="margin: 8px 0;">💰 Oros: <span id="oro-txt">0</span> | 🛡️ Clan: <span style="color:red;">Lluvia</span></div>
+            <div style="font-size: 22px; color: #ffd700;">SALA ID: <span id="display-id">---</span></div>
+            <div style="margin: 10px 0;">💰 Oros: <span id="oro-count" style="color:#00ff00;">0</span> | 🛡️ Clan: <span style="color:red;">Lluvia</span></div>
+            <div style="display:flex; justify-content:space-around; font-size:12px; border-top:1px solid #333; padding-top:10px;">
+                <span style="color:#ffd700;">💎 Aristocracia</span>
+                <span style="color:#ff00ff;">✨ SVIP</span>
+                <span style="color:#00ffff;">🔥 VIP</span>
+            </div>
         </div>
 
-        <div style="margin-top: 50px;">
-            <button id="btn-mic" class="btn-control" onclick="toggleMic()">🎙️ ENCENDER MICRO</button>
-            <button id="btn-box" class="btn-control" onclick="toggleAudio()">🔊 ACTIVAR BOCINA</button>
+        <div style="margin-top: 60px;">
+            <button id="mic-toggle" class="btn-interact" onclick="manejarMicro()">🎙️ ENCENDER MICRO</button>
+            <button id="audio-toggle" class="btn-interact" onclick="desbloquearAudio()">🔊 ACTIVAR BOCINA</button>
         </div>
 
-        <div id="zego-root" style="display:none;"></div>
+        <div id="zego-container" style="display:none;"></div>
+
+        <button class="btn-billetera" onclick="alert('Abriendo Billetera...')">💳 IR A BILLETERA</button>
     </div>
 
     <script>
-        // Configuración Firebase (Melvin)
         const firebaseConfig = {
             apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
             authDomain: "lluvia-live-69a05.firebaseapp.com",
@@ -56,51 +64,50 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let zp = null;
-        let micEnabled = false;
+        let zegoEngine = null;
+        let micOn = false;
 
-        async function iniciarApp() {
-            const name = document.getElementById('u-name').value || "User";
-            const room = document.getElementById('s-id').value || "100";
+        async function conectarApp() {
+            const nick = document.getElementById('nombre-usuario').value || "Invitado";
+            const room = document.getElementById('id-sala').value || "100";
             
-            document.getElementById('id-display').innerText = room;
+            document.getElementById('display-id').innerText = room;
             document.getElementById('lobby').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
+            document.getElementById('app-room').style.display = 'block';
 
-            // Generar Token de Zego
-            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(1111976694, "25049a1d82f7cc4b219154a4f89d53f5", room, "U"+Date.now(), name);
-            zp = ZegoUIKitPrebuilt.create(kitToken);
+            // Configuración Zego compatible con iPhone
+            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(1111976694, "25049a1d82f7cc4b219154a4f89d53f5", room, "U"+Date.now(), nick);
+            zegoEngine = ZegoUIKitPrebuilt.create(kitToken);
             
-            await zp.joinRoom({
-                container: document.querySelector("#zego-root"),
+            await zegoEngine.joinRoom({
+                container: document.querySelector("#zego-container"),
                 scenario: { mode: ZegoUIKitPrebuilt.GroupCall },
                 showPreJoinView: false,
-                turnOnMicrophoneWhenJoining: false // Importante: Empezar apagado para que el usuario lo active
+                turnOnMicrophoneWhenJoining: false 
             });
 
-            // Escuchar Oros
+            // Sincronizar Oros en tiempo real
             db.collection("usuarios").doc("Melvin_User").onSnapshot(doc => {
-                if(doc.exists) document.getElementById('oro-txt').innerText = doc.data().oro || 0;
+                if(doc.exists) document.getElementById('oro-count').innerText = doc.data().oro || 0;
             });
         }
 
-        function toggleMic() {
-            micEnabled = !micEnabled;
-            zp.turnMicrophoneOn(micEnabled);
-            const btn = document.getElementById('btn-mic');
-            btn.innerText = micEnabled ? "🎙️ MICRO: ON" : "🎙️ ENCENDER MICRO";
-            btn.className = micEnabled ? "btn-control active" : "btn-control";
+        function manejarMicro() {
+            micOn = !micOn;
+            zegoEngine.turnMicrophoneOn(micOn);
+            const b = document.getElementById('mic-toggle');
+            b.innerText = micOn ? "🎙️ MICRO: ON" : "🎙️ ENCENDER MICRO";
+            b.className = micOn ? "btn-interact active" : "btn-interact";
         }
 
-        function toggleAudio() {
-            // Esta función "despierta" el audio en iPhones
-            const context = new (window.AudioContext || window.webkitAudioContext)();
-            if (context.state === 'suspended') {
-                context.resume();
-            }
-            const btn = document.getElementById('btn-box');
-            btn.innerText = "🔊 AUDIO SINCRONIZADO";
-            btn.className = "btn-control active";
+        function desbloquearAudio() {
+            // Truco necesario para que el iPhone suelte el sonido
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (ctx.state === 'suspended') ctx.resume();
+            
+            const b = document.getElementById('audio-toggle');
+            b.innerText = "🔊 AUDIO SINCRONIZADO";
+            b.className = "btn-interact active";
         }
     </script>
 </body>
