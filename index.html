@@ -1,39 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Coravox</title>
+    <title>Lluvia Live - Entrada</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 
-<body style="text-align:center; margin-top:100px; font-family:Arial;">
+<body style="background:black; color:white; text-align:center; padding-top:100px; font-family: Arial;">
 
-<h1>🔥 Coravox</h1>
+    <h1 style="color: #00ff00;">☔ Lluvia Live</h1>
+    
+    <input type="text" id="name" placeholder="Tu nombre" style="padding:10px; border-radius:5px;"><br><br>
 
-<input id="name" placeholder="Tu nombre"><br><br>
+    <button onclick="crear()" style="padding:10px 20px; background:green; color:white; border:none; border-radius:5px;">Crear sala</button>
+    <button onclick="entrar()" style="padding:10px 20px; background:blue; color:white; border:none; border-radius:5px;">Entrar</button>
 
-<button onclick="crear()">Crear sala</button>
-<button onclick="entrar()">Entrar</button>
+    <script>
+        // CONEXIÓN A TU RENDER (ESTO ES LO IMPORTANTE)
+        const socket = io("https://audio-room-1.onrender.com");
 
-<script>
-function crear(){
-  let name = document.getElementById("name").value;
-  if(!name) return alert("Escribe tu nombre");
+        function crear() {
+            const name = document.getElementById("name").value;
+            if (!name) return alert("Escribe tu nombre");
+            
+            localStorage.setItem("username", name);
+            const room = Math.random().toString(36).substring(7);
+            window.location.href = "room.html?room=" + room;
+        }
 
-  localStorage.setItem("username", name);
+        function entrar() {
+            const name = document.getElementById("name").value;
+            const room = prompt("ID de sala");
+            if (!name || !room) return;
 
-  let room = Math.random().toString(36).substring(7);
-  window.location = "/room.html?room=" + room;
-}
-
-function entrar(){
-  let name = document.getElementById("name").value;
-  let room = prompt("ID de sala");
-
-  if(!name || !room) return;
-
-  localStorage.setItem("username", name);
-  window.location = "/room.html?room=" + room;
-}
-</script>
-
+            localStorage.setItem("username", name);
+            window.location.href = "room.html?room=" + room;
+        }
+    </script>
 </body>
 </html>
