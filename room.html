@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - Versión Final</title>
+    <title>Lluvia Live - Fix Total</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -11,63 +11,56 @@
 
     <style>
         body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
-        .header-sala { background: rgba(0,0,0,0.85); padding: 15px; border: 2px solid #ffd700; border-radius: 20px; width: 90%; margin: 15px auto; }
-        .info-row { display: flex; justify-content: space-around; font-size: 16px; margin: 10px 0; font-weight: bold; }
+        .header-sala { background: rgba(0,0,0,0.9); padding: 15px; border: 2px solid #ffd700; border-radius: 20px; width: 90%; margin: 15px auto; }
         
-        /* BOTÓN DE AUDIO (LA BOCINA) */
-        .btn-bocina { background: #222; border: 2px solid #00ff00; border-radius: 15px; padding: 15px 30px; display: inline-flex; align-items: center; gap: 15px; cursor: pointer; margin: 20px 0; }
-        .bocina-on { border-color: #ffd700; box-shadow: 0 0 15px #ffd700; }
+        /* SECCIÓN DE AUDIO */
+        .control-panel { margin: 20px auto; width: 90%; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        
+        .mic-circle { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #ffd700; background: #331a4d; font-size: 30px; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .mic-on { background: #ffd700; color: black; box-shadow: 0 0 20px #ffd700; }
 
-        /* MICRÓFONO */
-        .mic-icon { width: 85px; height: 85px; border-radius: 50%; border: 3px solid #ffd700; background: #331a4d; font-size: 35px; display: inline-flex; align-items: center; justify-content: center; margin-top: 10px; }
-        .mic-active { background: #ffd700; color: black; box-shadow: 0 0 20px #ffd700; }
+        .btn-toggle { background: #222; border: 2px solid #555; border-radius: 12px; padding: 12px 25px; width: 200px; cursor: pointer; color: white; font-weight: bold; }
+        .active-green { border-color: #00ff00; box-shadow: 0 0 10px #00ff00; }
 
         /* BILLETERA */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a0033; z-index: 5000; padding-top: 20px; overflow-y: auto; }
-        .card { background: #222; border: 2px solid #ffd700; border-radius: 25px; width: 90%; margin: auto; padding: 25px; box-sizing: border-box; }
-        .btn-pack { background: #333; border: 2px solid #ffd700; color: white; width: 100%; padding: 20px; margin-bottom: 15px; border-radius: 15px; display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; cursor: pointer; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a0033; z-index: 9999; overflow-y: auto; padding-top: 20px; }
+        .card-buy { background: #222; border: 2px solid #ffd700; border-radius: 20px; width: 85%; margin: auto; padding: 20px; }
+        .pack-row { background: #333; border: 1px solid #ffd700; padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; cursor: pointer; }
         
-        .btn-wallet { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 20px 60px; border-radius: 50px; font-weight: bold; border: none; font-size: 20px; box-shadow: 0 0 20px #ffd700; }
+        .btn-wallet { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 18px 45px; border-radius: 40px; font-weight: bold; font-size: 18px; border: none; box-shadow: 0 0 15px #ffd700; }
     </style>
 </head>
 <body>
 
     <div class="header-sala">
-        <div style="font-size: 24px; color: #ffd700;">👤 100</div>
-        <div class="info-row">
-            <span>💰 Oro: <span id="oro-txt" style="color:#ffd700;">...</span></span>
+        <div style="font-size: 22px; color: #ffd700;">👤 100</div>
+        <div style="display: flex; justify-content: space-around; margin: 10px 0;">
+            <span>💰 Oro: <span id="oro-val" style="color:#ffd700;">...</span></span>
             <span>🛡️ Clan: <span style="color:#ff4444;">Lluvia</span></span>
         </div>
-        <div style="color: #ffd700;">💎 Aristocracia <span style="color: #ff00ff; text-shadow: 0 0 10px #ff00ff;">SVIP</span></div>
+        <div style="color: #ffd700; font-weight: bold;">💎 Aristocracia <span style="color: #ff00ff;">SVIP</span></div>
     </div>
 
-    <div id="mic-viz" class="mic-icon">🎙️</div>
-    <br>
-
-    <div id="bocina-master" class="btn-bocina" onclick="controlAudio()">
-        <span style="font-size: 30px;">🔊</span>
-        <span id="bocina-status" style="font-weight: bold; color: #00ff00;">AUDIO: APAGADO</span>
+    <div class="control-panel">
+        <div id="mic-viz" class="mic-circle">🎙️</div>
+        
+        <button id="btn-mic" class="btn-toggle" onclick="toggleMicro()">🎙️ MICRO: OFF</button>
+        
+        <button id="btn-audio" class="btn-toggle" onclick="toggleAudio()">🔊 BOCINA: OFF</button>
     </div>
 
-    <button class="btn-wallet" onclick="abrirBilletera()">💳 IR A BILLETERA</button>
+    <button class="btn-wallet" onclick="abrirBilletera()">💳 BILLETERA</button>
 
     <div id="modal-pago" class="modal">
-        <div class="card">
-            <h2 style="color: #ffd700; margin-bottom: 25px;">Comprar Oros</h2>
-            
-            <div class="btn-pack" onclick="pagar('0.99', 100)">
-                <span>🪙 100 Oros</span> <span>$0.99</span>
-            </div>
-            <div class="btn-pack" onclick="pagar('9.99', 1100)">
-                <span>🪙 1100 Oros</span> <span>$9.99</span>
-            </div>
-            <div class="btn-pack" onclick="pagar('49.99', 6000)">
-                <span>🪙 6000 Oros</span> <span>$49.99</span>
-            </div>
+        <div class="card-buy">
+            <h2 style="color: #ffd700;">Recargar Oro</h2>
+            <div class="pack-row" onclick="prepararPaypal('0.99', 100)"><span>🪙 100 Oros</span><b>$0.99</b></div>
+            <div class="pack-row" onclick="prepararPaypal('9.99', 1100)"><span>🪙 1100 Oros</span><b>$9.99</b></div>
+            <div class="pack-row" onclick="prepararPaypal('49.99', 6000)"><span>🪙 6000 Oros</span><b>$49.99</b></div>
 
-            <div id="paypal-container" style="margin-top: 20px;"></div>
+            <div id="paypal-area" style="margin-top: 20px; min-height: 150px;"></div>
             
-            <button onclick="cerrarBilletera()" style="margin-top: 30px; background: #ff4444; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold;">VOLVER</button>
+            <button onclick="cerrarBilletera()" style="margin-top: 20px; width: 100%; padding: 12px; background: #ff4444; color: white; border: none; border-radius: 8px;">Cerrar</button>
         </div>
     </div>
 
@@ -84,51 +77,51 @@
         const db = firebase.firestore();
         let userId = "Melvin_User";
 
-        // Actualizar Oro en tiempo real
+        // Sincronizar Oros (Evita el "Cargando" eterno)
         db.collection("usuarios").doc(userId).onSnapshot(doc => {
-            if(doc.exists) document.getElementById('oro-txt').innerText = doc.data().oro || 0;
-        });
+            document.getElementById('oro-val').innerText = doc.exists ? (doc.data().oro || 0) : 0;
+        }, () => { document.getElementById('oro-val').innerText = "0"; });
 
-        // CONTROL DE AUDIO (APAGAR Y ENCENDER)
-        let encendido = false;
-        function controlAudio() {
-            encendido = !encendido;
-            const btn = document.getElementById('bocina-master');
-            const txt = document.getElementById('bocina-status');
-            const mic = document.getElementById('mic-viz');
+        // LÓGICA DE MICRO
+        let microOn = false;
+        function toggleMicro() {
+            microOn = !microOn;
+            const btn = document.getElementById('btn-mic');
+            const viz = document.getElementById('mic-viz');
+            btn.innerText = microOn ? "🎙️ MICRO: ON" : "🎙️ MICRO: OFF";
+            btn.className = microOn ? "btn-toggle active-green" : "btn-toggle";
+            viz.className = microOn ? "mic-circle mic-on" : "mic-circle";
+        }
 
-            if(encendido) {
-                btn.classList.add('bocina-on');
-                txt.innerText = "AUDIO: ENCENDIDO";
-                txt.style.color = "#ffd700";
-                mic.classList.add('mic-active');
-                // Desbloquea el audio del navegador
-                const audio = new Audio();
-                audio.play().catch(() => {});
-            } else {
-                btn.classList.remove('bocina-on');
-                txt.innerText = "AUDIO: APAGADO";
-                txt.style.color = "#00ff00";
-                mic.classList.remove('mic-active');
+        // LÓGICA DE BOCINA (AUDIO)
+        let audioOn = false;
+        function toggleAudio() {
+            audioOn = !audioOn;
+            const btn = document.getElementById('btn-audio');
+            btn.innerText = audioOn ? "🔊 BOCINA: ON" : "🔊 BOCINA: OFF";
+            btn.className = audioOn ? "btn-toggle active-green" : "btn-toggle";
+            if(audioOn) {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                ctx.resume();
             }
         }
 
+        // BILLETERA
         function abrirBilletera() { document.getElementById('modal-pago').style.display = 'block'; }
         function cerrarBilletera() { 
-            document.getElementById('modal-pago').style.display = 'none';
-            document.getElementById('paypal-container').innerHTML = ""; 
+            document.getElementById('modal-pago').style.display = 'none'; 
+            document.getElementById('paypal-area').innerHTML = "";
         }
 
-        // LÓGICA DE PAYPAL QUE NO FALLA
-        function pagar(monto, cantidad) {
-            const container = document.getElementById('paypal-container');
-            container.innerHTML = ""; // Limpia recargas anteriores
-
+        function prepararPaypal(precio, cantidad) {
+            const area = document.getElementById('paypal-area');
+            area.innerHTML = "<p>Cargando botones de pago...</p>";
+            
             paypal.Buttons({
                 style: { layout: 'vertical', color: 'gold', shape: 'pill' },
                 createOrder: (data, actions) => {
                     return actions.order.create({
-                        purchase_units: [{ amount: { value: monto } }]
+                        purchase_units: [{ amount: { value: precio }, description: cantidad + " Oros" }]
                     });
                 },
                 onApprove: (data, actions) => {
@@ -136,11 +129,11 @@
                         db.collection("usuarios").doc(userId).update({
                             oro: firebase.firestore.FieldValue.increment(cantidad)
                         });
-                        alert("¡Melvin, recarga de " + cantidad + " oros lista!");
+                        alert("¡Melvin, recibiste " + cantidad + " oros!");
                         cerrarBilletera();
                     });
                 }
-            }).render('#paypal-container');
+            }).render('#paypal-area');
         }
     </script>
 </body>
