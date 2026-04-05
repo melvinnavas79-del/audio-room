@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudioRoom PRO - Conexión</title>
+    <title>AudioRoom PRO - Sonido Forzado</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
@@ -11,7 +11,8 @@
         .aristocracia-tag { background: linear-gradient(90deg, #ffd700, #ff8c00); color: #000; font-weight: bold; padding: 5px 20px; border-radius: 15px; margin: 10px 0; display: inline-block; }
         .btn-mic { width: 80px; height: 80px; border-radius: 50%; border: none; font-size: 35px; cursor: pointer; background: #444; color: white; }
         .btn-active { background: #00ff00; border: 4px solid white; box-shadow: 0 0 20px #00ff00; }
-        .bocina-icon { font-size: 60px; margin: 20px; filter: drop-shadow(0 0 10px #00ffcc); }
+        .btn-audio { background: #ff0066; color: white; padding: 15px; border-radius: 10px; border: none; margin: 10px; font-weight: bold; cursor: pointer; }
+        .bocina-icon { font-size: 60px; margin: 10px; }
     </style>
 </head>
 <body>
@@ -21,44 +22,60 @@
         <div class="aristocracia-tag">🏆 Noble (Aristocracia)</div>
     </div>
 
-    <div id="room-display" style="font-size: 1.2rem; margin-bottom: 10px;">📍 Sala ID: Cargando...</div>
+    <div id="room-display" style="font-size: 1.1rem;">📍 Sala ID: Cargando...</div>
+    
+    <button class="btn-audio" onclick="activarBocina()">🔊 CLIC AQUÍ PARA ESCUCHAR</button>
+
     <div class="bocina-icon">🔊</div>
-    <p id="status">Paso 1: Pon el mismo ID<br>Paso 2: Toca el micro</p>
+    <p id="status">1. Pon el mismo ID<br>2. Toca el botón rosa<br>3. Toca el micro</p>
 
     <button class="btn-mic" id="main-btn" onclick="conectarAudio()">🎤</button>
 
-    <audio id="remote-audio" autoplay></audio>
+    <audio id="remote-audio" autoplay playsinline></audio>
 
     <script>
         const roomID = prompt("Ingresa el ID de la sala:") || "100";
         document.getElementById('room-display').innerText = "📍 Sala ID: " + roomID;
 
-        // Nombre de usuario para que se encuentren (ej: melvin-777)
-        const peer = new Peer('melvin-room-' + roomID);
+        // Generamos IDs fijos para que el Teléfono A siempre llame al B
+        const peer = new Peer('melvin-' + roomID + (Math.random() > 0.5 ? 'A' : 'B'));
+
+        function activarBocina() {
+            const audio = document.getElementById('remote-audio');
+            audio.play(); // Esto desbloquea el permiso de sonido en el celular
+            alert("¡Sonido desbloqueado! Ahora activa el micro.");
+        }
 
         function conectarAudio() {
             const btn = document.getElementById('main-btn');
             btn.classList.add('btn-active');
-            document.getElementById('status').innerText = "🎤 CONECTADO... ¡HABLA!";
+            document.getElementById('status').innerText = "🎤 CONECTADO - HABLA";
 
             navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-                // 1. Escuchar cuando el otro teléfono nos llame
+                // Escuchar llamadas
                 peer.on('call', call => {
                     call.answer(stream);
                     call.on('stream', remoteStream => {
-                        document.getElementById('remote-audio').srcObject = remoteStream;
+                        const remoteAudio = document.getElementById('remote-audio');
+                        remoteAudio.srcObject = remoteStream;
+                        remoteAudio.play();
                     });
                 });
 
-                // 2. Intentar llamar al otro teléfono
-                // (Usamos un pequeño truco para que el segundo que entre llame al primero)
-                const call = peer.call('melvin-room-' + roomID, stream);
-                if(call) {
-                    call.on('stream', remoteStream => {
-                        document.getElementById('remote-audio').srcObject = remoteStream;
-                    });
-                }
-            }).catch(err => alert("Error al activar micro: " + err));
+                // Llamar al otro (intentamos llamar a las dos versiones A y B)
+                const callA = peer.call('melvin-' + roomID + 'A', stream);
+                const callB = peer.call('melvin-' + roomID + 'B', stream);
+                
+                [callA, callB].forEach(call => {
+                    if(call) {
+                        call.on('stream', remoteStream => {
+                            const remoteAudio = document.getElementById('remote-audio');
+                            remoteAudio.srcObject = remoteStream;
+                            remoteAudio.play();
+                        });
+                    }
+                });
+            }).catch(err => alert("Error de micro: " + err));
         }
     </script>
 </body>
