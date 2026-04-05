@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - Sistema Corregido</title>
+    <title>Lluvia Live - Versión Final</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -11,25 +11,23 @@
 
     <style>
         body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
-        
         .header-sala { background: rgba(0,0,0,0.85); padding: 15px; border: 2px solid #ffd700; border-radius: 20px; width: 90%; margin: 15px auto; }
         .info-row { display: flex; justify-content: space-around; font-size: 16px; margin: 10px 0; font-weight: bold; }
-        .txt-svip { color: #ff00ff; font-weight: bold; text-shadow: 0 0 10px #ff00ff; }
-
-        /* CONTROL DE AUDIO MEJORADO */
-        .audio-box { margin-top: 20px; }
-        .btn-audio-toggle { background: #222; border: 2px solid #00ff00; border-radius: 15px; padding: 15px 25px; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.3s; }
-        .audio-active { border-color: #ffd700; box-shadow: 0 0 15px #ffd700; }
         
-        .mic-icon { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #ffd700; background: #331a4d; font-size: 35px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px; }
-        .mic-on { background: #ffd700; color: black; box-shadow: 0 0 20px #ffd700; }
+        /* BOTÓN DE AUDIO (LA BOCINA) */
+        .btn-bocina { background: #222; border: 2px solid #00ff00; border-radius: 15px; padding: 15px 30px; display: inline-flex; align-items: center; gap: 15px; cursor: pointer; margin: 20px 0; }
+        .bocina-on { border-color: #ffd700; box-shadow: 0 0 15px #ffd700; }
+
+        /* MICRÓFONO */
+        .mic-icon { width: 85px; height: 85px; border-radius: 50%; border: 3px solid #ffd700; background: #331a4d; font-size: 35px; display: inline-flex; align-items: center; justify-content: center; margin-top: 10px; }
+        .mic-active { background: #ffd700; color: black; box-shadow: 0 0 20px #ffd700; }
 
         /* BILLETERA */
-        .modal-pago { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a0033; z-index: 2000; overflow-y: auto; padding-top: 20px; }
-        .card-pago { background: #222; border: 2px solid #ffd700; border-radius: 20px; width: 88%; margin: auto; padding: 20px; }
-        .pack { background: #333; border: 1px solid #ffd700; color: white; width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; font-size: 18px; cursor: pointer; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a0033; z-index: 5000; padding-top: 20px; overflow-y: auto; }
+        .card { background: #222; border: 2px solid #ffd700; border-radius: 25px; width: 90%; margin: auto; padding: 25px; box-sizing: border-box; }
+        .btn-pack { background: #333; border: 2px solid #ffd700; color: white; width: 100%; padding: 20px; margin-bottom: 15px; border-radius: 15px; display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; cursor: pointer; }
         
-        .btn-wallet-main { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 18px 50px; border-radius: 40px; font-weight: bold; border: none; font-size: 18px; box-shadow: 0 0 20px #ffd700; }
+        .btn-wallet { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 20px 60px; border-radius: 50px; font-weight: bold; border: none; font-size: 20px; box-shadow: 0 0 20px #ffd700; }
     </style>
 </head>
 <body>
@@ -37,42 +35,39 @@
     <div class="header-sala">
         <div style="font-size: 24px; color: #ffd700;">👤 100</div>
         <div class="info-row">
-            <span>💰 Oro: <span id="oro-val" style="color:#ffd700;">0</span></span>
+            <span>💰 Oro: <span id="oro-txt" style="color:#ffd700;">...</span></span>
             <span>🛡️ Clan: <span style="color:#ff4444;">Lluvia</span></span>
         </div>
-        <div style="border-top: 1px solid #444; padding-top: 10px;">
-            <span style="color: #ffd700;">💎 Aristocracia</span> <span class="txt-svip">SVIP</span>
-        </div>
+        <div style="color: #ffd700;">💎 Aristocracia <span style="color: #ff00ff; text-shadow: 0 0 10px #ff00ff;">SVIP</span></div>
     </div>
 
-    <div class="audio-box">
-        <div id="mic-viz" class="mic-icon">🎙️</div>
-        <br>
-        <div id="audio-master" class="btn-audio-toggle" onclick="toggleSistemaAudio()">
-            <span style="font-size: 25px;">🔊</span>
-            <span id="status-text" style="font-weight: bold; color: #00ff00;">AUDIO: OFF</span>
-        </div>
+    <div id="mic-viz" class="mic-icon">🎙️</div>
+    <br>
+
+    <div id="bocina-master" class="btn-bocina" onclick="controlAudio()">
+        <span style="font-size: 30px;">🔊</span>
+        <span id="bocina-status" style="font-weight: bold; color: #00ff00;">AUDIO: APAGADO</span>
     </div>
 
-    <button class="btn-wallet-main" onclick="abrirBilletera()">💳 IR A BILLETERA</button>
+    <button class="btn-wallet" onclick="abrirBilletera()">💳 IR A BILLETERA</button>
 
-    <div id="modal-wallet" class="modal-pago">
-        <div class="card-pago">
-            <h2 style="color: #ffd700;">Recarga de Oro</h2>
+    <div id="modal-pago" class="modal">
+        <div class="card">
+            <h2 style="color: #ffd700; margin-bottom: 25px;">Comprar Oros</h2>
             
-            <div class="pack" onclick="iniciarPago('0.99', 100)">
-                <span>🪙 100 Oros</span> <b>$0.99</b>
+            <div class="btn-pack" onclick="pagar('0.99', 100)">
+                <span>🪙 100 Oros</span> <span>$0.99</span>
             </div>
-            <div class="pack" onclick="iniciarPago('9.99', 1100)">
-                <span>🪙 1100 Oros</span> <b>$9.99</b>
+            <div class="btn-pack" onclick="pagar('9.99', 1100)">
+                <span>🪙 1100 Oros</span> <span>$9.99</span>
             </div>
-            <div class="pack" onclick="iniciarPago('49.99', 6000)">
-                <span>🪙 6000 Oros</span> <b>$49.99</b>
+            <div class="btn-pack" onclick="pagar('49.99', 6000)">
+                <span>🪙 6000 Oros</span> <span>$49.99</span>
             </div>
 
-            <div id="paypal-button-container" style="margin-top: 20px; min-height: 150px;"></div>
+            <div id="paypal-container" style="margin-top: 20px;"></div>
             
-            <button onclick="cerrarBilletera()" style="margin-top: 20px; background: none; border: 1px solid #ff4444; color: #ff4444; padding: 12px; width: 100%; border-radius: 10px;">Volver</button>
+            <button onclick="cerrarBilletera()" style="margin-top: 30px; background: #ff4444; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold;">VOLVER</button>
         </div>
     </div>
 
@@ -89,51 +84,51 @@
         const db = firebase.firestore();
         let userId = "Melvin_User";
 
-        // Sincronizar Oro inmediatamente
+        // Actualizar Oro en tiempo real
         db.collection("usuarios").doc(userId).onSnapshot(doc => {
-            if(doc.exists) document.getElementById('oro-val').innerText = doc.data().oro || 0;
+            if(doc.exists) document.getElementById('oro-txt').innerText = doc.data().oro || 0;
         });
 
-        // Lógica de Audio On/Off
-        let isAudioOn = false;
-        function toggleSistemaAudio() {
-            isAudioOn = !isAudioOn;
-            const btn = document.getElementById('audio-master');
-            const txt = document.getElementById('status-text');
+        // CONTROL DE AUDIO (APAGAR Y ENCENDER)
+        let encendido = false;
+        function controlAudio() {
+            encendido = !encendido;
+            const btn = document.getElementById('bocina-master');
+            const txt = document.getElementById('bocina-status');
             const mic = document.getElementById('mic-viz');
 
-            if(isAudioOn) {
-                btn.classList.add('audio-active');
-                txt.innerText = "AUDIO: ON";
+            if(encendido) {
+                btn.classList.add('bocina-on');
+                txt.innerText = "AUDIO: ENCENDIDO";
                 txt.style.color = "#ffd700";
-                mic.classList.add('mic-on');
-                // Activa el motor de audio del iPhone
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                audioCtx.resume();
+                mic.classList.add('mic-active');
+                // Desbloquea el audio del navegador
+                const audio = new Audio();
+                audio.play().catch(() => {});
             } else {
-                btn.classList.remove('audio-active');
-                txt.innerText = "AUDIO: OFF";
+                btn.classList.remove('bocina-on');
+                txt.innerText = "AUDIO: APAGADO";
                 txt.style.color = "#00ff00";
-                mic.classList.remove('mic-on');
+                mic.classList.remove('mic-active');
             }
         }
 
-        // Billetera y PayPal
-        function abrirBilletera() { document.getElementById('modal-wallet').style.display = 'block'; }
+        function abrirBilletera() { document.getElementById('modal-pago').style.display = 'block'; }
         function cerrarBilletera() { 
-            document.getElementById('modal-wallet').style.display = 'none'; 
-            document.getElementById('paypal-button-container').innerHTML = ""; 
+            document.getElementById('modal-pago').style.display = 'none';
+            document.getElementById('paypal-container').innerHTML = ""; 
         }
 
-        function iniciarPago(precio, cantidad) {
-            const container = document.getElementById('paypal-button-container');
-            container.innerHTML = "<p style='color: #ffd700;'>Preparando botones de PayPal...</p>";
+        // LÓGICA DE PAYPAL QUE NO FALLA
+        function pagar(monto, cantidad) {
+            const container = document.getElementById('paypal-container');
+            container.innerHTML = ""; // Limpia recargas anteriores
 
             paypal.Buttons({
-                style: { layout: 'vertical', color: 'gold', shape: 'pill', label: 'paypal' },
+                style: { layout: 'vertical', color: 'gold', shape: 'pill' },
                 createOrder: (data, actions) => {
                     return actions.order.create({
-                        purchase_units: [{ amount: { value: precio }, description: cantidad + " Oros Lluvia Live" }]
+                        purchase_units: [{ amount: { value: monto } }]
                     });
                 },
                 onApprove: (data, actions) => {
@@ -141,11 +136,11 @@
                         db.collection("usuarios").doc(userId).update({
                             oro: firebase.firestore.FieldValue.increment(cantidad)
                         });
-                        alert("¡Compra exitosa! Se agregaron " + cantidad + " oros.");
+                        alert("¡Melvin, recarga de " + cantidad + " oros lista!");
                         cerrarBilletera();
                     });
                 }
-            }).render('#paypal-button-container');
+            }).render('#paypal-container');
         }
     </script>
 </body>
