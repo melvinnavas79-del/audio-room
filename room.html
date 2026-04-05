@@ -3,43 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live - Wallet & VIP</title>
+    <title>Lluvia Live - Identidad VIP</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { margin: 0; background: linear-gradient(180deg, #1a0033, #3d0066); color: white; font-family: sans-serif; text-align: center; height: 100vh; overflow: hidden; }
+        body { margin: 0; background: linear-gradient(180deg, #1a0033, #3d0066); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; height: 100vh; overflow: hidden; }
         
-        /* Panel Superior */
-        .header-panel { background: rgba(0,0,0,0.7); width: 90%; margin: 10px auto; padding: 12px; border-radius: 20px; border: 1.5px solid #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.3); }
-        .stats { display: flex; justify-content: space-around; font-size: 0.85rem; margin-bottom: 8px; }
-        .aristocracia { background: linear-gradient(90deg, #ffd700, #ff8c00); color: black; font-weight: bold; padding: 6px 20px; border-radius: 20px; display: inline-block; font-size: 0.9rem; }
+        /* Header con Identidad */
+        .header-panel { background: rgba(0,0,0,0.8); width: 92%; margin: 10px auto; padding: 15px; border-radius: 25px; border: 2px solid #ffd700; box-shadow: 0 0 20px rgba(255,215,0,0.4); }
+        .user-name { color: #ffd700; font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 5px; text-shadow: 0 0 10px #ffd700; }
+        .stats { display: flex; justify-content: space-around; font-size: 0.9rem; border-top: 1px solid #444; pt: 8px; }
         
-        .room-info { color: #ffd700; margin: 10px 0; font-weight: bold; font-size: 0.9rem; }
-        .btn-pink { background: #ff0066; color: white; padding: 10px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; width: 80%; }
-
-        /* Controles de Audio */
-        .controls { display: flex; justify-content: center; gap: 30px; margin-top: 15px; }
-        .circle-btn { width: 65px; height: 65px; border-radius: 50%; border: none; font-size: 25px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.6); }
-        .btn-on { background: #00ff00; color: black; border: 2px solid white; }
+        .aristocracia { background: linear-gradient(90deg, #ffd700, #ff8c00); color: black; font-weight: bold; padding: 6px 25px; border-radius: 20px; display: inline-block; margin-top: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        
+        /* Botones de Sala */
+        .btn-pink { background: #ff0066; color: white; padding: 12px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; width: 85%; margin-top: 10px; }
+        .controls { display: flex; justify-content: center; gap: 35px; margin-top: 20px; }
+        .circle-btn { width: 70px; height: 70px; border-radius: 50%; border: none; font-size: 28px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.6); }
+        .btn-on { background: #00ff00; color: black; border: 3px solid white; }
         .btn-off { background: #ff3333; color: white; }
 
-        /* BARRA DE ACCIONES INFERIOR (Wallet, Regalo, VIP) */
-        .footer-actions { position: fixed; bottom: 25px; width: 100%; display: flex; justify-content: space-evenly; align-items: center; }
-        
-        .action-btn { width: 55px; height: 55px; border-radius: 50%; border: 2px solid white; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; }
-        .wallet-btn { background: #ffd700; color: black; box-shadow: 0 0 15px #ffd700; }
-        .vip-btn { background: #00d2ff; color: white; box-shadow: 0 0 15px #00d2ff; }
-        .gift-btn { width: 75px; height: 75px; border-radius: 50%; background: linear-gradient(45deg, #ff0066, #ffcc00); border: none; font-size: 30px; cursor: pointer; box-shadow: 0 0 20px #ff0066; }
+        /* MODAL DE BILLETERA DE LUJO */
+        #wallet-modal { display: none; position: fixed; top: 15%; left: 5%; width: 90%; background: #222; border: 3px solid #ffd700; border-radius: 30px; padding: 20px; z-index: 1000; box-shadow: 0 0 100px black; box-sizing: border-box;}
+        .wallet-title { color: #ffd700; font-size: 1.5rem; margin-bottom: 15px; }
+        .price-opt { background: linear-gradient(90deg, #333, #444); margin: 12px 0; padding: 15px; border-radius: 15px; cursor: pointer; border: 1.5px solid #ffd700; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .price-opt:active { transform: scale(0.95); }
+        .close-btn { background: #ff3333; color: white; border: none; padding: 12px 30px; border-radius: 10px; font-weight: bold; margin-top: 10px; width: 100%; }
 
-        /* Modal Simple de Wallet */
-        #wallet-modal { display: none; position: fixed; top: 20%; left: 10%; width: 80%; background: #222; border: 2px solid #ffd700; border-radius: 20px; padding: 20px; z-index: 100; box-shadow: 0 0 50px black; }
-        .price-opt { background: #333; margin: 10px 0; padding: 10px; border-radius: 10px; cursor: pointer; border: 1px solid #444; }
+        /* Footer */
+        .footer-actions { position: fixed; bottom: 25px; width: 100%; display: flex; justify-content: space-evenly; align-items: center; }
+        .action-btn { width: 60px; height: 60px; border-radius: 50%; border: 2px solid white; font-weight: bold; cursor: pointer; font-size: 11px; }
+        .wallet-btn { background: #ffd700; color: black; box-shadow: 0 0 20px #ffd700; }
+        .gift-btn { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(45deg, #ff0066, #ffcc00); border: none; font-size: 35px; cursor: pointer; box-shadow: 0 0 30px #ff0066; }
+        .vip-btn { background: #00d2ff; color: white; box-shadow: 0 0 20px #00d2ff; }
     </style>
 </head>
 <body>
 
     <div class="header-panel">
+        <span class="user-name" id="display-name">Cargando...</span>
         <div class="stats">
             <span>💰 Oro: <b id="user-oro">...</b></span>
             <span style="color: #00ffcc;">🛡️ Clan: Lluvia</span>
@@ -47,8 +50,8 @@
         <div class="aristocracia">🏆 Noble (Aristocracia)</div>
     </div>
 
-    <div class="room-info" id="room-display">📍 Sala ID: Cargando...</div>
-    <button class="btn-pink" onclick="unmuteAudio()">🔊 ACTIVAR AUDIO DE SALA</button>
+    <div id="room-display" style="color: #ffd700; margin-top: 10px; font-weight: bold;">📍 Sala: ...</div>
+    <button class="btn-pink" onclick="unmuteAudio()">🔊 ESCUCHAR SALA</button>
 
     <div class="controls">
         <div><button id="mic-btn" class="circle-btn btn-off" onclick="toggleMic()">🎙️</button><p>Micro</p></div>
@@ -56,22 +59,22 @@
     </div>
 
     <div id="wallet-modal">
-        <h3>💳 Mi Billetera</h3>
-        <div class="price-opt" onclick="comprarOro(100)">🪙 100 Oro - $0.99</div>
-        <div class="price-opt" onclick="comprarOro(1000)">🪙 1100 Oro - $9.99</div>
-        <button onclick="cerrarWallet()" style="background: red; color: white; border: none; padding: 10px; border-radius: 5px; margin-top: 10px;">Cerrar</button>
+        <h3 class="wallet-title">💳 RECARGA ORO</h3>
+        <div class="price-opt" onclick="comprarOro(100)"><span>🪙 100 Oros</span> <span style="color: #00ff00;">$0.99</span></div>
+        <div class="price-opt" onclick="comprarOro(1100)"><span>🪙 1100 Oros</span> <span style="color: #00ff00;">$9.99</span></div>
+        <div class="price-opt" onclick="comprarOro(5000)"><span>🪙 5500 Oros</span> <span style="color: #00ff00;">$49.99</span></div>
+        <button class="close-btn" onclick="cerrarWallet()">CANCELAR</button>
     </div>
 
     <div class="footer-actions">
-        <button class="action-btn wallet-btn" onclick="abrirWallet()">💳<br>Wallet</button>
+        <button class="action-btn wallet-btn" onclick="abrirWallet()">💳<br>Billetera</button>
         <button class="gift-btn" onclick="enviarRegalo()">🎁</button>
-        <button class="action-btn vip-btn" onclick="alert('Tienda VIP en desarrollo')">👑<br>VIP</button>
+        <button class="action-btn vip-btn" onclick="alert('Tienda VIP Próximamente')">👑<br>VIP</button>
     </div>
 
     <audio id="remote-audio" autoplay playsinline></audio>
 
     <script>
-        // --- CONFIGURACIÓN DE FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
             authDomain: "lluvia-live-69a05.firebaseapp.com",
@@ -83,33 +86,40 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const userId = "melvin_user_1";
 
-        // Sincronizar Oro con Firebase
-        db.collection("usuarios").doc(userId).onSnapshot((doc) => {
-            if (doc.exists) document.getElementById('user-oro').innerText = doc.data().oro;
-            else db.collection("usuarios").doc(userId).set({ oro: 1000, rango: "Noble" });
+        // --- SISTEMA DE IDENTIDAD ---
+        let nombreUsuario = localStorage.getItem('nombre_lluvia');
+        if (!nombreUsuario) {
+            nombreUsuario = prompt("¡Bienvenido a Lluvia Live! ¿Cuál es tu nombre de usuario?") || "Usuario_" + Math.floor(Math.random()*1000);
+            localStorage.setItem('nombre_lluvia', nombreUsuario);
+        }
+        document.getElementById('display-name').innerText = "👤 " + nombreUsuario;
+
+        // Conectar a Firebase con el nombre del usuario
+        db.collection("usuarios").doc(nombreUsuario).onSnapshot((doc) => {
+            if (doc.exists) {
+                document.getElementById('user-oro').innerText = doc.data().oro;
+            } else {
+                db.collection("usuarios").doc(nombreUsuario).set({ oro: 500, rango: "Noble", clan: "Lluvia" });
+            }
         });
 
-        // Funciones de Wallet
+        // Funciones Wallet
         function abrirWallet() { document.getElementById('wallet-modal').style.display = 'block'; }
         function cerrarWallet() { document.getElementById('wallet-modal').style.display = 'none'; }
-        
-        function comprarOro(cantidad) {
-            const ref = db.collection("usuarios").doc(userId);
-            ref.update({ oro: firebase.firestore.FieldValue.increment(cantidad) })
-               .then(() => { alert("¡Recarga Exitosa! +" + cantidad + " Oros"); cerrarWallet(); });
+        function comprarOro(cant) {
+            db.collection("usuarios").doc(nombreUsuario).update({ oro: firebase.firestore.FieldValue.increment(cant) })
+              .then(() => { alert("¡Recarga exitosa!"); cerrarWallet(); });
         }
 
         function enviarRegalo() {
-            const ref = db.collection("usuarios").doc(userId);
-            ref.update({ oro: firebase.firestore.FieldValue.increment(-10) });
+            db.collection("usuarios").doc(nombreUsuario).update({ oro: firebase.firestore.FieldValue.increment(-10) });
         }
 
         // --- AUDIO ---
-        const roomID = prompt("ID Sala:") || "100";
-        document.getElementById('room-display').innerText = "📍 Sala: " + roomID;
-        const peer = new Peer('lluvia-' + roomID + (Math.random() > 0.5 ? 'A' : 'B'));
+        const roomID = "100"; 
+        document.getElementById('room-display').innerText = "📍 Sala ID: " + roomID;
+        const peer = new Peer('lluvia-' + roomID + '-' + nombreUsuario);
         let myStream, mic = false, spk = true;
 
         function unmuteAudio() { document.getElementById('remote-audio').play(); }
@@ -118,9 +128,6 @@
             if (!myStream) {
                 myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 peer.on('call', c => { c.answer(myStream); c.on('stream', s => document.getElementById('remote-audio').srcObject = s); });
-                const target = peer.id.endsWith('A') ? 'B' : 'A';
-                const call = peer.call('lluvia-' + roomID + target, myStream);
-                if(call) call.on('stream', s => document.getElementById('remote-audio').srcObject = s);
             }
             mic = !mic;
             myStream.getAudioTracks()[0].enabled = mic;
