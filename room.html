@@ -3,62 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live</title>
+    <title>Lluvia Live - Billetera Real</title>
+    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.paypal.com/sdk/js?client-id=AfHuBVaA8_T6bxvMRwYfG&currency=USD" async></script>
+    
+    <script src="https://www.paypal.com/sdk/js?client-id=AWOafs7E7hOuryPjXYaHIMvKeWhSgH65Fejg2eyY4b0BY_7xoClV0xhc45Zdr7Y5MhMGSCefLgl6X18&currency=USD"></script>
 
     <style>
-        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; height: 100vh; }
-        .header-panel { background: rgba(0,0,0,0.8); width: 92%; margin: 10px auto; padding: 15px; border-radius: 20px; border: 2px solid #ffd700; box-sizing: border-box; }
-        .user-info { font-weight: bold; color: #ffd700; margin-bottom: 5px; }
-        .stats { display: flex; justify-content: space-around; font-size: 0.9rem; border-top: 1px solid #444; padding-top: 8px; }
-        
-        /* Contenedor Sala */
-        .room-tag { margin-top: 20px; font-weight: bold; color: #ffd700; }
-
-        /* Billetera */
-        #wallet-modal { display: none; position: fixed; top: 15%; left: 5%; width: 90%; background: #222; border: 3px solid #ffd700; border-radius: 25px; padding: 20px; z-index: 1000; box-sizing: border-box; }
-        .pack-box { background: #333; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #555; }
-        #paypal-button-container { margin-top: 15px; min-height: 150px; }
-        
-        .footer { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: center; }
-        .btn-wallet { width: 80px; height: 80px; border-radius: 50%; background: #ffd700; color: black; font-weight: bold; border: 4px solid white; cursor: pointer; box-shadow: 0 0 15px #ffd700; }
+        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
+        .header { background: rgba(0,0,0,0.8); padding: 15px; border-bottom: 2px solid #ffd700; }
+        .wallet-card { background: #222; border: 3px solid #ffd700; border-radius: 25px; width: 92%; margin: 20px auto; padding: 20px; box-sizing: border-box; }
+        .pack-btn { background: #333; border: 2px solid #ffd700; border-radius: 15px; padding: 15px; margin-bottom: 12px; cursor: pointer; display: flex; justify-content: space-between; width: 100%; color: white; font-weight: bold; font-size: 16px; }
+        #paypal-button-container { margin-top: 20px; min-height: 150px; }
+        .instrucciones { font-size: 12px; color: #aaa; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="header-panel">
-        <div class="user-info" id="user-tag">👤 Cargando...</div>
-        <div class="stats">
-            <span>💰 Oro: <b id="oro-val">...</b></span>
-            <span>🛡️ Clan: Lluvia</span>
-        </div>
+    <div class="header">
+        <div style="color: #ffd700; font-weight: bold;">💎 Lluvia Live 💎</div>
+        <div style="margin-top: 10px;">💰 Mi Oro: <span id="oro-txt" style="color: #ffd700; font-size: 20px;">...</span></div>
     </div>
 
-    <div class="room-tag">📍 Sala: 100</div>
-
-    <div id="wallet-modal">
-        <h2 style="color:#ffd700; margin-top:0;">RECARGA ORO</h2>
-        <div class="pack-box">
-            <div style="font-size: 1.2rem;">💎 5500 Oros</div>
-            <div style="color:#00ff00; font-weight:bold;">$49.99 USD</div>
-        </div>
+    <div class="wallet-card">
+        <h3 style="color: #ffd700; margin-top: 0;">💳 RECARGAR ORO</h3>
+        <p class="instrucciones">Selecciona un paquete para activar el pago</p>
         
-        <div id="paypal-button-container"></div>
-        
-        <button onclick="document.getElementById('wallet-modal').style.display='none'" 
-                style="background:#ff3333; color:white; border:none; padding:10px; width:100%; border-radius:10px; font-weight:bold; margin-top:10px;">
-            CERRAR
+        <button class="pack-btn" onclick="prepararPago('0.99', 100)">
+            <span>🪙 100 Oros</span> <span style="color:#00ff00;">$0.99</span>
         </button>
-    </div>
+        
+        <button class="pack-btn" onclick="prepararPago('9.99', 1100)">
+            <span>🪙 1100 Oros</span> <span style="color:#00ff00;">$9.99</span>
+        </button>
+        
+        <button class="pack-btn" onclick="prepararPago('49.99', 5500)">
+            <span>🪙 5500 Oros</span> <span style="color:#00ff00;">$49.99</span>
+        </button>
 
-    <div class="footer">
-        <button class="btn-wallet" onclick="abrirWallet()">💳<br>Billetera</button>
+        <div id="paypal-button-container"></div>
     </div>
 
     <script>
-        // Configuración Firebase (de tu foto)
+        // Configuración de Firebase para Lluvia Live
         const firebaseConfig = {
             apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
             authDomain: "lluvia-live-69a05.firebaseapp.com",
@@ -67,47 +55,46 @@
             messagingSenderId: "909704512499",
             appId: "1:909704512499:web:a8f0d658fb6dbd3f610886"
         };
-
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        
+        // ID de usuario para la prueba (Melvin)
+        let userId = "Melvin_User"; 
 
-        // Nombre de usuario
-        let miNombre = localStorage.getItem('nombre_lluvia') || "Usuario_" + Math.floor(Math.random()*999);
-        document.getElementById('user-tag').innerText = "👤 " + miNombre;
-
-        // Escuchar Oro en tiempo real
-        db.collection("usuarios").doc(miNombre).onSnapshot(doc => {
-            if(doc.exists) document.getElementById('oro-val').innerText = doc.data().oro;
-            else db.collection("usuarios").doc(miNombre).set({ oro: 1000 });
+        // Escuchar cambios en el oro en tiempo real
+        db.collection("usuarios").doc(userId).onSnapshot(doc => {
+            if(doc.exists) {
+                document.getElementById('oro-txt').innerText = doc.data().oro || 0;
+            }
         });
 
-        function abrirWallet() {
-            document.getElementById('wallet-modal').style.display = 'block';
-            // Cargamos el botón solo cuando se abre la billetera
-            if (window.paypal) {
-                renderPaypal();
-            } else {
-                alert("PayPal está cargando, espera un segundo...");
-            }
-        }
-
-        function renderPaypal() {
-            document.getElementById('paypal-button-container').innerHTML = "";
+        function prepararPago(monto, cantidadOro) {
+            // Limpiamos el contenedor para refrescar el botón
+            document.getElementById('paypal-button-container').innerHTML = ""; 
+            
             paypal.Buttons({
                 createOrder: (data, actions) => {
                     return actions.order.create({
-                        purchase_units: [{ amount: { value: '49.99' }, description: "5500 Oros Lluvia Live" }]
+                        purchase_units: [{
+                            description: "Compra de " + cantidadOro + " Oros - Lluvia Live",
+                            amount: { value: monto }
+                        }]
                     });
                 },
                 onApprove: (data, actions) => {
                     return actions.order.capture().then(details => {
-                        db.collection("usuarios").doc(miNombre).update({
-                            oro: firebase.firestore.FieldValue.increment(5500)
+                        // Si el pago es exitoso, sumamos el oro en Firebase
+                        db.collection("usuarios").doc(userId).update({
+                            oro: firebase.firestore.FieldValue.increment(cantidadOro)
                         }).then(() => {
-                            alert("¡Recarga exitosa! Gracias " + details.payer.name.given_name);
-                            document.getElementById('wallet-modal').style.display='none';
+                            alert("¡Felicidades Melvin! Recargaste " + cantidadOro + " oros con éxito.");
                         });
                     });
+                },
+                onError: (err) => {
+                    console.error("Error en PayPal:", err);
+                    alert("Hubo un problema con la conexión de PayPal.");
                 }
             }).render('#paypal-button-container');
         }
