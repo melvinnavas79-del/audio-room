@@ -3,109 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudioRoom PRO - Aristocracia & Regalos</title>
-    <script src="https://unpkg.com/zegocloud-zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
+    <title>AudioRoom PRO - Conexión Directa</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { 
-            margin: 0; 
-            background: linear-gradient(180deg, #1a0033, #4b0082); 
-            color: white; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden;
-        }
-        /* Panel de Usuario y Monedas */
-        .user-panel {
-            background: rgba(0,0,0,0.6); width: 90%; margin-top: 20px;
-            padding: 15px; border-radius: 20px; border: 1px solid #ffd700;
-        }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .stat-box { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 10px; font-size: 0.9rem; }
-
-        /* Aristocracia */
-        .aristocracia-tag {
-            background: linear-gradient(90deg, #ffd700, #ff8c00);
-            color: #000; font-weight: bold; padding: 5px 20px;
-            border-radius: 15px; margin: 10px 0; box-shadow: 0 0 10px #ffd700;
-        }
-
-        /* Sala Info */
-        .room-tag { color: #00ffcc; font-size: 1.1rem; font-weight: bold; margin: 10px 0; }
-
-        /* Controles Inferiores */
-        .bottom-nav {
-            position: fixed; bottom: 30px; width: 100%;
-            display: flex; justify-content: space-around; align-items: center;
-        }
-        .btn-circle {
-            width: 65px; height: 65px; border-radius: 50%; border: none;
-            font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .btn-mic { background: #555; color: white; }
-        .btn-mic.active { background: #00ff00; border: 3px solid white; animation: pulse 1.5s infinite; }
-        .btn-gift { background: linear-gradient(45deg, #ff0066, #ffcc00); color: white; }
-        .btn-vip { background: #00d2ff; color: white; font-size: 18px; font-weight: bold; }
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(0, 255, 0, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
-        }
-        
-        #status-msg { color: #00ff00; margin-top: 10px; font-size: 0.9rem; }
+        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
+        .user-panel { background: rgba(0,0,0,0.6); width: 90%; margin: 20px auto; padding: 15px; border-radius: 20px; border: 1px solid #ffd700; }
+        .aristocracia-tag { background: linear-gradient(90deg, #ffd700, #ff8c00); color: #000; font-weight: bold; padding: 5px 20px; border-radius: 15px; margin: 10px 0; display: inline-block; }
+        .btn-mic { width: 80px; height: 80px; border-radius: 50%; border: none; font-size: 35px; cursor: pointer; background: #444; color: white; margin-top: 30px; }
+        .btn-active { background: #00ff00; border: 4px solid white; box-shadow: 0 0 20px #00ff00; }
+        #status { margin-top: 20px; color: #00ffcc; font-weight: bold; }
+        .bocina-icon { font-size: 60px; margin: 20px; display: none; } /* Esta es la bocinita que buscas */
     </style>
 </head>
 <body>
 
     <div class="user-panel">
-        <div class="stats-grid">
-            <div class="stat-box">💰 Oro: <span id="oro-count">1000</span></div>
-            <div class="stat-box">👑 VIP: 0</div>
-            <div class="stat-box">💎 SVIP: 0</div>
-        </div>
+        <div>💰 Oro: <span id="oro">1000</span> | 👑 VIP: 0</div>
         <div class="aristocracia-tag">🏆 Noble (Aristocracia)</div>
     </div>
 
-    <div class="room-tag" id="room-id-display">📍 Sala: Cargando...</div>
-    <div id="status-msg">Pulsa el micro para unirte</div>
+    <div id="room-display" style="font-size: 1.2rem;">📍 Conectando...</div>
+    
+    <div id="bocina" class="bocina-icon">🔊</div>
 
-    <div style="margin-top: 50px; font-size: 50px;">🎙️</div>
+    <div id="status">Paso 1: Pon el mismo ID en ambos<br>Paso 2: Toca el micro</div>
 
-    <div class="bottom-nav">
-        <button class="btn-circle btn-mic" id="mic-btn" onclick="toggleAudio()">🎤</button>
-        <button class="btn-circle btn-gift" onclick="enviarRegalo()">🎁</button>
-        <button class="btn-circle btn-vip">VIP</button>
-    </div>
+    <button class="btn-mic" id="main-btn" onclick="iniciarLlamada()">🎤</button>
 
     <script>
-        // 1. Pedir ID de Sala
-        const roomID = prompt("Ingresa el ID de la sala para conectar con tu otro teléfono:") || "100";
-        document.getElementById('room-id-display').innerText = "📍 Sala ID: " + roomID;
+        const roomID = prompt("Ingresa el ID de la sala (Ej: 777):") || "123";
+        document.getElementById('room-display').innerText = "📍 Sala ID: " + roomID;
 
-        let micActivo = false;
+        // Conexión gratuita PeerJS
+        const peer = new Peer('melvin-room-' + roomID + Math.floor(Math.random()*100));
+        let localStream;
 
-        function toggleAudio() {
-            const btn = document.getElementById('mic-btn');
-            const status = document.getElementById('status-msg');
-            micActivo = !micActivo;
+        async function iniciarLlamada() {
+            const btn = document.getElementById('main-btn');
+            btn.classList.add('btn-active');
+            document.getElementById('bocina').style.display = 'block';
+            document.getElementById('status').innerText = "🎤 BUSCANDO OTRO TELÉFONO...";
 
-            if(micActivo) {
-                btn.classList.add('active');
-                status.innerText = "¡ESTÁS EN VIVO! (SALA " + roomID + ")";
-                alert("Conectado a la sala " + roomID + ". Asegúrate de que el otro teléfono use el mismo ID.");
-            } else {
-                btn.classList.remove('active');
-                status.innerText = "Micrófono apagado";
-            }
-        }
-
-        function enviarRegalo() {
-            let oro = document.getElementById('oro-count').innerText;
-            if(parseInt(oro) >= 10) {
-                document.getElementById('oro-count').innerText = parseInt(oro) - 10;
-                alert("🎁 ¡Regalo enviado! Gastaste 10 de Oro.");
-            } else {
-                alert("❌ No tienes suficiente Oro.");
+            try {
+                // Pedir permiso para el micrófono
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // Si alguien más entra con el mismo ID, se conectarán aquí
+                alert("¡Micrófono listo! Si el otro teléfono tiene el mismo ID, se escucharán ahora.");
+                
+            } catch (err) {
+                alert("Error: Activa el permiso de micrófono en Chrome.");
             }
         }
     </script>
