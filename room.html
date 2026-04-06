@@ -3,140 +3,158 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Lluvia Live - Fix Total</title>
+<title>Lluvia Live - Acceso y Audio</title>
 <style>
 :root { --gold:#ffd700; --blue:#0084ff; --red:#ff004c; }
 body { margin:0; background:#0b0015; color:white; font-family: sans-serif; height:100vh; overflow:hidden; position: fixed; width: 100%; }
 
-/* PK BAR */
+/* PANTALLA DE ENTRADA (ID) */
+#pantalla-inicio {
+    position: fixed; top:0; left:0; width:100%; height:100%; 
+    background:#0b0015; z-index: 5000; display: flex; flex-direction: column; 
+    align-items: center; justify-content: center;
+}
+.input-id { 
+    background:#222; border: 2px solid var(--gold); padding: 15px; 
+    border-radius: 10px; color: white; width: 80%; margin-bottom: 20px; text-align: center;
+}
+.btn-entrar { 
+    background: var(--gold); color: black; padding: 15px 40px; 
+    border-radius: 30px; font-weight: bold; font-size: 18px;
+}
+
+/* INTERFAZ DE SALA (OCULTA AL INICIO) */
+#interfaz-sala { display: none; }
+
+/* PK Y SILLAS */
 .pk-bar { display:flex; height:45px; border-bottom: 2px solid var(--gold); }
 .pk-b { background: var(--blue); width: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 .pk-r { background: var(--red); width: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
-/* SILLAS */
 .sala { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; }
-.silla { background: rgba(255,255,255,0.1); width:65px; height:65px; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; border: 1px solid #444; position: relative; font-size: 24px; z-index: 1; }
+.silla { background: rgba(255,255,255,0.1); width:65px; height:65px; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; border: 1px solid #444; position: relative; font-size: 24px; }
 .silla-on { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; color: #00ff00; }
 .num { position: absolute; bottom: -5px; background: var(--gold); color: black; font-size: 10px; padding: 1px 5px; border-radius: 5px; font-weight: bold; }
 
-/* ANIMACION DE REGALOS (CAPA MEDIA) */
-#capa-animacion {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none; z-index: 500; /* Por encima de las sillas, debajo de los botones */
-    display: flex; align-items: center; justify-content: center;
-}
+/* CAPA DE REGALOS */
+#capa-regalos { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index: 1500; display:flex; align-items:center; justify-content:center; }
 
-/* CONTROLES (CAPA SUPERIOR) */
-.controles {
-    position: absolute; bottom: 120px; width: 100%;
-    display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 1000;
-}
-
-.btn-mic {
-    background: #111; border: 2.5px solid var(--gold); padding: 12px 40px;
-    border-radius: 30px; color: var(--gold); font-weight: bold; cursor: pointer;
-}
-.btn-mic.on { background: var(--red); color: white; border-color: white; box-shadow: 0 0 15px var(--red); }
+/* CONTROLES */
+.controles { position: absolute; bottom: 120px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 2000; }
+.btn-mic { background: #111; border: 2.5px solid var(--gold); padding: 12px 40px; border-radius: 30px; color: var(--gold); font-weight: bold; }
+.btn-mic.on { background: var(--red); color: white; box-shadow: 0 0 15px var(--red); }
 
 .botones-row { display: flex; gap: 25px; align-items: center; }
-.btn-c { width: 65px; height: 65px; border-radius: 50%; border: 2.5px solid var(--gold); background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 28px; }
-.btn-regalo { width: 85px; height: 85px; background: red; font-size: 40px; }
+.btn-c { width: 60px; height: 60px; border-radius: 50%; border: 2.5px solid var(--gold); background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 28px; }
 
 /* PANELES */
-.panel {
-    position: fixed; bottom: -100%; left: 0; width: 100%; height: 50%;
-    background: #150028; border-top: 3.5px solid var(--gold);
-    border-radius: 25px 25px 0 0; transition: 0.4s; z-index: 2000;
-    padding: 20px; box-sizing: border-box;
-}
+.panel { position: fixed; bottom: -100%; left: 0; width: 100%; height: 50%; background: #150028; border-top: 3.5px solid var(--gold); border-radius: 25px 25px 0 0; transition: 0.4s; z-index: 3000; padding: 20px; box-sizing: border-box; }
 .panel.open { bottom: 0; }
-.gift-card { background: #222; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #444; }
 </style>
 </head>
 <body>
 
-<div class="pk-bar">
-    <div class="pk-b">CLAN NAVAS</div>
-    <div class="pk-r">CLAN RIVAL</div>
+<div id="pantalla-inicio">
+    <h2 style="color:var(--gold)">LLUVIA LIVE</h2>
+    <input type="text" id="user-id" class="input-id" placeholder="Introduce tu ID">
+    <button class="btn-entrar" onclick="entrarSala()">ENTRAR A SALA</button>
 </div>
 
-<div id="capa-animacion"></div>
+<div id="interfaz-sala">
+    <div class="pk-bar">
+        <div class="pk-b">CLAN NAVAS</div>
+        <div class="pk-r">CLAN RIVAL</div>
+    </div>
 
-<div class="sala">
-    <div class="silla" id="s1">👤<div class="num">1</div></div>
-    <div class="silla">👤<div class="num">2</div></div>
-    <div class="silla">👤<div class="num">3</div></div>
-    <div class="silla">👤<div class="num">4</div></div>
-    <div class="silla">👤<div class="num">5</div></div>
-    <div class="silla">👤<div class="num">6</div></div>
-</div>
+    <div id="capa-regalos"></div>
 
-<div class="controles">
-    <div class="btn-mic" id="btn-mic" onclick="toggleAudio()">🎤 ENCENDER MICRO</div>
-    <div class="botones-row">
-        <div class="btn-c" style="border-color: #00ff00" onclick="verPanel('p-banco')">🏦</div>
-        <div class="btn-c btn-regalo" onclick="verPanel('p-regalo')">🎁</div>
-        <div class="btn-c" style="background: #1a237e" onclick="alert('Tienda VIP')">👑</div>
+    <div style="padding: 15px; display: flex; align-items: center; gap: 10px;">
+        <div style="width:45px; height:45px; border-radius:50%; border:2px solid var(--gold); background: #333; display: flex; align-items: center; justify-content: center;">👤</div>
+        <div><b id="display-name">Melvin</b><br><span style="color:var(--gold)">💰 <span id="saldo">2000</span></span></div>
+    </div>
+
+    <div class="sala">
+        <div class="silla" id="s1">👤<div class="num">1</div></div>
+        <div class="silla">👤<div class="num">2</div></div>
+        <div class="silla">👤<div class="num">3</div></div>
+        <div class="silla">👤<div class="num">4</div></div>
+        <div class="silla">👤<div class="num">5</div></div>
+        <div class="silla">👤<div class="num">6</div></div>
+    </div>
+
+    <div class="controles">
+        <div class="btn-mic" id="btn-mic" onclick="toggleMic()">🎤 ENCENDER MICRO</div>
+        <div class="botones-row">
+            <div class="btn-c" style="border-color: #00ff00" onclick="verPanel('p-banco')">🏦</div>
+            <div class="btn-c" style="background: red; width:75px; height:75px;" onclick="verPanel('p-regalo')">🎁</div>
+            <div class="btn-c" style="background: #1a237e" onclick="alert('Tienda VIP')">👑</div>
+        </div>
     </div>
 </div>
 
 <div id="p-banco" class="panel">
-    <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><b>RECARGA AGENTE</b> <span onclick="verPanel('p-banco')">✕</span></div>
-    <div onclick="sumar(5000)" style="background:#222; padding:15px; border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between;">
+    <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><b>BANCO / RECARGA</b> <span onclick="verPanel('p-banco')">✕</span></div>
+    <div onclick="recargar(5000)" style="background:#222; padding:15px; border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between;">
         <span>📦 5,000 ORO</span> <b>$4.99</b>
     </div>
 </div>
 
 <div id="p-regalo" class="panel">
-    <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><b>ENVIAR</b> <span onclick="verPanel('p-regalo')">✕</span></div>
+    <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><b>REGALOS ANIMADOS</b> <span onclick="verPanel('p-regalo')">✕</span></div>
     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-        <div class="gift-card" onclick="lanzar(10, '🌹')">🌹<br><small>10</small></div>
-        <div class="gift-card" onclick="lanzar(500, '💍')">💍<br><small>500</small></div>
-        <div class="gift-card" onclick="lanzar(1000, '🦁')">🦁<br><small>1k</small></div>
+        <div style="background:#222; padding:10px; border-radius:10px; text-align:center" onclick="lanzarRegalo('🌹')">🌹<br>10</div>
+        <div style="background:#222; padding:10px; border-radius:10px; text-align:center" onclick="lanzarRegalo('💍')">💍<br>500</div>
+        <div style="background:#222; padding:10px; border-radius:10px; text-align:center" onclick="lanzarRegalo('🦁')">🦁<br>1k</div>
     </div>
 </div>
 
 <script>
-let micStatus = false;
+let micOn = false;
 
-function toggleAudio() {
-    micStatus = !micStatus;
+function entrarSala() {
+    let id = document.getElementById('user-id').value;
+    if(id == "") { alert("Por favor, pon un ID"); return; }
+    
+    document.getElementById('display-name').innerText = id;
+    document.getElementById('pantalla-inicio').style.display = 'none';
+    document.getElementById('interfaz-sala').style.display = 'block';
+    
+    // IMPORTANTE: Esto desbloquea el audio en iPhone al hacer el primer clic
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function toggleMic() {
+    micOn = !micOn;
     const btn = document.getElementById('btn-mic');
     const s1 = document.getElementById('s1');
-    if(micStatus) {
+    if(micOn) {
         btn.innerText = "🔴 MICRO ENCENDIDO";
         btn.classList.add('on');
         s1.innerHTML = '🎤<div class="num">1</div>';
         s1.classList.add('silla-on');
-        // Pedir permiso real de audio
         navigator.mediaDevices.getUserMedia({audio:true}).catch(()=>alert("Activa el micro en Safari"));
     } else {
-        btn.innerText = "🎤 ENCENDER MICRO";
-        btn.classList.remove('on');
-        s1.innerHTML = '👤<div class="num">1</div>';
-        s1.classList.remove('silla-on');
+        btn.innerText = "🎤 ENCENDER MICRO"; btn.classList.remove('on');
+        s1.innerHTML = '👤<div class="num">1</div>'; s1.classList.remove('silla-on');
     }
 }
 
 function verPanel(id) { document.getElementById(id).classList.toggle('open'); }
 
-function sumar(n) {
+function recargar(n) {
     let s = document.getElementById('saldo');
-    alert("Sumando " + n + " de oro...");
+    s.innerText = parseInt(s.innerText) + n;
     verPanel('p-banco');
 }
 
-function lanzar(costo, emoji) {
-    // 1. Mostrar el regalo en la capa de animación
-    const capa = document.getElementById('capa-animacion');
+function lanzarRegalo(emoji) {
+    const capa = document.getElementById('capa-regalos');
     const div = document.createElement('div');
-    div.innerHTML = `<span style="font-size:80px">${emoji}</span>`;
+    div.innerHTML = `<span style="font-size:100px">${emoji}</span>`;
     div.style.position = "absolute";
     capa.appendChild(div);
-
-    // 2. Cerrar panel y limpiar regalo tras 2 segundos
     verPanel('p-regalo');
-    setTimeout(() => div.remove(), 2000);
+    setTimeout(() => div.remove(), 2500);
 }
 </script>
 </body>
