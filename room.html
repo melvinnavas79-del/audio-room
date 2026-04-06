@@ -3,134 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live - Wallet & VIP</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <title>AudioRoom PRO - Control Total</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { margin: 0; background: linear-gradient(180deg, #1a0033, #3d0066); color: white; font-family: sans-serif; text-align: center; height: 100vh; overflow: hidden; }
+        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
+        .user-panel { background: rgba(0,0,0,0.6); width: 90%; margin: 20px auto; padding: 15px; border-radius: 20px; border: 1px solid #ffd700; }
+        .aristocracia-tag { background: linear-gradient(90deg, #ffd700, #ff8c00); color: #000; font-weight: bold; padding: 5px 20px; border-radius: 15px; margin: 10px 0; display: inline-block; }
         
-        /* Panel Superior */
-        .header-panel { background: rgba(0,0,0,0.7); width: 90%; margin: 10px auto; padding: 12px; border-radius: 20px; border: 1.5px solid #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.3); }
-        .stats { display: flex; justify-content: space-around; font-size: 0.85rem; margin-bottom: 8px; }
-        .aristocracia { background: linear-gradient(90deg, #ffd700, #ff8c00); color: black; font-weight: bold; padding: 6px 20px; border-radius: 20px; display: inline-block; font-size: 0.9rem; }
+        .controls-row { display: flex; justify-content: center; gap: 40px; margin-top: 30px; }
+        .btn-circle { 
+            width: 75px; height: 75px; border-radius: 50%; border: none; font-size: 30px; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.3s;
+        }
+
+        /* Colores de estado */
+        .btn-on { background: #00ff00; color: black; border: 3px solid white; }
+        .btn-off { background: #ff3333; color: white; border: 3px solid #555; }
         
-        .room-info { color: #ffd700; margin: 10px 0; font-weight: bold; font-size: 0.9rem; }
-        .btn-pink { background: #ff0066; color: white; padding: 10px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; width: 80%; }
-
-        /* Controles de Audio */
-        .controls { display: flex; justify-content: center; gap: 30px; margin-top: 15px; }
-        .circle-btn { width: 65px; height: 65px; border-radius: 50%; border: none; font-size: 25px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.6); }
-        .btn-on { background: #00ff00; color: black; border: 2px solid white; }
-        .btn-off { background: #ff3333; color: white; }
-
-        /* BARRA DE ACCIONES INFERIOR (Wallet, Regalo, VIP) */
-        .footer-actions { position: fixed; bottom: 25px; width: 100%; display: flex; justify-content: space-evenly; align-items: center; }
-        
-        .action-btn { width: 55px; height: 55px; border-radius: 50%; border: 2px solid white; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; }
-        .wallet-btn { background: #ffd700; color: black; box-shadow: 0 0 15px #ffd700; }
-        .vip-btn { background: #00d2ff; color: white; box-shadow: 0 0 15px #00d2ff; }
-        .gift-btn { width: 75px; height: 75px; border-radius: 50%; background: linear-gradient(45deg, #ff0066, #ffcc00); border: none; font-size: 30px; cursor: pointer; box-shadow: 0 0 20px #ff0066; }
-
-        /* Modal Simple de Wallet */
-        #wallet-modal { display: none; position: fixed; top: 20%; left: 10%; width: 80%; background: #222; border: 2px solid #ffd700; border-radius: 20px; padding: 20px; z-index: 100; box-shadow: 0 0 50px black; }
-        .price-opt { background: #333; margin: 10px 0; padding: 10px; border-radius: 10px; cursor: pointer; border: 1px solid #444; }
+        .btn-audio { background: #ff0066; color: white; padding: 12px; border-radius: 10px; border: none; margin: 10px; font-weight: bold; }
+        #status-msg { margin-top: 15px; color: #00ffcc; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="header-panel">
-        <div class="stats">
-            <span>💰 Oro: <b id="user-oro">...</b></span>
-            <span style="color: #00ffcc;">🛡️ Clan: Lluvia</span>
+    <div class="user-panel">
+        <div>💰 Oro: 1000 | 👑 Noble (Aristocracia)</div>
+        <div class="aristocracia-tag">🏆 Rango: Noble</div>
+    </div>
+
+    <div id="room-display">📍 Sala: Cargando...</div>
+    <button class="btn-audio" onclick="desbloquearSonido()">🔊 1. CLIC AQUÍ AL ENTRAR</button>
+
+    <div class="controls-row">
+        <div>
+            <button id="mic-btn" class="btn-circle btn-off" onclick="toggleMic()">🎙️</button>
+            <p>Micro</p>
         </div>
-        <div class="aristocracia">🏆 Noble (Aristocracia)</div>
+        <div>
+            <button id="spk-btn" class="btn-circle btn-on" onclick="toggleSpeaker()">🔊</button>
+            <p>Bocina</p>
+        </div>
     </div>
 
-    <div class="room-info" id="room-display">📍 Sala ID: Cargando...</div>
-    <button class="btn-pink" onclick="unmuteAudio()">🔊 ACTIVAR AUDIO DE SALA</button>
-
-    <div class="controls">
-        <div><button id="mic-btn" class="circle-btn btn-off" onclick="toggleMic()">🎙️</button><p>Micro</p></div>
-        <div><button id="spk-btn" class="circle-btn btn-on" onclick="toggleSpeaker()">🔊</button><p>Bocina</p></div>
-    </div>
-
-    <div id="wallet-modal">
-        <h3>💳 Mi Billetera</h3>
-        <div class="price-opt" onclick="comprarOro(100)">🪙 100 Oro - $0.99</div>
-        <div class="price-opt" onclick="comprarOro(1000)">🪙 1100 Oro - $9.99</div>
-        <button onclick="cerrarWallet()" style="background: red; color: white; border: none; padding: 10px; border-radius: 5px; margin-top: 10px;">Cerrar</button>
-    </div>
-
-    <div class="footer-actions">
-        <button class="action-btn wallet-btn" onclick="abrirWallet()">💳<br>Wallet</button>
-        <button class="gift-btn" onclick="enviarRegalo()">🎁</button>
-        <button class="action-btn vip-btn" onclick="alert('Tienda VIP en desarrollo')">👑<br>VIP</button>
-    </div>
-
+    <p id="status-msg">Pulsa el botón rosa y luego el Micro</p>
     <audio id="remote-audio" autoplay playsinline></audio>
 
     <script>
-        // --- CONFIGURACIÓN DE FIREBASE ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
-            authDomain: "lluvia-live-69a05.firebaseapp.com",
-            projectId: "lluvia-live-69a05",
-            storageBucket: "lluvia-live-69a05.firebasestorage.app",
-            messagingSenderId: "909704512499",
-            appId: "1:909704512499:web:a8f0d658fb6dbd3f610886"
-        };
+        const roomID = prompt("Ingresa el ID de la sala:") || "100";
+        document.getElementById('room-display').innerText = "📍 Sala ID: " + roomID;
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const userId = "melvin_user_1";
+        const peer = new Peer('melvin-pro-' + roomID + (Math.random() > 0.5 ? 'A' : 'B'));
+        let localStream;
+        let micActivo = false;
+        let bocinaActiva = true;
 
-        // Sincronizar Oro con Firebase
-        db.collection("usuarios").doc(userId).onSnapshot((doc) => {
-            if (doc.exists) document.getElementById('user-oro').innerText = doc.data().oro;
-            else db.collection("usuarios").doc(userId).set({ oro: 1000, rango: "Noble" });
-        });
-
-        // Funciones de Wallet
-        function abrirWallet() { document.getElementById('wallet-modal').style.display = 'block'; }
-        function cerrarWallet() { document.getElementById('wallet-modal').style.display = 'none'; }
-        
-        function comprarOro(cantidad) {
-            const ref = db.collection("usuarios").doc(userId);
-            ref.update({ oro: firebase.firestore.FieldValue.increment(cantidad) })
-               .then(() => { alert("¡Recarga Exitosa! +" + cantidad + " Oros"); cerrarWallet(); });
+        function desbloquearSonido() {
+            document.getElementById('remote-audio').play();
+            alert("🔊 Sonido listo.");
         }
-
-        function enviarRegalo() {
-            const ref = db.collection("usuarios").doc(userId);
-            ref.update({ oro: firebase.firestore.FieldValue.increment(-10) });
-        }
-
-        // --- AUDIO ---
-        const roomID = prompt("ID Sala:") || "100";
-        document.getElementById('room-display').innerText = "📍 Sala: " + roomID;
-        const peer = new Peer('lluvia-' + roomID + (Math.random() > 0.5 ? 'A' : 'B'));
-        let myStream, mic = false, spk = true;
-
-        function unmuteAudio() { document.getElementById('remote-audio').play(); }
 
         async function toggleMic() {
-            if (!myStream) {
-                myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                peer.on('call', c => { c.answer(myStream); c.on('stream', s => document.getElementById('remote-audio').srcObject = s); });
-                const target = peer.id.endsWith('A') ? 'B' : 'A';
-                const call = peer.call('lluvia-' + roomID + target, myStream);
-                if(call) call.on('stream', s => document.getElementById('remote-audio').srcObject = s);
+            const btn = document.getElementById('mic-btn');
+            
+            if (!localStream) {
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    iniciarConexion();
+                } catch (e) { alert("Permite el micro en Chrome"); return; }
             }
-            mic = !mic;
-            myStream.getAudioTracks()[0].enabled = mic;
-            document.getElementById('mic-btn').className = mic ? "circle-btn btn-on" : "circle-btn btn-off";
+
+            micActivo = !micActivo;
+            localStream.getAudioTracks()[0].enabled = micActivo;
+
+            if (micActivo) {
+                btn.className = "btn-circle btn-on";
+                btn.innerText = "🎙️";
+                document.getElementById('status-msg').innerText = "✅ HABLANDO...";
+            } else {
+                btn.className = "btn-circle btn-off";
+                btn.innerText = "🔇";
+                document.getElementById('status-msg').innerText = "🔇 MICRO SILENCIADO";
+            }
         }
 
         function toggleSpeaker() {
-            spk = !spk;
-            document.getElementById('remote-audio').muted = !spk;
-            document.getElementById('spk-btn').className = spk ? "circle-btn btn-on" : "circle-btn btn-off";
+            const btn = document.getElementById('spk-btn');
+            const audio = document.getElementById('remote-audio');
+            bocinaActiva = !bocinaActiva;
+            audio.muted = !bocinaActiva;
+
+            if (bocinaActiva) {
+                btn.className = "btn-circle btn-on";
+                btn.innerText = "🔊";
+            } else {
+                btn.className = "btn-circle btn-off";
+                btn.innerText = "🔈";
+            }
+        }
+
+        function iniciarConexion() {
+            peer.on('call', call => {
+                call.answer(localStream);
+                call.on('stream', remStream => {
+                    document.getElementById('remote-audio').srcObject = remStream;
+                });
+            });
+
+            const target = peer.id.endsWith('A') ? 'B' : 'A';
+            const call = peer.call('melvin-pro-' + roomID + target, localStream);
+            if (call) {
+                call.on('stream', remStream => {
+                    document.getElementById('remote-audio').srcObject = remStream;
+                });
+            }
         }
     </script>
 </body>
