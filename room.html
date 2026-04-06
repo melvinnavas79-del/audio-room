@@ -1,23 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Lluvia Live - Entrada</title>
+    <title>Lluvia Live - Sala de Audio</title>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
-<body style="background:black; color:white; text-align:center; padding-top:100px; font-family: Arial;">
+<body style="background:black; color:white; text-align:center; font-family: Arial, sans-serif; padding-top:50px;">
     <h1 style="color: #00ff00;">☔ Lluvia Live</h1>
-    <p>Panel de Control</p>
-    <input type="text" id="name" placeholder="Tu nombre" style="padding:15px; border-radius:10px; border:none; width:200px;"><br><br>
-    <button onclick="crear()" style="padding:15px 30px; background:#00ff00; color:black; border:none; border-radius:50px; font-weight:bold; cursor:pointer;">CREAR SALA</button>
+    <h2 id="roomTitle">SALA DE AUDIO</h2>
+    <div id="status" style="margin-bottom: 30px; color: yellow; font-size: 20px;">Estado: Conectando a Render...</div>
+    <button onclick="activarMicrofono()" style="padding: 20px 40px; font-size: 18px; background: #6200ee; color: white; border: none; border-radius: 50px; cursor: pointer;">
+        🎤 INICIAR AUDIO EN VIVO
+    </button>
     <script>
         const socket = io("https://audio-room-1.onrender.com");
-        function crear() {
-            const name = document.getElementById("name").value;
-            if (!name) return alert("Escribe tu nombre");
-            localStorage.setItem("username", name);
-            const room = Math.random().toString(36).substring(7);
-            window.location.href = "room.html?room=" + room;
+        const statusDiv = document.getElementById('status');
+        const urlParams = new URLSearchParams(window.location.search);
+        document.getElementById('roomTitle').innerText = "Sala: " + urlParams.get('room');
+        socket.on('connect', () => {
+            statusDiv.innerText = "✅ CONECTADO AL SERVIDOR";
+            statusDiv.style.color = "#00ff00";
+        });
+        socket.on('connect_error', () => {
+            statusDiv.innerText = "❌ Esperando que Render despierte (30s)...";
+            statusDiv.style.color = "orange";
+        });
+        async function activarMicrofono() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        socket.emit('audio-stream', event.data);
+                    }
+                };
+                mediaRecorder.start(100);
+                statusDiv.innerText = "🎤 TRANSMITIENDO EN VIVO";
+                statusDiv.style.color = "#00ccff";
+                alert("¡Micrófono encendido!");
+            } catch (err) {
+                alert("Error: Activa el micrófono en tu navegador.");
+            }
         }
+        socket.on('audio-broadcast', (data) => {
+            const blob = new Blob([data], { type: 'audio/webm' });
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            audio.play();
+        });
     </script>
 </body>
 </html>
