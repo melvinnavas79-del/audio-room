@@ -3,77 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Lluvia Live PRO</title>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-
+<title>Lluvia Live PRO Fix</title>
 <style>
 :root { --gold:#ffd700; --blue-pk:#0084ff; --red-pk:#ff004c; --dark-bg:#0b0015; }
+body { margin:0; background:var(--dark-bg); color:white; font-family: sans-serif; height:100vh; overflow:hidden; position: fixed; width: 100%; }
 
-body { margin:0; background:var(--dark-bg); color:white; font-family: 'Segoe UI', Roboto, sans-serif; height:100vh; overflow:hidden; position: fixed; width: 100%; }
+/* PK HEADER */
+.pk-container { display:flex; height:45px; border-bottom: 2px solid var(--gold); }
+.pk-team { width:50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
+.pk-blue { background: var(--blue-pk); }
+.pk-red { background: var(--red-pk); }
 
-/* BARRA PK MEJORADA */
-.pk-container { display:flex; height:45px; position: relative; border-bottom: 2px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-.pk-team { width:50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; text-shadow: 1px 1px 2px black; }
-.pk-blue { background: linear-gradient(90deg, #004e92, var(--blue-pk)); }
-.pk-red { background: linear-gradient(90deg, var(--red-pk), #8e0000); }
-.pk-timer { position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); background: #000; border: 1px solid var(--gold); padding: 2px 10px; border-radius: 12px; font-size: 11px; z-index: 5; color: var(--gold); }
+/* PERFIL */
+.header-card { background: rgba(255,255,255,0.05); width:90%; margin:10px auto; padding:10px; border-radius:15px; border:1px solid var(--gold); display:flex; align-items: center; gap:10px; }
 
-/* PERFIL CABECERA */
-.header-card { background: rgba(255,255,255,0.05); width:92%; margin:12px auto; padding:12px; border-radius:18px; border:1px solid rgba(255,215,0,0.3); display:flex; align-items: center; gap:12px; }
-.avatar-frame { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold); overflow: hidden; background: #333; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+/* SILLAS */
+.grid-sala { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:15px; }
+.silla { background: rgba(255,255,255,0.1); width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; border: 1px solid #444; position: relative; font-size: 20px; }
+.silla-active { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; color: #00ff00; }
+.silla-num { position: absolute; bottom: -5px; background: var(--gold); color: black; font-size: 10px; padding: 1px 4px; border-radius: 4px; font-weight: bold; }
 
-/* SILLAS DE AUDIO */
-.grid-sala { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:15px; margin-top: 10px; }
-.silla { background: rgba(255,255,255,0.08); width:65px; height:65px; border-radius:50%; display:flex; flex-direction: column; align-items:center; justify-content:center; border: 1px solid rgba(255,255,255,0.1); position: relative; }
-.silla-active { border-color: #00ff00; box-shadow: 0 0 10px #00ff00; }
-.silla-num { position: absolute; bottom: -5px; background: var(--gold); color: black; font-size: 10px; padding: 1px 5px; border-radius: 5px; font-weight: bold; }
+/* CONTROLES INFERIORES */
+.footer-controls { position: absolute; bottom: 100px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; }
 
-/* BOTONES DE ACCIÓN */
-.footer-nav { position:absolute; bottom:90px; width:100%; display:flex; justify-content:center; align-items: center; gap:25px; z-index: 10; }
-.btn-action { width:62px; height:62px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; background:#1a1a1a; border:2px solid var(--gold); box-shadow: 0 5px 15px rgba(0,0,0,0.6); transition: 0.1s; }
-.btn-action:active { transform: scale(0.9); }
-.btn-main { width:85px; height:85px; background: linear-gradient(135deg, #ff0000, #b30000); border-width: 3px; font-size: 38px; }
+.mic-btn { background: #111; border: 2px solid var(--gold); padding: 12px 30px; border-radius: 30px; font-weight: bold; color: var(--gold); cursor: pointer; z-index: 100; }
+.mic-on { background: #ff004c; color: white; box-shadow: 0 0 15px #ff004c; }
 
-/* BOTÓN MICRÓFONO */
-.mic-container { position: absolute; bottom: 15px; width: 100%; display: flex; justify-content: center; }
-.mic-btn { background: #111; border: 2px solid var(--gold); padding: 10px 25px; border-radius: 25px; font-weight: bold; color: var(--gold); display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.3s; }
-.mic-on { background: #ff004c; color: white; border-color: white; box-shadow: 0 0 15px #ff004c; }
+.btn-row { display: flex; gap: 20px; align-items: center; }
+.btn-circle { width:60px; height:60px; border-radius:50%; border:2px solid var(--gold); background:#1a1a1a; display:flex; align-items:center; justify-content:center; font-size:25px; }
+.btn-main { width:80px; height:80px; background: red; font-size: 35px; }
 
-/* PANEL DE REGALOS (ESTILO VOLA) */
-.gift-panel { position: fixed; bottom: -100%; left: 0; width: 100%; height: 45%; background: rgba(15, 0, 35, 0.98); border-top: 3px solid var(--gold); border-radius: 25px 25px 0 0; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; padding: 20px; box-sizing: border-box; }
-.gift-panel.open { bottom: 0; }
-.gift-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.gift-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; overflow-y: auto; height: 80%; }
-.gift-card { background: rgba(255,255,255,0.05); padding: 10px 5px; border-radius: 12px; text-align: center; border: 1px solid transparent; }
-.gift-card:active { border-color: var(--gold); background: rgba(255,215,0,0.1); }
-.gift-icon { font-size: 30px; display: block; margin-bottom: 5px; }
-.gift-price { font-size: 11px; color: var(--gold); font-weight: bold; }
-
-/* ANIMACIÓN REGALO */
-.gift-anim { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); z-index: 500; pointer-events: none; text-align: center; animation: popUp 1.5s forwards; }
-@keyframes popUp { 0% { transform: translate(-50%, 0%) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -60%) scale(1.2); opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(-50%, -100%) scale(1); opacity: 0; } }
+/* MODALES (RECARGA Y REGALOS) */
+.panel-slide { position: fixed; bottom: -100%; left: 0; width: 100%; height: 50%; background: #150025; border-top: 3px solid var(--gold); border-radius: 20px 20px 0 0; transition: 0.3s; z-index: 1000; padding: 20px; box-sizing: border-box; }
+.panel-slide.open { bottom: 0; }
+.grid-items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+.item-card { background: #222; padding: 10px; border-radius: 10px; text-align: center; border: 1px solid #444; }
 </style>
 </head>
-
 <body>
 
 <div class="pk-container">
-    <div class="pk-team pk-blue">CLAN NAVAS: 0</div>
-    <div class="pk-team pk-red">CLAN RIVAL: 0</div>
-    <div class="pk-timer" id="pk-timer">05:00</div>
+    <div class="pk-blue">CLAN NAVAS: 0</div>
+    <div class="pk-red">CLAN RIVAL: 0</div>
 </div>
 
 <div class="header-card">
-    <div class="avatar-frame">👤</div>
-    <div style="flex-grow: 1;">
-        <b style="font-size: 18px;">Melvin</b><br>
-        <span style="color:var(--gold); font-weight: bold;">💰 <span id="oro-val">2000</span></span>
-    </div>
-    <div style="font-size: 22px; cursor: pointer;" onclick="alert('Admin Panel')">⚙️</div>
+    <div style="width:45px; height:45px; background:#333; border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center;">👤</div>
+    <div style="flex-grow:1"><b>Melvin</b><br><span style="color:var(--gold)">💰 <span id="oro-val">2000</span></span></div>
 </div>
 
 <div class="grid-sala">
-    <div class="silla silla-active" id="silla-1">🎤<div class="silla-num">1</div></div>
+    <div class="silla" id="s1">👤<div class="silla-num">1</div></div>
     <div class="silla">👤<div class="silla-num">2</div></div>
     <div class="silla">👤<div class="silla-num">3</div></div>
     <div class="silla">👤<div class="silla-num">4</div></div>
@@ -84,86 +64,75 @@ body { margin:0; background:var(--dark-bg); color:white; font-family: 'Segoe UI'
     <div class="silla">👤<div class="silla-num">9</div></div>
 </div>
 
-<div class="footer-nav">
-    <div class="btn-action" style="border-color:#00ff00;" onclick="alert('Agentes y Recargas')">🏦</div>
-    <div class="btn-action btn-main" onclick="toggleGifts()">🎁</div>
-    <div class="btn-action" style="background:#1a237e;" onclick="alert('Tienda VIP')">👑</div>
-</div>
+<div class="footer-controls">
+    <div class="mic-btn" id="mic-btn" onclick="toggleMic()">🎤 ENCENDER MICRO</div>
 
-<div class="mic-container">
-    <div class="mic-btn" id="mic-trigger" onclick="toggleMic()">🎤 Activar Mic</div>
-</div>
-
-<div id="gift-panel" class="gift-panel">
-    <div class="gift-header">
-        <b style="color:var(--gold)">TIENDA DE REGALOS</b>
-        <span onclick="toggleGifts()" style="font-size: 24px; cursor: pointer;">✕</span>
+    <div class="btn-row">
+        <div class="btn-circle" style="border-color:#00ff00;" onclick="togglePanel('panel-recarga')">🏦</div>
+        <div class="btn-circle btn-main" onclick="togglePanel('panel-regalos')">🎁</div>
+        <div class="btn-circle" style="background:#1a237e;" onclick="alert('Tienda VIP')">👑</div>
     </div>
-    <div class="gift-grid">
-        <div class="gift-card" onclick="enviarRegalo('Rosa', 10, '🌹')"><span class="gift-icon">🌹</span><span class="gift-price">10</span></div>
-        <div class="gift-card" onclick="enviarRegalo('Diamante', 500, '💎')"><span class="gift-icon">💎</span><span class="gift-price">500</span></div>
-        <div class="gift-card" onclick="enviarRegalo('Anillo', 1000, '💍')"><span class="gift-icon">💍</span><span class="gift-price">1k</span></div>
-        <div class="gift-card" onclick="enviarRegalo('Carro', 5000, '🏎️')"><span class="gift-icon">🏎️</span><span class="gift-price">5k</span></div>
-        <div class="gift-card" onclick="enviarRegalo('Avión', 10000, '✈️')"><span class="gift-icon">✈️</span><span class="gift-price">10k</span></div>
-        <div class="gift-card" onclick="enviarRegalo('Castillo', 25000, '🏰')"><span class="gift-icon">🏰</span><span class="gift-price">25k</span></div>
-        <div class="gift-card" onclick="enviarRegalo('León', 50000, '🦁')"><span class="gift-icon">🦁</span><span class="gift-price">50k</span></div>
-        <div class="gift-card" onclick="enviarRegalo('Cohete', 100000, '🚀')"><span class="gift-icon">🚀</span><span class="gift-price">100k</span></div>
+</div>
+
+<div id="panel-recarga" class="panel-slide">
+    <div style="display:flex; justify-content:space-between;"><b>RECARGAR ORO</b> <span onclick="togglePanel('panel-recarga')">✕</span></div>
+    <div class="grid-items">
+        <div class="item-card" onclick="recargar(1000)">📦 1k<br><small>$0.99</small></div>
+        <div class="item-card" onclick="recargar(5000)">📦 5k<br><small>$4.99</small></div>
+        <div class="item-card" onclick="recargar(10000)">📦 10k<br><small>$9.99</small></div>
+    </div>
+</div>
+
+<div id="panel-regalos" class="panel-slide">
+    <div style="display:flex; justify-content:space-between;"><b>ENVIAR REGALO</b> <span onclick="togglePanel('panel-regalos')">✕</span></div>
+    <div class="grid-items">
+        <div class="item-card" onclick="regalar('Rosa', 10)">🌹<br>10</div>
+        <div class="item-card" onclick="regalar('Anillo', 500)">💍<br>500</div>
+        <div class="item-card" onclick="regalar('León', 1000)">🦁<br>1k</div>
     </div>
 </div>
 
 <script>
-// VARIABLES
-let micActivo = false;
+let micOn = false;
 
-// 🎤 MICRÓFONO
-async function toggleMic(){
-    micActivo = !micActivo;
-    const btn = document.getElementById("mic-trigger");
-    const silla = document.getElementById("silla-1");
-
-    if(micActivo){
-        btn.innerText = "🔴 HABLANDO...";
-        btn.classList.add("mic-on");
-        silla.classList.add("silla-active");
-        try { await navigator.mediaDevices.getUserMedia({audio:true}); } catch(e) { alert("Mic bloqueado"); }
+function toggleMic() {
+    micOn = !micOn;
+    const btn = document.getElementById('mic-btn');
+    const silla = document.getElementById('s1');
+    if(micOn) {
+        btn.innerText = "🔴 MICRO ENCENDIDO";
+        btn.classList.add('mic-on');
+        silla.innerHTML = '🎤<div class="silla-num">1</div>';
+        silla.classList.add('silla-active');
     } else {
-        btn.innerText = "🎤 Activar Mic";
-        btn.classList.remove("mic-on");
-        silla.classList.remove("silla-active");
+        btn.innerText = "🎤 ENCENDER MICRO";
+        btn.classList.remove('mic-on');
+        silla.innerHTML = '👤<div class="silla-num">1</div>';
+        silla.classList.remove('silla-active');
     }
 }
 
-// 🎁 REGALOS
-function toggleGifts() {
-    document.getElementById("gift-panel").classList.toggle("open");
+function togglePanel(id) {
+    document.querySelectorAll('.panel-slide').forEach(p => {
+        if(p.id !== id) p.classList.remove('open');
+    });
+    document.getElementById(id).classList.toggle('open');
 }
 
-function enviarRegalo(nombre, valor, emoji) {
-    let oroTxt = document.getElementById("oro-val");
-    let oro = parseInt(oroTxt.innerText.replace(',', ''));
-
-    if(oro < valor) {
-        alert("¡Necesitas más oro, Melvin!");
-        return;
-    }
-
-    oro -= valor;
-    oroTxt.innerText = oro.toLocaleString();
-    
-    toggleGifts();
-    lanzarAnimacion(nombre, emoji);
+function recargar(cant) {
+    let oro = parseInt(document.getElementById('oro-val').innerText);
+    document.getElementById('oro-val').innerText = oro + cant;
+    alert("Recarga exitosa: +" + cant);
+    togglePanel('panel-recarga');
 }
 
-function lanzarAnimacion(nombre, emoji) {
-    const anim = document.createElement("div");
-    anim.className = "gift-anim";
-    anim.innerHTML = `<span style="font-size:60px">${emoji}</span><br><b>${nombre}</b>`;
-    document.body.appendChild(anim);
-    
-    // Aquí puedes sumar puntos al PK automáticamente
-    setTimeout(() => anim.remove(), 1500);
+function regalar(nom, costo) {
+    let oro = parseInt(document.getElementById('oro-val').innerText);
+    if(oro < costo) { alert("Oro insuficiente"); return; }
+    document.getElementById('oro-val').innerText = oro - costo;
+    alert("Enviaste " + nom);
+    togglePanel('panel-regalos');
 }
 </script>
-
 </body>
 </html>
