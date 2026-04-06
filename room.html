@@ -61,23 +61,27 @@ border:2px solid gold; display:flex;align-items:center;justify-content:center;
 background:#1a1a1a;
 }
 
+/* MODAL */
 .modal {
 display:none; position:fixed; top:50%; left:50%;
 transform:translate(-50%,-50%);
 background:#111; border:2px solid gold;
 padding:20px; border-radius:15px;
+text-align:center;
 }
 </style>
 </head>
 
 <body>
 
+<!-- PANTALLA INICIO -->
 <div id="pantalla-inicio">
 <div class="logo">LLUVIA LIVE</div>
 <input id="id-input" class="input-sala" placeholder="ID sala">
 <button class="btn-entrar" onclick="abrirSala()">Entrar</button>
 </div>
 
+<!-- SALA -->
 <div id="sala-audio">
 <div class="header-clanes">
 <div class="clan" style="background:blue">CLAN A</div>
@@ -97,17 +101,26 @@ SALA ID: <span id="sala-display"></span> |
 
 <div class="controles">
 <div class="iconos-extra">
-<div class="circulo-btn">🏦</div>
+<div class="circulo-btn" onclick="abrirBanco()">🏦</div>
 <div class="circulo-btn" style="background:red;" onclick="abrirRegalos()">🎁</div>
-<div class="circulo-btn">👑</div>
+<div class="circulo-btn" onclick="abrirVIP()">👑</div>
 </div>
+
+<br>
+
+<button onclick="activarAudio()" style="padding:10px 20px;border-radius:20px;">
+🎤 Activar Micrófono
+</button>
+
 </div>
 </div>
 
+<!-- MODAL -->
 <div id="modal" class="modal"></div>
 
 <script>
 
+// 🔓 ENTRAR A SALA
 function abrirSala(){
 let id = document.getElementById("id-input").value;
 if(!id) return alert("Pon ID");
@@ -117,7 +130,27 @@ document.getElementById("pantalla-inicio").style.display="none";
 document.getElementById("sala-audio").style.display="block";
 }
 
-/* 🎁 REGALOS */
+// 🎤 AUDIO
+async function activarAudio(){
+try{
+await navigator.mediaDevices.getUserMedia({audio:true});
+alert("Micrófono activado 🎤");
+}catch(e){
+alert("Permite el micrófono");
+}
+}
+
+// 🏦 BANCO
+function abrirBanco(){
+mostrar("Banco próximamente 💰");
+}
+
+// 👑 VIP
+function abrirVIP(){
+mostrar("VIP próximamente 👑");
+}
+
+// 🎁 REGALOS
 const regalos = [
  {nombre:"🌹 Rosa", precio:100},
  {nombre:"💎 Diamante", precio:500},
@@ -134,7 +167,7 @@ ${r.nombre} - ${r.precio}
 </button>`;
 });
 
-html += `<button onclick="cerrar()">Cerrar</button>`;
+html += `<br><button onclick="cerrar()">Cerrar</button>`;
 
 document.getElementById("modal").innerHTML = html;
 document.getElementById("modal").style.display = "block";
@@ -155,6 +188,7 @@ animacion(nombre);
 cerrar();
 }
 
+// 🎉 ANIMACIÓN
 function animacion(nombre){
 let div = document.createElement("div");
 div.innerText = nombre;
@@ -168,6 +202,12 @@ div.style.color="gold";
 document.body.appendChild(div);
 
 setTimeout(()=>div.remove(),2000);
+}
+
+// MODAL
+function mostrar(txt){
+document.getElementById("modal").innerHTML = txt + "<br><br><button onclick='cerrar()'>OK</button>";
+document.getElementById("modal").style.display = "block";
 }
 
 function cerrar(){
