@@ -2,235 +2,195 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live - Full Version</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lluvia Live</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
     <style>
-        body { margin: 0; background: #000; color: white; font-family: 'Arial', sans-serif; text-align: center; height: 100vh; overflow: hidden; }
+        body { margin: 0; background: #0b0015; color: white; font-family: 'Segoe UI', Roboto, sans-serif; text-align: center; height: 100vh; overflow: hidden; }
         
-        /* PANTALLA DE ACCESO */
+        /* LOGIN */
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .logo-box { font-size: 45px; font-weight: bold; color: #00ff00; margin-bottom: 30px; }
-        .input-field { width: 80%; padding: 15px; margin: 10px 0; border-radius: 12px; border: none; font-size: 20px; text-align: center; background: #fff; color: #000; }
-        .btn-row { display: flex; gap: 10px; width: 85%; margin-top: 20px; }
-        .btn-action { flex: 1; padding: 18px; border-radius: 12px; border: none; font-weight: bold; font-size: 18px; color: white; cursor: pointer; }
+        .input-field { width: 80%; padding: 15px; margin: 10px 0; border-radius: 15px; border: none; font-size: 18px; text-align: center; }
+        .btn-entrar { width: 85%; padding: 15px; border-radius: 15px; border: none; font-weight: bold; font-size: 18px; color: white; cursor: pointer; margin-top: 10px; }
 
-        /* APP PRINCIPAL */
-        #main-app { display: none; background: #0f001e; height: 100vh; padding-top: 10px; position: relative; }
-        .header-card { background: rgba(0,0,0,0.6); width: 92%; margin: 0 auto; padding: 15px; border-radius: 25px; border: 2px solid #ffd700; }
-        .badge-noble { background: linear-gradient(90deg, #b8860b, #ffd700); color: black; font-weight: bold; padding: 8px 25px; border-radius: 20px; display: inline-block; font-size: 18px; margin-bottom: 5px; position: relative; }
-        
-        /* Etiqueta SVIP Roja */
-        .tag-svip { background: #ff0000; color: white; padding: 4px 10px; border-radius: 8px; font-size: 14px; font-weight: bold; margin-left: 8px; display: none; box-shadow: 0 0 10px red; vertical-align: middle; }
+        /* HEADER */
+        #main-app { display: none; height: 100vh; position: relative; }
+        .header-card { background: rgba(20, 0, 40, 0.8); width: 92%; margin: 10px auto; padding: 15px; border-radius: 25px; border: 2px solid #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
+        .badge-noble { background: linear-gradient(90deg, #b8860b, #ffd700, #b8860b); color: black; font-weight: bold; padding: 10px 30px; border-radius: 20px; display: inline-block; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .tag-svip { background: #ff0000; color: white; padding: 4px 12px; border-radius: 10px; font-size: 14px; font-weight: bold; margin-left: 8px; box-shadow: 0 0 10px red; display: none; }
 
-        /* Controles de Audio */
-        .audio-main-controls { display: flex; justify-content: center; gap: 30px; margin: 20px 0; }
-        .btn-circle-audio { width: 75px; height: 75px; border-radius: 50%; border: 3px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; }
-        .btn-off { background: #ff3333; }
-        .btn-on { background: #00ff00; box-shadow: 0 0 20px #00ff00; }
+        /* CONTROLES AUDIO */
+        .audio-row { display: flex; justify-content: center; gap: 40px; margin: 20px 0; }
+        .btn-circle { width: 75px; height: 75px; border-radius: 50%; border: 3px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .btn-off { background: #ff4444; }
+        .btn-on { background: #00ff44; box-shadow: 0 0 20px #00ff44; }
 
-        /* Sillas */
-        .sala-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px; }
-        .silla-box { width: 65px; height: 65px; border-radius: 50%; border: 2px solid #444; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto; transition: 0.3s; }
-        .silla-on { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; }
+        /* SILLAS */
+        .sala-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 10px 25px; }
+        .silla { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #333; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto; }
+        .silla-activa { border-color: #00ff44; box-shadow: 0 0 15px #00ff44; }
 
-        /* Navegación Inferior */
-        .bottom-nav { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: center; align-items: center; gap: 20px; z-index: 100; }
-        .nav-item { width: 65px; height: 65px; border-radius: 50%; border: none; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        /* NAVEGACIÓN */
+        .bottom-nav { position: fixed; bottom: 35px; width: 100%; display: flex; justify-content: center; align-items: center; gap: 25px; }
+        .nav-btn { width: 65px; height: 65px; border-radius: 50%; border: none; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; }
 
-        /* MODALES (DISEÑO CORREGIDO) */
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; border: 2px solid #ffd700; border-radius: 25px; padding: 25px; width: 85%; z-index: 10000; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
-        .modal-btn { background: #fff; color: #000; border: none; padding: 15px; margin: 10px 0; width: 100%; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        .vip-info { background: #333; padding: 15px; border-radius: 15px; text-align: left; margin-bottom: 15px; font-size: 14px; }
+        /* MODALES CORREGIDOS */
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; border: 2px solid #ffd700; border-radius: 25px; padding: 25px; width: 80%; z-index: 10000; box-shadow: 0 0 30px #000; }
+        .modal-item { background: #fff; color: #000; padding: 15px; margin: 10px 0; width: 100%; border-radius: 12px; font-weight: bold; border: none; font-size: 16px; }
+        .btn-vip-buy { background: linear-gradient(90deg, #ff0000, #900); color: white; border: 1px solid #fff; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <div class="logo-box">☔ Lluvia Live</div>
-        <input type="text" id="user-name" class="input-field" placeholder="Tu Nombre (Ej: Josue)">
+        <h1 style="color: #00ff00; font-size: 40px; margin-bottom: 20px;">☔ Lluvia Live</h1>
+        <input type="text" id="user-name" class="input-field" placeholder="Tu Nombre">
         <input type="text" id="room-id" class="input-field" placeholder="ID de Sala (Ej: 1234)">
-        <div class="btn-row">
-            <button class="btn-action" style="background:#008000" onclick="entrarSala('A')">Crear sala</button>
-            <button class="btn-action" style="background:#0000ff" onclick="entrarSala('B')">Entrar</button>
-        </div>
+        <button class="btn-entrar" style="background: #008000;" onclick="entrar('A')">Crear Sala</button>
+        <button class="btn-entrar" style="background: #0000ff;" onclick="entrar('B')">Entrar</button>
     </div>
 
     <div id="main-app">
         <div class="header-card">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size: 18px;">
-                <span>💰 Oro: <b id="oro-txt" style="color:#ffd700">0</b></span>
-                <span style="color:#00ffcc">🛡️ Clan: Lluvia</span>
+            <div style="display:flex; justify-content:space-between; font-size: 18px; margin-bottom: 10px;">
+                <span>💰 Oro: <b id="oro-txt" style="color: #ffd700;">0</b></span>
+                <span style="color: #00ffcc;">🛡️ Lluvia</span>
             </div>
-            <div class="badge-noble">
-                Noble (Aristocracia) 
-                <span id="svip-tag" class="tag-svip">SVIP</span>
-            </div>
-            <p style="color: #ff85a2; font-size: 13px; margin: 5px 0;">💕 C.P: Buscando pareja...</p>
-            <div id="id-label" style="color:#ffd700; font-size:15px; font-weight: bold;">📍 ID SALA: ---</div>
+            <div class="badge-noble">Noble (Aristocracia) <span id="svip-tag" class="tag-svip">SVIP</span></div>
+            <div style="color: #ff85a2; font-size: 14px; margin-top: 8px;">💕 C.P: Buscando pareja...</div>
+            <div id="sala-label" style="color: #ffd700; font-weight: bold; margin-top: 5px;">📍 ID SALA: ---</div>
         </div>
 
-        <div class="audio-main-controls">
-            <div onclick="toggleMicro()">
-                <div id="mic-btn" class="btn-circle-audio btn-off">🎙️</div>
-                <p style="font-size:12px; margin-top:8px; font-weight: bold;">Micro</p>
-            </div>
-            <div onclick="toggleBocina()">
-                <div id="spk-btn" class="btn-circle-audio btn-on">🔊</div>
-                <p style="font-size:12px; margin-top:8px; font-weight: bold;">Bocina</p>
-            </div>
+        <div class="audio-row">
+            <div onclick="toggleMic()"><div id="mic-btn" class="btn-circle btn-off">🎙️</div><p>Micro</p></div>
+            <div onclick="toggleSpk()"><div id="spk-btn" class="btn-circle btn-on">🔊</div><p>Bocina</p></div>
         </div>
 
-        <div class="sala-grid" id="grid-sillas">
-            </div>
+        <div class="sala-grid" id="sillas-container"></div>
 
         <div class="bottom-nav">
-            <button class="nav-item" style="background:#ffd700; color: black;" onclick="abrirModal('modal-wallet')">💳<br>Wallet</button>
-            <button class="nav-item" style="background: linear-gradient(#ff9800, #f44336); width:85px; height:85px; font-size:40px;" onclick="abrirModal('modal-regalos')">🎁</button>
-            <button class="nav-item" style="background:#00d2ff; color: black;" onclick="abrirModal('modal-tienda')">👑<br>VIP</button>
+            <button class="nav-btn" style="background: #ffd700;" onclick="showM('modal-w')">💳<br>Wallet</button>
+            <button class="nav-btn" style="background: linear-gradient(#ff9800, #f44336); width: 85px; height: 85px; font-size: 40px;" onclick="showM('modal-g')">🎁</button>
+            <button class="nav-btn" style="background: #00d2ff;" onclick="showM('modal-v')">👑<br>VIP</button>
         </div>
     </div>
 
-    <div id="modal-regalos" class="modal">
-        <h2 style="color:#ff85a2; margin-top: 0;">Enviar Regalo</h2>
-        <button class="modal-btn" onclick="enviarRegalo('Rosa', 10)">🌹 Rosa (10 Oro)</button>
-        <button class="modal-btn" onclick="enviarRegalo('Carro', 500)">🚗 Carro (500 Oro)</button>
-        <button class="modal-btn" style="background:#ff3333; color:white;" onclick="cerrarModal()">Cerrar</button>
+    <div id="modal-g" class="modal">
+        <h2 style="color: #ff85a2; margin-top: 0;">Enviar Regalo</h2>
+        <button class="modal-item" onclick="sendG('Rosa', 10)">🌹 Rosa (10 Oro)</button>
+        <button class="modal-item" onclick="sendG('Carro', 500)">🚗 Carro (500 Oro)</button>
+        <button class="modal-item" style="background:#444; color:white;" onclick="closeM()">Cerrar</button>
     </div>
 
-    <div id="modal-tienda" class="modal">
-        <h2 style="color:#00d2ff; margin-top: 0;">Tienda VIP</h2>
-        <div class="vip-info">
-            <p style="color:#ffd700; font-weight:bold; margin-top:0;">Beneficios SVIP:</p>
-            <ul style="margin: 5px 0; padding-left: 20px;">
-                <li>Etiqueta SVIP roja exclusiva</li>
-                <li>Prioridad en entrada a salas</li>
-                <li>Color de nombre especial</li>
-            </ul>
+    <div id="modal-v" class="modal">
+        <h2 style="color: #00d2ff; margin-top: 0;">Tienda VIP</h2>
+        <div style="background: #333; padding: 10px; border-radius: 10px; text-align: left; font-size: 14px; margin-bottom: 10px;">
+            <p style="color: #ffd700; margin: 0;">✓ Etiqueta SVIP Roja</p>
+            <p style="color: #ffd700; margin: 5px 0 0 0;">✓ Entrada especial</p>
         </div>
-        <button class="modal-btn" style="background: linear-gradient(90deg, #ff0000, #b30000); color: white; border: 1px solid white;" onclick="comprarVIP('SVIP', 2000)">
-            👑 ACTIVAR SVIP (2000 Oro)
-        </button>
-        <button class="modal-btn" onclick="cerrarModal()">Cerrar</button>
+        <button class="modal-item btn-vip-buy" onclick="buyV()">👑 ACTIVAR SVIP (2000 Oro)</button>
+        <button class="modal-item" style="background:#444; color:white;" onclick="closeM()">Cerrar</button>
     </div>
 
-    <div id="modal-wallet" class="modal">
-        <h2 style="color:#ffd700; margin-top: 0;">Mi Wallet</h2>
-        <button class="modal-btn" style="background:#4CAF50; color:white" onclick="recargar(1000)">Recargar +1000 Oro ($0.99)</button>
-        <button class="modal-btn" onclick="cerrarModal()">Cerrar</button>
+    <div id="modal-w" class="modal">
+        <h2 style="color: #ffd700; margin-top: 0;">Wallet</h2>
+        <button class="modal-item" style="background:#28a745; color:white;" onclick="recharge()">Recargar +1000 Oro</button>
+        <button class="modal-item" onclick="closeM()">Cerrar</button>
     </div>
 
-    <audio id="remote-audio" autoplay playsinline></audio>
+    <audio id="audio-player" autoplay playsinline></audio>
 
     <script>
-        // CONFIGURACIÓN FIREBASE
-        const firebaseConfig = { apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4", projectId: "lluvia-live-69a05" };
-        firebase.initializeApp(firebaseConfig);
+        const config = { apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4", projectId: "lluvia-live-69a05" };
+        firebase.initializeApp(config);
         const db = firebase.firestore();
 
-        let peer, localStream, role, room, nombre;
+        let peer, stream, role, room, user;
 
-        // Generar las 9 sillas
-        const grid = document.getElementById('grid-sillas');
+        // Crear sillas
+        const container = document.getElementById('sillas-container');
         for(let i=1; i<=9; i++) {
-            grid.innerHTML += `<div><div class="silla-box" id="silla-${i}">👤</div><div style="font-size:11px;margin-top:6px;color:#aaa;">Silla ${i}</div></div>`;
+            container.innerHTML += `<div><div class="silla" id="s-${i}">👤</div><div style="font-size:11px; color:#888; margin-top:5px;">Silla ${i}</div></div>`;
         }
 
-        async function entrarSala(tipo) {
-            nombre = document.getElementById('user-name').value;
+        async function entrar(t) {
+            user = document.getElementById('user-name').value;
             room = document.getElementById('room-id').value;
-            role = tipo;
-
-            if(!nombre || !room) return alert("Por favor escribe tu nombre e ID de sala");
+            role = t;
+            if(!user || !room) return alert("Completa los datos");
 
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-app').style.display = 'block';
-            document.getElementById('id-label').innerText = "📍 ID SALA: " + room;
+            document.getElementById('sala-label').innerText = "📍 ID SALA: " + room;
 
             peer = new Peer('lluvia-' + room + '-' + role);
 
-            // Escuchar base de datos en tiempo real (Oro y VIP)
-            db.collection("usuarios").doc(nombre).onSnapshot(doc => {
+            // Escuchar cambios de Oro y VIP
+            db.collection("usuarios").doc(user).onSnapshot(doc => {
                 if(doc.exists) {
-                    const data = doc.data();
-                    document.getElementById('oro-txt').innerText = data.oro || 0;
-                    document.getElementById('svip-tag').style.display = data.svip ? 'inline-block' : 'none';
+                    const d = doc.data();
+                    document.getElementById('oro-txt').innerText = d.oro || 0;
+                    document.getElementById('svip-tag').style.display = d.svip ? 'inline-block' : 'none';
                 }
             });
 
             peer.on('call', call => {
-                call.answer(localStream);
-                call.on('stream', s => { document.getElementById('remote-audio').srcObject = s; });
+                call.answer(stream);
+                call.on('stream', s => { document.getElementById('audio-player').srcObject = s; });
             });
         }
 
-        async function toggleMicro() {
-            if (!localStream) {
+        async function toggleMic() {
+            if (!stream) {
                 try {
-                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    const destino = (role === 'A') ? 'B' : 'A';
-                    peer.call('lluvia-' + room + '-' + destino, localStream);
-                } catch (e) { alert("Permite el acceso al micrófono"); return; }
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const target = (role === 'A') ? 'B' : 'A';
+                    peer.call('lluvia-' + room + '-' + target, stream);
+                } catch (e) { alert("Activa el micro"); return; }
             }
-            const estado = !localStream.getAudioTracks()[0].enabled;
-            localStream.getAudioTracks()[0].enabled = estado;
-            document.getElementById('mic-btn').className = estado ? "btn-circle-audio btn-on" : "btn-circle-audio btn-off";
-            
-            const sId = (role === 'A') ? '1' : '2';
-            document.getElementById('silla-'+sId).className = estado ? "silla-box silla-on" : "silla-box";
+            const active = !stream.getAudioTracks()[0].enabled;
+            stream.getAudioTracks()[0].enabled = active;
+            document.getElementById('mic-btn').className = active ? "btn-circle btn-on" : "btn-circle btn-off";
+            const sId = (role === 'A') ? 's-1' : 's-2';
+            document.getElementById(sId).className = active ? "silla silla-activa" : "silla";
         }
 
-        function toggleBocina() {
-            const audio = document.getElementById('remote-audio');
-            audio.muted = !audio.muted;
-            document.getElementById('spk-btn').className = audio.muted ? "btn-circle-audio btn-off" : "btn-circle-audio btn-on";
+        function toggleSpk() {
+            const a = document.getElementById('audio-player');
+            a.muted = !a.muted;
+            document.getElementById('spk-btn').className = a.muted ? "btn-circle btn-off" : "btn-circle btn-on";
         }
 
-        // LÓGICA DE REGALOS (DESCUENTO REAL)
-        async function enviarRegalo(item, costo) {
-            const userRef = db.collection("usuarios").doc(nombre);
-            const doc = await userRef.get();
-            const oroActual = doc.data()?.oro || 0;
-
-            if (oroActual >= costo) {
-                await userRef.update({ oro: firebase.firestore.FieldValue.increment(-costo) });
-                alert(`¡Has enviado un(a) ${item}!`);
-                cerrarModal();
-            } else {
-                alert("No tienes suficiente oro.");
-            }
+        async function sendG(name, cost) {
+            const ref = db.collection("usuarios").doc(user);
+            const doc = await ref.get();
+            if ((doc.data()?.oro || 0) >= cost) {
+                await ref.update({ oro: firebase.firestore.FieldValue.increment(-cost) });
+                alert("¡Regalo " + name + " enviado!");
+                closeM();
+            } else { alert("Oro insuficiente"); }
         }
 
-        // LÓGICA DE COMPRA VIP
-        async function comprarVIP(tipo, costo) {
-            const userRef = db.collection("usuarios").doc(nombre);
-            const doc = await userRef.get();
-            const oroActual = doc.data()?.oro || 0;
-
-            if (oroActual >= costo) {
-                await userRef.update({ 
-                    oro: firebase.firestore.FieldValue.increment(-costo),
-                    svip: true 
-                });
-                alert("¡Felicidades! Ya eres " + tipo);
-                cerrarModal();
-            } else {
-                alert("Oro insuficiente para comprar el VIP.");
-            }
+        async function buyV() {
+            const ref = db.collection("usuarios").doc(user);
+            const doc = await ref.get();
+            if ((doc.data()?.oro || 0) >= 2000) {
+                await ref.update({ oro: firebase.firestore.FieldValue.increment(-2000), svip: true });
+                alert("¡Felicidades! Ya eres SVIP");
+                closeM();
+            } else { alert("Necesitas 2000 de oro"); }
         }
 
-        function recargar(cant) {
-            db.collection("usuarios").doc(nombre).set({ 
-                oro: firebase.firestore.FieldValue.increment(cant) 
-            }, { merge: true });
-            alert("Recarga de oro exitosa.");
+        function recharge() {
+            db.collection("usuarios").doc(user).set({ oro: firebase.firestore.FieldValue.increment(1000) }, { merge: true });
+            alert("Recarga exitosa");
         }
 
-        function abrirModal(id) { document.getElementById(id).style.display = 'block'; }
-        function cerrarModal() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
+        function showM(id) { document.getElementById(id).style.display = 'block'; }
+        function closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
     </script>
 </body>
 </html>
