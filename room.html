@@ -3,86 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live - Sala & Billetera</title>
-    
+    <title>Lluvia Live - Versión Final</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.paypal.com/sdk/js?client-id=AWOafs7E7hOuryPjXYaHIMvKeWhSgH65Fejg2eyY4b0BY_7xoClV0xhc45Zdr7Y5MhMGSCefLgl6X18&currency=USD"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AfHuBVaA8_T6bxvMRwYfG&currency=USD"></script>
 
     <style>
-        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; overflow-x: hidden; }
+        body { margin: 0; background: linear-gradient(180deg, #1a0033, #3d0066); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; height: 100vh; overflow: hidden; }
         
-        /* Cabecera Principal */
-        .header-sala { background: rgba(0,0,0,0.6); padding: 15px; border: 2px solid #ffd700; border-radius: 15px; width: 90%; margin: 10px auto; box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
-        .info-row { display: flex; justify-content: space-around; font-size: 16px; margin-top: 10px; font-weight: bold; }
+        /* Panel Superior */
+        .header-panel { background: rgba(0,0,0,0.8); width: 92%; margin: 10px auto; padding: 15px; border-radius: 25px; border: 2px solid #ffd700; box-shadow: 0 0 20px rgba(255,215,0,0.4); }
+        .user-name { color: #ffd700; font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 5px; text-shadow: 0 0 10px #ffd700; }
+        .stats { display: flex; justify-content: space-around; font-size: 0.9rem; border-top: 1px solid #444; padding-top: 8px; }
+        .aristocracia { background: linear-gradient(90deg, #ffd700, #ff8c00); color: black; font-weight: bold; padding: 6px 25px; border-radius: 20px; display: inline-block; margin-top: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         
-        /* Aristocracia SVIP */
-        .aristocracia-box { border-top: 1px solid rgba(255,215,0,0.3); margin-top: 15px; padding-top: 10px; }
-        .txt-aristocracia { color: #ffd700; font-size: 17px; }
-        .txt-svip { color: #ff00ff; text-shadow: 0 0 8px #ff00ff; margin-left: 5px; }
-        
-        /* Contenedor del Micrófono */
-        .mic-section { margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
-        .mic-btn { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #ffd700; background: #331a4d; cursor: pointer; font-size: 40px; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-        .mic-on { background: #ffd700; color: black; box-shadow: 0 0 30px #ffd700; }
+        /* Controles de Sala */
+        .room-info { color: #ffd700; margin: 10px 0; font-weight: bold; }
+        .btn-pink { background: #ff0066; color: white; padding: 12px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; width: 85%; margin-top: 10px; }
+        .controls { display: flex; justify-content: center; gap: 35px; margin-top: 20px; }
+        .circle-btn { width: 70px; height: 70px; border-radius: 50%; border: none; font-size: 28px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.6); }
+        .btn-on { background: #00ff00; color: black; border: 3px solid white; }
+        .btn-off { background: #ff3333; color: white; }
 
-        /* LA BOCINITA (Fundamental para el audio) */
-        .bocina-status { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 20px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 20px; width: fit-content; margin-left: auto; margin-right: auto; }
-        .icon-bocina { font-size: 30px; filter: drop-shadow(0 0 5px #fff); }
+        /* Billetera de Lujo */
+        #wallet-modal { display: none; position: fixed; top: 15%; left: 5%; width: 90%; background: #222; border: 3px solid #ffd700; border-radius: 30px; padding: 20px; z-index: 1000; box-shadow: 0 0 100px black; box-sizing: border-box; }
+        .wallet-title { color: #ffd700; font-size: 1.5rem; margin-bottom: 20px; }
+        #paypal-button-container { margin-top: 20px; min-height: 150px; }
+        .close-btn { background: #ff3333; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; margin-top: 20px; width: 100%; }
 
-        /* Billetera */
-        .wallet-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26, 0, 51, 0.99); z-index: 1000; padding-top: 30px; }
-        .wallet-card { background: #222; border: 2px solid #ffd700; border-radius: 20px; width: 85%; margin: auto; padding: 25px; }
-        .pack-btn { background: #333; border: 1px solid #ffd700; border-radius: 12px; padding: 20px; margin-bottom: 15px; cursor: pointer; display: flex; justify-content: space-between; width: 100%; color: white; font-size: 18px; }
-        
-        .btn-wallet-main { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 18px 50px; border-radius: 40px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 0 25px #ffd700; font-size: 18px; }
+        /* Barra de Acciones Inferior */
+        .footer-actions { position: fixed; bottom: 25px; width: 100%; display: flex; justify-content: space-evenly; align-items: center; }
+        .action-btn { width: 60px; height: 60px; border-radius: 50%; border: 2px solid white; font-weight: bold; cursor: pointer; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .wallet-btn { background: #ffd700; color: black; box-shadow: 0 0 20px #ffd700; }
+        .gift-btn { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(45deg, #ff0066, #ffcc00); border: none; font-size: 35px; cursor: pointer; box-shadow: 0 0 30px #ff0066; }
+        .vip-btn { background: #00d2ff; color: white; box-shadow: 0 0 20px #00d2ff; }
     </style>
 </head>
 <body>
 
-    <div class="header-sala">
-        <div style="font-size: 24px; color: #ffd700; margin-bottom: 5px;">👤 100</div>
-        
-        <div class="info-row">
-            <span>💰 Oro: <span id="oro-txt" style="color:#ffd700;">...</span></span>
-            <span>🛡️ Clan: <span style="color:#ff4444;">Lluvia</span></span>
+    <div class="header-panel">
+        <span class="user-name" id="display-name">Cargando...</span>
+        <div class="stats">
+            <span>💰 Oro: <b id="user-oro">...</b></span>
+            <span style="color: #00ffcc;">🛡️ Clan: Lluvia</span>
         </div>
-
-        <div class="aristocracia-box">
-            <div class="txt-aristocracia">💎 Aristocracia <span class="txt-svip">SVIP</span></div>
-            <div style="color: #00ff00; margin-top: 8px; font-size: 14px;">📍 Sala: 100</div>
-        </div>
+        <div class="aristocracia">🏆 Noble (Aristocracia)</div>
     </div>
 
-    <div class="mic-section">
-        <div id="btn-mic" class="mic-btn" onclick="toggleMic()">🎙️</div>
-        
-        <div class="bocina-status">
-            <span class="icon-bocina">🔊</span>
-            <span id="status-text" style="font-weight: bold; color: #00ff00;">Audio Activo</span>
-        </div>
+    <div id="room-display" class="room-info">📍 Sala: 100</div>
+    <button class="btn-pink" onclick="unmuteAudio()">🔊 ACTIVAR AUDIO DE SALA</button>
+
+    <div class="controls">
+        <div><button id="mic-btn" class="circle-btn btn-off" onclick="toggleMic()">🎙️</button><p>Micro</p></div>
+        <div><button id="spk-btn" class="circle-btn btn-on" onclick="toggleSpeaker()">🔊</button><p>Bocina</p></div>
     </div>
 
-    <button class="btn-wallet-main" onclick="abrirBilletera()">💳 IR A BILLETERA</button>
-
-    <div id="modal-billetera" class="wallet-container">
-        <div class="wallet-card">
-            <h2 style="color: #ffd700;">Recargar Oro</h2>
-            <button class="pack-btn" onclick="prepararPago('0.99', 100)">
-                <span>🪙 100 Oros</span> <b>$0.99</b>
-            </button>
-            <button class="pack-btn" onclick="prepararPago('9.99', 1100)">
-                <span>🪙 1100 Oros</span> <b>$9.99</b>
-            </button>
-            
-            <div id="paypal-button-container" style="margin-top: 20px;"></div>
-            
-            <button onclick="cerrarBilletera()" style="margin-top: 20px; background: none; border: 1px solid #ff4444; color: #ff4444; padding: 10px; width: 100%; border-radius: 10px;">Cerrar</button>
-        </div>
+    <div id="wallet-modal">
+        <h3 class="wallet-title">💳 RECARGAR ORO</h3>
+        <p style="color: #ffd700;">Pack: 1100 Oros por $9.99</p>
+        <div id="paypal-button-container"></div>
+        <button class="close-btn" onclick="cerrarWallet()">CANCELAR</button>
     </div>
+
+    <div class="footer-actions">
+        <button class="action-btn wallet-btn" onclick="abrirWallet()">💳<br>Wallet</button>
+        <button class="gift-btn" onclick="enviarRegalo()">🎁</button>
+        <button class="action-btn vip-btn" onclick="alert('Tienda VIP en desarrollo')">👑<br>VIP</button>
+    </div>
+
+    <audio id="remote-audio" autoplay playsinline></audio>
 
     <script>
-        // Configuración de Firebase
+        // Configuración de Firebase (Copiada de tu foto de consola)
         const firebaseConfig = {
             apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
             authDomain: "lluvia-live-69a05.firebaseapp.com",
@@ -91,58 +84,88 @@
             messagingSenderId: "909704512499",
             appId: "1:909704512499:web:a8f0d658fb6dbd3f610886"
         };
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        let userId = "Melvin_User";
 
-        // Cargar Oro en tiempo real
-        db.collection("usuarios").doc(userId).onSnapshot(doc => {
-            if(doc.exists) {
-                document.getElementById('oro-txt').innerText = doc.data().oro || 0;
+        // Sistema de Nombre de Usuario
+        let nombreUsuario = localStorage.getItem('nombre_lluvia');
+        if (!nombreUsuario) {
+            nombreUsuario = prompt("¿Cómo te llamas en Lluvia Live?") || "Usuario_" + Math.floor(Math.random()*1000);
+            localStorage.setItem('nombre_lluvia', nombreUsuario);
+        }
+        document.getElementById('display-name').innerText = "👤 " + nombreUsuario;
+
+        // Escuchar Saldo en Tiempo Real
+        db.collection("usuarios").doc(nombreUsuario).onSnapshot((doc) => {
+            if (doc.exists) {
+                document.getElementById('user-oro').innerText = doc.data().oro;
+            } else {
+                db.collection("usuarios").doc(nombreUsuario).set({ oro: 1000, rango: "Noble", clan: "Lluvia" });
             }
         });
 
-        // Función del Micrófono y Audio
-        let activo = false;
-        function toggleMic() {
-            activo = !activo;
-            const btn = document.getElementById('btn-mic');
-            const txt = document.getElementById('status-text');
-            if(activo) {
-                btn.classList.add('mic-on');
-                txt.innerText = "Transmitiendo...";
-                txt.style.color = "#ffd700";
-            } else {
-                btn.classList.remove('mic-on');
-                txt.innerText = "Audio Activo";
-                txt.style.color = "#00ff00";
-            }
+        // Lógica de la Billetera y PayPal
+        function abrirWallet() {
+            document.getElementById('wallet-modal').style.display = 'block';
+            renderizarPaypal();
         }
 
-        function abrirBilletera() { document.getElementById('modal-billetera').style.display = 'block'; }
-        function cerrarBilletera() { 
-            document.getElementById('modal-billetera').style.display = 'none'; 
-            document.getElementById('paypal-button-container').innerHTML = "";
+        function cerrarWallet() {
+            document.getElementById('wallet-modal').style.display = 'none';
         }
 
-        function prepararPago(monto, cantidad) {
+        function renderizarPaypal() {
             document.getElementById('paypal-button-container').innerHTML = "";
             paypal.Buttons({
-                createOrder: (data, actions) => {
+                createOrder: function(data, actions) {
                     return actions.order.create({
-                        purchase_units: [{ amount: { value: monto } }]
+                        purchase_units: [{
+                            description: "1100 Oros - Lluvia Live",
+                            amount: { value: '9.99' }
+                        }]
                     });
                 },
-                onApprove: (data, actions) => {
-                    return actions.order.capture().then(details => {
-                        db.collection("usuarios").doc(userId).update({
-                            oro: firebase.firestore.FieldValue.increment(cantidad)
+                onApprove: function(data, actions) {
+                    return actions.order.capture().then(function(details) {
+                        db.collection("usuarios").doc(nombreUsuario).update({
+                            oro: firebase.firestore.FieldValue.increment(1100)
+                        }).then(() => {
+                            alert("¡Recarga exitosa, " + details.payer.name.given_name + "!");
+                            cerrarWallet();
                         });
-                        alert("¡Oros agregados con éxito!");
-                        cerrarBilletera();
                     });
                 }
             }).render('#paypal-button-container');
+        }
+
+        function enviarRegalo() {
+            db.collection("usuarios").doc(nombreUsuario).update({
+                oro: firebase.firestore.FieldValue.increment(-10)
+            });
+        }
+
+        // Sistema de Audio
+        const roomID = "100";
+        const peer = new Peer('lluvia-' + roomID + '-' + nombreUsuario);
+        let myStream, mic = false, spk = true;
+
+        function unmuteAudio() { document.getElementById('remote-audio').play(); }
+
+        async function toggleMic() {
+            if (!myStream) {
+                myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                peer.on('call', c => { c.answer(myStream); c.on('stream', s => document.getElementById('remote-audio').srcObject = s); });
+            }
+            mic = !mic;
+            myStream.getAudioTracks()[0].enabled = mic;
+            document.getElementById('mic-btn').className = mic ? "circle-btn btn-on" : "circle-btn btn-off";
+        }
+
+        function toggleSpeaker() {
+            spk = !spk;
+            document.getElementById('remote-audio').muted = !spk;
+            document.getElementById('spk-btn').className = spk ? "circle-btn btn-on" : "circle-btn btn-off";
         }
     </script>
 </body>
