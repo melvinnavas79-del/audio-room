@@ -3,110 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Lluvia Live Fix</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
+    <title>Lluvia Live - Store</title>
     <style>
-        :root { --gold: #ffd700; --blue-pk: #0084ff; --red-pk: #ff004c; }
-        body { 
-            margin: 0; background: #0b0015; color: white; font-family: sans-serif; 
-            height: 100vh; overflow: hidden; position: fixed; width: 100%;
+        :root { --gold: #ffd700; --bg: #0b0015; }
+        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; height: 100vh; }
+
+        /* ... (Mantenemos tu diseño de PK y Sillas igual) ... */
+        .pk-container { width: 100%; height: 40px; display: flex; border-bottom: 2px solid var(--gold); background: #222; }
+        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px; }
+        .silla { background: rgba(255,255,255,0.1); width: 60px; height: 60px; border-radius: 50%; margin: 0 auto; border: 1px solid #444; }
+
+        /* NAVEGACIÓN INFERIOR */
+        .footer-nav { position: fixed; bottom: 60px; width: 100%; display: flex; justify-content: center; gap: 20px; z-index: 100; }
+        .btn-action { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--gold); background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 25px; cursor: pointer; }
+        .btn-main { width: 80px; height: 80px; background: red; font-size: 35px; }
+
+        /* --- MENÚ DE REGALOS ESTILO VOLA --- */
+        #gift-menu {
+            position: fixed; bottom: -100%; left: 0; width: 100%; height: 40%;
+            background: rgba(15, 0, 30, 0.95); border-top: 3px solid var(--gold);
+            border-radius: 20px 20px 0 0; transition: 0.4s ease; z-index: 1000;
+            padding: 20px; box-sizing: border-box;
         }
+        #gift-menu.open { bottom: 0; }
+
+        .gift-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 10px; }
+        .gift-item { text-align: center; font-size: 10px; color: var(--gold); }
+        .gift-icon { font-size: 30px; display: block; margin-bottom: 5px; }
         
-        /* BARRA PK */
-        .pk-container { width: 100%; height: 40px; display: flex; position: relative; border-bottom: 2px solid var(--gold); z-index: 10; }
-        .pk-blue { background: var(--blue-pk); width: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
-        .pk-red { background: var(--red-pk); width: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
-        .pk-timer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #000; border: 1px solid var(--gold); border-radius: 10px; padding: 2px 8px; font-size: 10px; }
-
-        /* PERFIL */
-        .header-card { background: rgba(30,0,60,0.8); width: 90%; margin: 10px auto; padding: 10px; border-radius: 15px; border: 1.5px solid var(--gold); display: flex; align-items: center; gap: 10px; }
-        .avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--gold); }
-
-        /* SILLAS */
-        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 20px; margin-top: 10px; }
-        .silla { background: rgba(255,255,255,0.1); width: 60px; height: 60px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid #333; }
-
-        /* --- BOTONES CORREGIDOS --- */
-        .footer-nav { 
-            position: absolute; 
-            bottom: 80px; /* Subimos la barra para que Safari no la bloquee */
-            left: 0; width: 100%; 
-            display: flex; justify-content: center; align-items: center; gap: 25px;
-            z-index: 9999; 
-        }
-
-        .btn-action { 
-            width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--gold);
-            display: flex; align-items: center; justify-content: center; font-size: 25px;
-            background: #1a1a1a; cursor: pointer;
-            -webkit-tap-highlight-color: transparent; /* Quita el cuadro azul en iPhone */
-            transition: transform 0.1s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        .btn-action:active { transform: scale(0.85); background: #333; }
-
-        .btn-main { width: 80px; height: 80px; background: #ff0000; font-size: 35px; border: 3px solid var(--gold); }
-
-        /* MODAL SIMPLE */
-        .modal { 
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #111; border: 2px solid var(--gold); padding: 20px; border-radius: 20px;
-            width: 70%; z-index: 10000; text-align: center;
-        }
+        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 20px; color: white; }
     </style>
 </head>
 <body>
 
     <div class="pk-container">
-        <div class="pk-blue">CLAN A: 0</div>
-        <div class="pk-red">CLAN B: 0</div>
-        <div class="pk-timer">05:00</div>
-    </div>
-
-    <div class="header-card">
-        <div class="avatar">👤</div>
-        <div style="text-align:left flex-grow:1;">
-            <b id="user-name">Melvin</b><br>
-            <span style="color:var(--gold); font-size:12px;">💰 <span id="oro-val">2,000</span></span>
-        </div>
-        <div style="margin-left:auto; font-size:20px;" onclick="abrirModal('m-config')">⚙️</div>
+        <div style="background:blue; width:50%; display:flex; align-items:center; justify-content:center;">CLAN A</div>
+        <div style="background:red; width:50%; display:flex; align-items:center; justify-content:center;">CLAN B</div>
     </div>
 
     <div class="grid-sala">
-        <div class="silla">👤</div><div class="silla">👤</div><div class="silla">👤</div>
-        <div class="silla">👤</div><div class="silla">👤</div><div class="silla">👤</div>
-        <div class="silla">👤</div><div class="silla">👤</div><div class="silla">👤</div>
+        <div class="silla"></div><div class="silla"></div><div class="silla"></div>
+        <div class="silla"></div><div class="silla"></div><div class="silla"></div>
     </div>
 
     <div class="footer-nav">
-        <div class="btn-action" style="border-color:#00ff00;" onclick="accionBoton('Banco')">🏦</div>
-        <div class="btn-action btn-main" onclick="accionBoton('Regalo')">🎁</div>
-        <div class="btn-action" style="background:#1a237e;" onclick="accionBoton('VIP')">👑</div>
+        <div class="btn-action" onclick="alert('Abriendo Banco')">🏦</div>
+        <div class="btn-action btn-main" onclick="toggleGifts()">🎁</div>
+        <div class="btn-action" onclick="alert('Abriendo VIP')">👑</div>
     </div>
 
-    <div id="m-msg" class="modal">
-        <h2 id="modal-title"></h2>
-        <button onclick="cerrarModal()" style="padding:10px 20px; background:var(--gold); border:none; border-radius:10px;">OK</button>
+    <div id="gift-menu">
+        <div class="close-btn" onclick="toggleGifts()">✕</div>
+        <h3 style="margin: 0; font-size: 16px;">Enviar Regalos</h3>
+        <div class="gift-grid">
+            <div class="gift-item" onclick="enviarRegalo('Rosa', 10)"><span class="gift-icon">🌹</span>10</div>
+            <div class="gift-item" onclick="enviarRegalo('Anillo', 500)"><span class="gift-icon">💍</span>500</div>
+            <div class="gift-item" onclick="enviarRegalo('Castillo', 5000)"><span class="gift-icon">🏰</span>5k</div>
+            <div class="gift-item" onclick="enviarRegalo('Cohete', 10000)"><span class="gift-icon">🚀</span>10k</div>
+            <div class="gift-item" onclick="enviarRegalo('Corona', 2000)"><span class="gift-icon">👑</span>2k</div>
+            <div class="gift-item" onclick="enviarRegalo('Carro', 8000)"><span class="gift-icon">🏎️</span>8k</div>
+            <div class="gift-item" onclick="enviarRegalo('Yate', 15000)"><span class="gift-icon">🛥️</span>15k</div>
+            <div class="gift-item" onclick="enviarRegalo('León', 30000)"><span class="gift-icon">🦁</span>30k</div>
+        </div>
     </div>
 
     <script>
-        // Configuración mínima para que no de error
-        const firebaseConfig = { apiKey: "AIzaSy...", projectId: "lluvia-live-69a05" };
-        firebase.initializeApp(firebaseConfig);
-
-        function accionBoton(tipo) {
-            // Efecto de vibración (haptic feedback) para móviles
-            if (navigator.vibrate) navigator.vibrate(50);
-            
-            document.getElementById('modal-title').innerText = "Abriendo " + tipo;
-            document.getElementById('m-msg').style.display = 'block';
+        function toggleGifts() {
+            document.getElementById('gift-menu').classList.toggle('open');
         }
 
-        function abrirModal(id) { document.getElementById('m-msg').style.display = 'block'; }
-        function cerrarModal() { document.getElementById('m-msg').style.display = 'none'; }
+        function enviarRegalo(nombre, costo) {
+            alert("Has enviado un " + nombre + " por " + costo + " de oro.");
+            toggleGifts();
+            // Aquí es donde el contacto de Pakistán conectará la animación SVGA
+        }
     </script>
 </body>
 </html>
