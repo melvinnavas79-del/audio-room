@@ -1,136 +1,180 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Lluvia Live - Conexión Dual</title>
-    <style>
-        :root { --gold:#ffd700; --red:#ff004c; --blue:#0084ff; }
-        body { margin:0; background:#0b0015; color:white; font-family: sans-serif; overflow:hidden; height:100vh; width:100%; position:fixed; }
-        
-        /* PANTALLA DE INICIO (ESTO ES LO QUE TE FALTABA) */
-        #pantalla-inicio {
-            position: fixed; inset:0; background:#0b0015; z-index:9999;
-            display:flex; flex-direction:column; align-items:center; justify-content:center;
-            padding: 20px; text-align: center;
-        }
-        .logo { color: var(--gold); font-size: 32px; font-weight: bold; margin-bottom: 30px; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-        .input-sala { 
-            background:#1a1a1a; border:2px solid var(--gold); padding:18px; 
-            border-radius:15px; color:white; width:80%; margin-bottom:20px; 
-            text-align:center; font-size: 18px;
-        }
-        .btn-entrar { 
-            background:var(--gold); color:black; padding:18px 60px; 
-            border-radius:35px; font-weight:bold; border:none; font-size: 20px;
-            box-shadow: 0 5px 15px rgba(255,215,0,0.3);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lluvia Live PRO</title>
 
-        /* INTERFAZ DE SALA */
-        #sala-audio { display:none; }
-        .header-clanes { display:flex; height:50px; border-bottom:2px solid var(--gold); }
-        .clan { flex:1; display:flex; align-items:center; justify-content:center; font-weight:bold; }
-        
-        .grid-usuarios { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:30px 20px; }
-        .perfil { width:70px; height:70px; border-radius:50%; background:rgba(255,255,255,0.1); border:1px solid #444; margin:auto; display:flex; align-items:center; justify-content:center; font-size:28px; position:relative; }
-        .perfil.hablando { border-color:#00ff00; box-shadow:0 0 20px #00ff00; }
-        .num-silla { position:absolute; bottom:-5px; background:var(--gold); color:black; font-size:11px; padding:2px 6px; border-radius:10px; font-weight:bold; }
+<style>
+:root { --gold:#ffd700; --red:#ff004c; --blue:#0084ff; }
 
-        /* CONTROLES INFERIORES */
-        .controles { position:absolute; bottom:120px; width:100%; display:flex; flex-direction:column; align-items:center; gap:20px; }
-        .btn-accion { width:90%; display:flex; gap:10px; }
-        .btn-web { flex:1; padding:18px; border-radius:35px; border:2.5px solid var(--gold); font-weight:bold; background:#111; color:var(--gold); font-size: 14px; }
-        .btn-web.activo { background:var(--red); color:white; border-color:white; box-shadow: 0 0 15px var(--red); }
-        
-        .iconos-extra { display:flex; gap:25px; align-items:center; }
-        .circulo-btn { width:60px; height:60px; border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:25px; background:#1a1a1a; }
-    </style>
+body { margin:0; background:#0b0015; color:white; font-family:sans-serif; overflow:hidden; }
+
+#pantalla-inicio {
+position:fixed; inset:0; background:#0b0015; z-index:9999;
+display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+
+.logo { color:gold; font-size:30px; margin-bottom:20px; }
+
+.input-sala {
+padding:15px; border-radius:10px; border:2px solid gold;
+background:#111; color:white;
+}
+
+.btn-entrar {
+margin-top:10px; padding:15px 40px; border:none;
+background:gold; border-radius:30px;
+}
+
+/* SALA */
+#sala-audio { display:none; }
+
+.header-clanes { display:flex; }
+.clan { flex:1; text-align:center; padding:10px; }
+
+.grid-usuarios {
+display:grid; grid-template-columns:repeat(3,1fr);
+gap:20px; padding:20px;
+}
+
+.perfil {
+width:70px;height:70px;border-radius:50%;
+background:#222; display:flex;align-items:center;justify-content:center;
+margin:auto; position:relative;
+}
+
+.num-silla {
+position:absolute; bottom:-5px;
+background:gold; color:black; border-radius:10px;
+font-size:10px; padding:2px 5px;
+}
+
+/* BOTONES */
+.controles { position:absolute; bottom:100px; width:100%; text-align:center; }
+
+.iconos-extra { display:flex; justify-content:center; gap:20px; }
+
+.circulo-btn {
+width:60px;height:60px;border-radius:50%;
+border:2px solid gold; display:flex;align-items:center;justify-content:center;
+background:#1a1a1a;
+}
+
+.modal {
+display:none; position:fixed; top:50%; left:50%;
+transform:translate(-50%,-50%);
+background:#111; border:2px solid gold;
+padding:20px; border-radius:15px;
+}
+</style>
 </head>
+
 <body>
 
 <div id="pantalla-inicio">
-    <div class="logo">LLUVIA LIVE</div>
-    <p style="margin-bottom:20px; opacity:0.8;">Introduce el ID para entrar o abrir sala</p>
-    <input type="number" id="id-input" class="input-sala" placeholder="ID de Sala (Ej: 555)">
-    <button class="btn-entrar" onclick="abrirSala()">ABRIR SALA</button>
+<div class="logo">LLUVIA LIVE</div>
+<input id="id-input" class="input-sala" placeholder="ID sala">
+<button class="btn-entrar" onclick="abrirSala()">Entrar</button>
 </div>
 
 <div id="sala-audio">
-    <div class="header-clanes">
-        <div class="clan" style="background:var(--blue)">CLAN NAVAS: 0</div>
-        <div class="clan" style="background:var(--red)">CLAN RIVAL: 0</div>
-    </div>
-
-    <div style="padding:15px; font-weight:bold;">SALA ID: <span id="sala-display" style="color:var(--gold)">--</span></div>
-
-    <div class="grid-usuarios">
-        <div class="perfil" id="yo">👤<div class="num-silla">1</div></div>
-        <div class="perfil">👤<div class="num-silla">2</div></div>
-        <div class="perfil">👤<div class="num-silla">3</div></div>
-        <div class="perfil">👤<div class="num-silla">4</div></div>
-        <div class="perfil">👤<div class="num-silla">5</div></div>
-        <div class="perfil">👤<div class="num-silla">6</div></div>
-    </div>
-
-    <div class="controles">
-        <div class="btn-accion">
-            <button id="btn-mic" class="btn-web" onclick="toggleMic()">🎤 MICRO: OFF</button>
-            <button id="btn-spk" class="btn-web" onclick="toggleSpk()">🔊 BOCINA: ON</button>
-        </div>
-        
-        <div class="iconos-extra">
-            <div class="circulo-btn" onclick="alert('Banco Abierto')">🏦</div>
-            <div class="circulo-btn" style="background:red; width:80px; height:80px; font-size:40px;" onclick="alert('Regalos')">🎁</div>
-            <div class="circulo-btn">👑</div>
-        </div>
-    </div>
+<div class="header-clanes">
+<div class="clan" style="background:blue">CLAN A</div>
+<div class="clan" style="background:red">CLAN B</div>
 </div>
 
+<div style="padding:10px;">
+SALA ID: <span id="sala-display"></span> |
+💰 <span id="oro">2000</span>
+</div>
+
+<div class="grid-usuarios">
+<div class="perfil">👤<div class="num-silla">1</div></div>
+<div class="perfil">👤<div class="num-silla">2</div></div>
+<div class="perfil">👤<div class="num-silla">3</div></div>
+</div>
+
+<div class="controles">
+<div class="iconos-extra">
+<div class="circulo-btn">🏦</div>
+<div class="circulo-btn" style="background:red;" onclick="abrirRegalos()">🎁</div>
+<div class="circulo-btn">👑</div>
+</div>
+</div>
+</div>
+
+<div id="modal" class="modal"></div>
+
 <script>
-    let micStatus = false;
-    let spkStatus = true;
 
-    function abrirSala() {
-        const id = document.getElementById('id-input').value;
-        if(!id) return alert("Por favor, pon un ID de sala");
+function abrirSala(){
+let id = document.getElementById("id-input").value;
+if(!id) return alert("Pon ID");
 
-        // DESBLOQUEO DE AUDIO (El "Acuerdo" que mencionaste)
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        document.getElementById('sala-display').innerText = id;
-        document.getElementById('pantalla-inicio').style.display = 'none';
-        document.getElementById('sala-audio').style.display = 'block';
-        
-        console.log("Sala " + id + " abierta. Audio desbloqueado.");
-    }
+document.getElementById("sala-display").innerText = id;
+document.getElementById("pantalla-inicio").style.display="none";
+document.getElementById("sala-audio").style.display="block";
+}
 
-    function toggleMic() {
-        micStatus = !micStatus;
-        const btn = document.getElementById('btn-mic');
-        const yo = document.getElementById('yo');
-        if(micStatus) {
-            btn.innerText = "🔴 MICRO: ON";
-            btn.classList.add('activo');
-            yo.classList.add('hablando');
-            yo.innerHTML = "🎤<div class='num-silla'>1</div>";
-            // Pedir permiso real al iPhone
-            navigator.mediaDevices.getUserMedia({audio:true}).catch(() => {
-                alert("Debes permitir el micrófono en los ajustes de Safari.");
-            });
-        } else {
-            btn.innerText = "🎤 MICRO: OFF";
-            btn.classList.remove('activo');
-            yo.classList.remove('hablando');
-            yo.innerHTML = "👤<div class='num-silla'>1</div>";
-        }
-    }
+/* 🎁 REGALOS */
+const regalos = [
+ {nombre:"🌹 Rosa", precio:100},
+ {nombre:"💎 Diamante", precio:500},
+ {nombre:"🚗 Carro", precio:1000}
+];
 
-    function toggleSpk() {
-        spkStatus = !spkStatus;
-        const btn = document.getElementById('btn-spk');
-        btn.innerText = spkStatus ? "🔊 BOCINA: ON" : "🔇 BOCINA: MUTE";
-        btn.style.opacity = spkStatus ? "1" : "0.5";
-    }
+function abrirRegalos(){
+let html="<h3>Enviar regalo</h3>";
+
+regalos.forEach(r=>{
+html += `<button onclick="enviar('${r.nombre}',${r.precio})"
+style="display:block;margin:10px;padding:10px;">
+${r.nombre} - ${r.precio}
+</button>`;
+});
+
+html += `<button onclick="cerrar()">Cerrar</button>`;
+
+document.getElementById("modal").innerHTML = html;
+document.getElementById("modal").style.display = "block";
+}
+
+function enviar(nombre,precio){
+let oro = parseInt(document.getElementById("oro").innerText);
+
+if(oro < precio){
+alert("No tienes oro");
+return;
+}
+
+oro -= precio;
+document.getElementById("oro").innerText = oro;
+
+animacion(nombre);
+cerrar();
+}
+
+function animacion(nombre){
+let div = document.createElement("div");
+div.innerText = nombre;
+div.style.position="absolute";
+div.style.top="50%";
+div.style.left="50%";
+div.style.transform="translate(-50%,-50%)";
+div.style.fontSize="30px";
+div.style.color="gold";
+
+document.body.appendChild(div);
+
+setTimeout(()=>div.remove(),2000);
+}
+
+function cerrar(){
+document.getElementById("modal").style.display="none";
+}
+
 </script>
+
 </body>
 </html>
