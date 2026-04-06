@@ -1,55 +1,52 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudioRoom PRO - Conexión por ID</title>
-    <script src="https://unpkg.com/zegocloud-zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
-    <style>
-        body { margin: 0; background: linear-gradient(180deg, #4b0082, #8a2be2); color: white; font-family: sans-serif; text-align: center; height: 100vh; }
-        .header { padding: 20px; }
-        .room-info { background: rgba(0,0,0,0.4); padding: 10px; margin: 10px; border-radius: 10px; font-size: 1.2rem; border: 1px solid gold; }
-        .controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 20px; }
-        .btn { width: 70px; height: 70px; border-radius: 50%; border: none; font-size: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .btn-mic { background: #555; color: white; }
-        .btn-active { background: #6c5ce7; border: 3px solid #00ff00; }
-        #status { margin-top: 20px; color: #00ff00; font-weight: bold; }
-    </style>
+    <title>Lluvia Live - Sala de Audio</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
-<body>
-
-    <div class="header">
-        <h1>🎤 AudioRoom PRO</h1>
-        <div class="room-info" id="room-display">Sala ID: Cargando...</div>
-    </div>
-
-    <div id="status">Esperando conexión...</div>
-
-    <div class="controls">
-        <button class="btn btn-mic" id="main-btn" onclick="iniciarTodo()">🎤</button>
-    </div>
-
+<body style="background:black; color:white; text-align:center; font-family: Arial, sans-serif; padding-top:50px;">
+    <h1 style="color: #00ff00;">☔ Lluvia Live</h1>
+    <h2 id="roomTitle">SALA DE AUDIO</h2>
+    <div id="status" style="margin-bottom: 30px; color: yellow; font-size: 20px;">Estado: Conectando a Render...</div>
+    <button onclick="activarMicrofono()" style="padding: 20px 40px; font-size: 18px; background: #6200ee; color: white; border: none; border-radius: 50px; cursor: pointer;">
+        🎤 INICIAR AUDIO EN VIVO
+    </button>
     <script>
-        // 1. Pedir el ID de la sala al usuario
-        const roomID = prompt("Ingresa el ID de la sala (Ej: 1234):") || "8888";
-        document.getElementById('room-display').innerText = "Sala ID: " + roomID;
-
-        // 2. Configurar el motor de audio (ZegoCloud)
-        const userID = "user_" + Math.floor(Math.random() * 1000);
-        const userName = "Melvin_" + userID;
-        
-        // ¡IMPORTANTE! Usa tus datos reales de ZegoCloud aquí
-        const appID = 123456789; 
-        const serverSecret = "tu_secret_aqui"; 
-
-        function iniciarTodo() {
-            const btn = document.getElementById('main-btn');
-            btn.classList.toggle('btn-active');
-            document.getElementById('status').innerText = "🎤 TRANSMITIENDO EN VIVO EN SALA: " + roomID;
-            
-            // Aquí Chrome activará la bocina y el micro al mismo tiempo
-            alert("Audio conectado en la sala " + roomID + ". ¡Habla ahora!");
+        const socket = io("https://audio-room-1.onrender.com");
+        const statusDiv = document.getElementById('status');
+        const urlParams = new URLSearchParams(window.location.search);
+        document.getElementById('roomTitle').innerText = "Sala: " + urlParams.get('room');
+        socket.on('connect', () => {
+            statusDiv.innerText = "✅ CONECTADO AL SERVIDOR";
+            statusDiv.style.color = "#00ff00";
+        });
+        socket.on('connect_error', () => {
+            statusDiv.innerText = "❌ Esperando que Render despierte (30s)...";
+            statusDiv.style.color = "orange";
+        });
+        async function activarMicrofono() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        socket.emit('audio-stream', event.data);
+                    }
+                };
+                mediaRecorder.start(100);
+                statusDiv.innerText = "🎤 TRANSMITIENDO EN VIVO";
+                statusDiv.style.color = "#00ccff";
+                alert("¡Micrófono encendido!");
+            } catch (err) {
+                alert("Error: Activa el micrófono en tu navegador.");
+            }
         }
+        socket.on('audio-broadcast', (data) => {
+            const blob = new Blob([data], { type: 'audio/webm' });
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            audio.play();
+        });
     </script>
 </body>
 </html>
