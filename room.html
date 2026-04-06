@@ -13,8 +13,11 @@
 body { margin:0; background:#0f001e; color:white; font-family:sans-serif; text-align:center; }
 
 .sala-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; }
-.silla-box { width:60px; height:60px; border-radius:50%; background:#1a1a1a; border:2px solid #444; display:flex; align-items:center; justify-content:center; margin:auto; }
+.silla-box { width:70px; height:70px; border-radius:50%; background:#1a1a1a; border:2px solid #444; display:flex; align-items:center; justify-content:center; margin:auto; position:relative; }
 .silla-on { border-color:#00ff00; box-shadow:0 0 15px #00ff00; }
+
+.vip { position:absolute; top:-5px; right:-5px; font-size:12px; }
+.clan { position:absolute; bottom:-5px; font-size:10px; color:#00ffcc; }
 
 .btn-circle { width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; }
 .btn-on { background:#00ff00; }
@@ -37,11 +40,9 @@ body { margin:0; background:#0f001e; color:white; font-family:sans-serif; text-a
 <div id="app" style="display:none;">
 <h3>Sala: <span id="roomTxt"></span> | 💰 <span id="oro">1000</span></h3>
 
-<div>
 <div onclick="toggleMicro()">
 <div id="mic-btn" class="btn-circle btn-off">🎤</div>
 <p>Micro</p>
-</div>
 </div>
 
 <div id="grid" class="sala-grid"></div>
@@ -58,23 +59,29 @@ body { margin:0; background:#0f001e; color:white; font-family:sans-serif; text-a
 
 <script>
 
-// 🔥 CONFIG
-firebase.initializeApp({ apiKey:"test", projectId:"test" });
+// 🔥 FIREBASE
+firebase.initializeApp({ apiKey:"AIza...", projectId:"lluvia-live-69a05" });
+const db = firebase.firestore();
 
 let peer, localStream, role, room, nombre;
 let miSilla = null;
 
 // 🔥 CREAR SILLAS
 const grid = document.getElementById("grid");
+
 for(let i=1;i<=9;i++){
 grid.innerHTML += `
 <div onclick="tomarSilla(${i})">
-<div class="silla-box" id="silla-${i}">👤</div>
+<div class="silla-box" id="silla-${i}">
+👤
+<div id="vip-${i}" class="vip"></div>
+<div id="clan-${i}" class="clan"></div>
+</div>
 <p>Silla ${i}</p>
 </div>`;
 }
 
-// 🔥 ENTRAR
+// 🚀 ENTRAR
 function entrar(tipo){
 nombre = document.getElementById("name").value;
 room = document.getElementById("room").value;
@@ -84,25 +91,46 @@ document.getElementById("login").style.display="none";
 document.getElementById("app").style.display="block";
 document.getElementById("roomTxt").innerText = room;
 
-peer = new Peer('lluvia-'+room+'-'+role);
+peer = new Peer('lluvia-'+room+'-'+nombre);
 
+// escuchar llamadas
 peer.on('call', call=>{
 call.answer(localStream);
 call.on('stream', s=>{
 document.getElementById("remote-audio").srcObject = s;
 });
 });
+
+// 🔥 escuchar sillas en tiempo real
+db.collection("salas").doc(room).onSnapshot(doc=>{
+const data = doc.data() || {};
+for(let i=1;i<=9;i++){
+const silla = data["silla"+i];
+
+if(silla){
+document.getElementById("silla-"+i).innerHTML =
+"👤" +
+(silla.vip ? "<div class='vip'>👑</div>" : "") +
+"<div class='clan'>"+silla.clan+"</div>";
+}else{
+document.getElementById("silla-"+i).innerHTML = "👤";
 }
-
-// 🪑 TOMAR SILLA
-function tomarSilla(num){
-miSilla = num;
-
-document.querySelectorAll(".silla-box").forEach(s=>{
-s.classList.remove("silla-on");
+}
 });
 
-document.getElementById("silla-"+num).classList.add("silla-on");
+}
+
+// 🪑 TOMAR SILLA EN TIEMPO REAL
+async function tomarSilla(num){
+miSilla = num;
+
+await db.collection("salas").doc(room).set({
+["silla"+num]: {
+nombre: nombre,
+clan: "Lluvia",
+vip: false
+}
+},{merge:true});
 
 alert("Silla "+num);
 }
@@ -111,15 +139,24 @@ alert("Silla "+num);
 async function toggleMicro(){
 
 if(miSilla===null){
-alert("Primero elige silla");
+alert("Elige silla primero");
 return;
 }
 
 if(!localStream){
 try{
 localStream = await navigator.mediaDevices.getUserMedia({audio:true});
-const destino = (role==='A')?'B':'A';
-peer.call('lluvia-'+room+'-'+destino, localStream);
+
+// 🔥 llamar a TODOS (simplificado)
+db.collection("salas").doc(room).get().then(doc=>{
+const data = doc.data() || {};
+for(let key in data){
+if(data[key].nombre !== nombre){
+peer.call('lluvia-'+room+'-'+data[key].nombre, localStream);
+}
+}
+});
+
 }catch(e){
 alert("Permite mic");
 return;
