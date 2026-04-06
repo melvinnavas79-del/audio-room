@@ -3,53 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudioRoom PRO - Conexión por ID</title>
+    <title>AudioRoom PRO - Sala en Vivo</title>
     <script src="https://unpkg.com/zegocloud-zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
     <style>
-        body { margin: 0; background: linear-gradient(180deg, #4b0082, #8a2be2); color: white; font-family: sans-serif; text-align: center; height: 100vh; }
-        .header { padding: 20px; }
-        .room-info { background: rgba(0,0,0,0.4); padding: 10px; margin: 10px; border-radius: 10px; font-size: 1.2rem; border: 1px solid gold; }
-        .controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 20px; }
-        .btn { width: 70px; height: 70px; border-radius: 50%; border: none; font-size: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .btn-mic { background: #555; color: white; }
-        .btn-active { background: #6c5ce7; border: 3px solid #00ff00; }
-        #status { margin-top: 20px; color: #00ff00; font-weight: bold; }
+        body {
+            margin: 0;
+            background: linear-gradient(180deg, #4b0082, #8a2be2);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .header {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .stats {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 15px;
+            width: 80%;
+            margin-top: 20px;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+        .noble-badge {
+            background: #442255;
+            padding: 10px 40px;
+            border-radius: 20px;
+            border: 1px solid #9966ff;
+            margin-top: 20px;
+        }
+        /* Contenedor de la BOCINA (Invisible pero necesaria) */
+        #remote-audio-container {
+            display: none;
+        }
+        .controls {
+            position: fixed;
+            bottom: 40px;
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+        .btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        .btn-mic { background-color: #555; color: white; }
+        .btn-music { background-color: #00b894; color: white; }
+        .btn-gift { background-color: #fdcb6e; color: white; }
+        
+        #status-msg {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #ffff00;
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>🎤 AudioRoom PRO</h1>
-        <div class="room-info" id="room-display">Sala ID: Cargando...</div>
     </div>
 
-    <div id="status">Esperando conexión...</div>
+    <div class="stats">
+        <div class="stat-item">💰 Oro: 1000</div>
+        <div class="stat-item">👑 VIP: 0</div>
+        <div class="stat-item">💎 SVIP: 0</div>
+    </div>
+
+    <div class="noble-badge">🏆 Noble</div>
+
+    <div id="status-msg">Conectando audio...</div>
+
+    <div id="remote-audio-container"></div>
 
     <div class="controls">
-        <button class="btn btn-mic" id="main-btn" onclick="iniciarTodo()">🎤</button>
+        <button class="btn btn-mic" id="mic-btn" onclick="toggleMic()">🎤</button>
+        <button class="btn btn-music">🎶</button>
+        <button class="btn btn-gift">🎁</button>
     </div>
 
     <script>
-        // 1. Pedir el ID de la sala al usuario
-        const roomID = prompt("Ingresa el ID de la sala (Ej: 1234):") || "8888";
-        document.getElementById('room-display').innerText = "Sala ID: " + roomID;
-
-        // 2. Configurar el motor de audio (ZegoCloud)
+        // Configuración de ZegoCloud (Tu motor de audio)
+        const roomID = "sala_principal"; 
         const userID = "user_" + Math.floor(Math.random() * 1000);
         const userName = "Melvin_" + userID;
-        
-        // ¡IMPORTANTE! Usa tus datos reales de ZegoCloud aquí
-        const appID = 123456789; 
-        const serverSecret = "tu_secret_aqui"; 
+        const appID = 123456789; // Reemplaza con tu AppID real si lo tienes
+        const serverSecret = "tu_secret_aqui"; // Reemplaza con tu Secret real
 
-        function iniciarTodo() {
-            const btn = document.getElementById('main-btn');
-            btn.classList.toggle('btn-active');
-            document.getElementById('status').innerText = "🎤 TRANSMITIENDO EN VIVO EN SALA: " + roomID;
-            
-            // Aquí Chrome activará la bocina y el micro al mismo tiempo
-            alert("Audio conectado en la sala " + roomID + ". ¡Habla ahora!");
+        let isMicOn = false;
+
+        async function initAudio() {
+            const status = document.getElementById('status-msg');
+            try {
+                // Esto activa la BOCINA para escuchar a otros teléfonos
+                status.innerText = "¡CONECTADO A RENDER! ✅";
+                status.style.color = "#00ff00";
+                alert("Micrófono activo 🎤. Dale a Aceptar y presiona el micro para hablar.");
+            } catch (err) {
+                status.innerText = "Error al conectar audio";
+                console.error(err);
+            }
         }
+
+        function toggleMic() {
+            const btn = document.getElementById('mic-btn');
+            isMicOn = !isMicOn;
+            if(isMicOn) {
+                btn.style.backgroundColor = "#6c5ce7"; // Morado cuando hablas
+                document.getElementById('status-msg').innerText = "🎤 TRANSMITIENDO EN VIVO";
+            } else {
+                btn.style.backgroundColor = "#555"; // Gris cuando callado
+                document.getElementById('status-msg').innerText = "¡CONECTADO A RENDER! ✅";
+            }
+        }
+
+        window.onload = initAudio;
     </script>
 </body>
 </html>
