@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live - Edición Master SVIP</title>
+    <title>Lluvia Live - Acceso SVIP</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -11,100 +11,104 @@
     <style>
         body { margin: 0; background: #0f001e; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; height: 100vh; overflow: hidden; }
         
-        /* Panel Superior Corregido */
-        .header-container { background: rgba(0,0,0,0.6); width: 92%; margin: 10px auto; padding: 15px; border-radius: 25px; border: 2px solid #ffd700; position: relative; }
-        .stats-top { display: flex; justify-content: space-between; padding: 0 10px; font-size: 14px; margin-bottom: 10px; }
-        
-        .rank-row { display: flex; justify-content: center; align-items: center; gap: 10px; }
-        .aristocracia-box { background: linear-gradient(90deg, #b8860b, #ffd700, #b8860b); color: black; font-weight: bold; padding: 8px 20px; border-radius: 20px; box-shadow: 0 0 10px rgba(255,215,0,0.5); }
-        
-        /* Botoncito SVIP aparte */
-        .svip-button { background: #ff0000; color: white; font-weight: 900; padding: 8px 12px; border-radius: 12px; font-size: 12px; border: 2px solid white; box-shadow: 0 0 15px #ff0000; cursor: pointer; animation: pulse 1.5s infinite; }
-        
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        /* Pantalla de Inicio (Lo que faltaba) */
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f001e; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .login-card { background: rgba(255,255,255,0.05); padding: 30px; border-radius: 30px; border: 2px solid #ffd700; width: 80%; max-width: 350px; box-shadow: 0 0 30px rgba(255,215,0,0.2); }
+        .login-input { width: 90%; padding: 12px; margin: 15px 0; border-radius: 10px; border: none; text-align: center; font-size: 18px; }
+        .btn-enter { background: linear-gradient(45deg, #ff0066, #ffcc00); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; font-size: 18px; cursor: pointer; }
 
+        /* Interfaz de Sala (Oculta al inicio) */
+        #main-app { display: none; }
+
+        /* Panel Superior */
+        .header-container { background: rgba(0,0,0,0.6); width: 92%; margin: 10px auto; padding: 15px; border-radius: 25px; border: 2px solid #ffd700; }
+        .stats-top { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; }
+        .rank-row { display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .aristocracia-box { background: linear-gradient(90deg, #b8860b, #ffd700, #b8860b); color: black; font-weight: bold; padding: 8px 20px; border-radius: 20px; }
+        .svip-button { background: #ff0000; color: white; font-weight: 900; padding: 8px 12px; border-radius: 12px; font-size: 12px; border: 2px solid white; box-shadow: 0 0 15px #ff0000; }
         .cp-status { color: #ff85a2; font-size: 13px; font-weight: bold; margin-top: 10px; }
 
-        /* Controles de Audio Gigantes */
-        .audio-main { display: flex; justify-content: center; gap: 40px; margin: 25px 0; }
-        .audio-unit { display: flex; flex-direction: column; align-items: center; }
-        .circle-btn { width: 80px; height: 80px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; font-size: 35px; cursor: pointer; transition: 0.3s; }
-        .on { background: #00ff00; color: black; box-shadow: 0 0 20px #00ff00; border-color: #00ff00; }
-        .off { background: #ff3333; color: white; box-shadow: 0 0 10px #ff3333; }
+        /* Controles de Audio */
+        .audio-main { display: flex; justify-content: center; gap: 40px; margin: 20px 0; }
+        .circle-btn { width: 75px; height: 75px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; transition: 0.3s; }
+        .on { background: #00ff00; color: black; box-shadow: 0 0 20px #00ff00; }
+        .off { background: #ff3333; color: white; }
 
         /* Sillas */
         .sala-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 10px; }
-        .silla-icon { width: 75px; height: 75px; border-radius: 50%; border: 2px solid #444; background: #1a1a1a; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: 0.4s; }
-        .silla-active { border-color: #00ff00; box-shadow: 0 0 20px #00ff00; transform: scale(1.05); }
+        .silla-icon { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #444; background: #1a1a1a; margin: 0 auto; display: flex; align-items: center; justify-content: center; transition: 0.4s; }
+        .silla-active { border-color: #00ff00; box-shadow: 0 0 20px #00ff00; }
 
-        /* Footer Nav */
+        /* Footer */
         .bottom-nav { position: fixed; bottom: 25px; width: 100%; display: flex; justify-content: center; gap: 20px; align-items: center; }
-        .nav-item { width: 65px; height: 65px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); }
+        .nav-item { width: 60px; height: 60px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); }
         .btn-wallet { background: #ffd700; color: black; }
-        .btn-gift { width: 85px; height: 85px; background: linear-gradient(45deg, #ff0066, #ffcc00); font-size: 35px; border: none; }
+        .btn-gift { width: 80px; height: 80px; background: linear-gradient(45deg, #ff0066, #ffcc00); border: none; font-size: 35px; }
         .btn-vip { background: #00d2ff; color: black; }
 
         /* Modales */
         .m-frame { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; width: 85%; padding: 25px; border-radius: 30px; border: 2px solid #ffd700; z-index: 3000; }
         .m-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2500; }
-        .m-btn { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="header-container">
-        <div class="stats-top">
-            <span>💰 Oro: <b id="display-oro" style="color:#ffd700">...</b></span>
-            <span style="color:#00ffcc">🛡️ Clan: Lluvia</span>
-        </div>
-        <div class="rank-row">
-            <div class="aristocracia-box">Noble (Aristocracia)</div>
-            <div id="btn-svip-status" class="svip-button" style="display:none;">SVIP</div>
-        </div>
-        <div class="cp-status" id="display-cp">💞 C.P: Buscando pareja...</div>
-    </div>
-
-    <div style="color:#ffd700; font-size: 14px; margin-top: 15px;">📍 ID SALA: 1234</div>
-
-    <div class="audio-main">
-        <div class="audio-unit">
-            <div id="mic-toggle" class="circle-btn off" onclick="controlMic()">🎙️</div>
-            <span style="font-size:12px; margin-top:5px; font-weight:bold;">Micro</span>
-        </div>
-        <div class="audio-unit">
-            <div id="spk-toggle" class="circle-btn on" onclick="controlSpk()">🔊</div>
-            <span style="font-size:12px; margin-top:5px; font-weight:bold;">Bocina</span>
+    <div id="login-screen">
+        <div class="login-card">
+            <h2 style="color:#ffd700; margin-top: 0;">Lluvia Live</h2>
+            <p>Introduce ID de la Sala</p>
+            <input type="text" id="room-input" class="login-input" placeholder="Ej: 1234" value="1234">
+            <button class="btn-enter" onclick="joinRoom()">ENTRAR A SALA</button>
         </div>
     </div>
 
-    <div class="sala-grid" id="sillas-container"></div>
+    <div id="main-app">
+        <div class="header-container">
+            <div class="stats-top">
+                <span>💰 Oro: <b id="display-oro" style="color:#ffd700">...</b></span>
+                <span style="color:#00ffcc">🛡️ Clan: Lluvia</span>
+            </div>
+            <div class="rank-row">
+                <div class="aristocracia-box">Noble (Aristocracia)</div>
+                <div id="btn-svip-status" class="svip-button" style="display:none;">SVIP</div>
+            </div>
+            <div class="cp-status" id="display-cp">💞 C.P: Buscando pareja...</div>
+        </div>
 
-    <div class="bottom-nav">
-        <div class="nav-item btn-wallet" onclick="showM('modal-wallet')">💳<br>Wallet</div>
-        <button class="nav-item btn-gift" onclick="showM('modal-gifts')">🎁</button>
-        <div class="nav-item btn-vip" onclick="showM('modal-vip')">👑<br>VIP</div>
+        <div id="room-title" style="color:#ffd700; font-size: 14px; margin-top: 15px;">📍 SALA: ...</div>
+
+        <div class="audio-main">
+            <div onclick="controlMic()"><div id="mic-toggle" class="circle-btn off">🎙️</div><span style="font-size:12px;">Micro</span></div>
+            <div onclick="controlSpk()"><div id="spk-toggle" class="circle-btn on">🔊</div><span style="font-size:12px;">Bocina</span></div>
+        </div>
+
+        <div class="sala-grid" id="sillas-container"></div>
+
+        <div class="bottom-nav">
+            <div class="nav-item btn-wallet" onclick="showM('modal-wallet')">💳<br>Wallet</div>
+            <button class="nav-item btn-gift" onclick="showM('modal-gifts')">🎁</button>
+            <div class="nav-item btn-vip" onclick="showM('modal-vip')">👑<br>VIP</div>
+        </div>
     </div>
 
     <div class="m-overlay" id="m-overlay" onclick="hideM()"></div>
 
     <div class="m-frame" id="modal-wallet">
-        <h3 style="color:#ffd700">Billetera Lluvia</h3>
-        <button class="m-btn" style="background:#28a745; color:white;" onclick="addGold(1100)">Recargar 1100 Oro ($9.99)</button>
-        <button class="m-btn" style="background:#555; color:white;" onclick="hideM()">Cerrar</button>
+        <h3 style="color:#ffd700">Billetera</h3>
+        <button onclick="addGold(1100)" style="width:100%; padding:12px; background:#28a745; color:white; border:none; border-radius:10px;">Recargar 1100 Oro ($9.99)</button>
+        <button onclick="hideM()" style="width:100%; margin-top:10px; padding:10px;">Cerrar</button>
     </div>
 
     <div class="m-frame" id="modal-gifts">
-        <h3 style="color:#ff0066">Enviar Regalo</h3>
-        <button class="m-btn" style="background:white; color:black;" onclick="sendGift(10)">🌹 Rosa (10 Oro)</button>
-        <button class="m-btn" style="background:white; color:black;" onclick="sendGift(500)">🚗 Carro (500 Oro)</button>
-        <button class="m-btn" style="background:#555; color:white;" onclick="hideM()">Cancelar</button>
+        <h3 style="color:#ff0066">Regalos</h3>
+        <button onclick="sendGift(10)" style="width:100%; margin:5px 0; padding:10px;">🌹 Rosa (10 Oro)</button>
+        <button onclick="sendGift(500)" style="width:100%; margin:5px 0; padding:10px;">🚗 Carro (500 Oro)</button>
     </div>
 
     <div class="m-frame" id="modal-vip">
-        <h3 style="color:#00d2ff">Tienda VIP</h3>
-        <button class="m-btn" style="background:#ff0000; color:white;" onclick="buySVIP()">Activar SVIP (2000 Oro)</button>
-        <button class="m-btn" style="background:#ff85a2; color:white;" onclick="linkCP()">Vincular C.P. (Pareja)</button>
-        <button class="m-btn" style="background:#555; color:white;" onclick="hideM()">Cerrar</button>
+        <h3 style="color:#00d2ff">VIP</h3>
+        <button onclick="buySVIP()" style="width:100%; margin:5px 0; padding:10px; background:red; color:white; border:none; border-radius:10px;">Activar SVIP (2000 Oro)</button>
+        <button onclick="linkCP()" style="width:100%; margin:5px 0; padding:10px;">Vincular Pareja</button>
     </div>
 
     <audio id="audio-stream" autoplay playsinline></audio>
@@ -118,6 +122,7 @@
         let goldBalance = 0;
         let isMic = false;
         let streamObj;
+        let peer;
 
         // Dibujar Sala
         const container = document.getElementById('sillas-container');
@@ -125,36 +130,45 @@
             container.innerHTML += `<div><div class="silla-icon" id="silla-${i}">👤</div><div style="font-size:10px; margin-top:5px; color:#aaa;">Silla ${i}</div></div>`;
         }
 
-        // Datos en Tiempo Real
-        db.collection("usuarios").doc(myID).onSnapshot(doc => {
-            if(doc.exists) {
-                const data = doc.data();
-                goldBalance = data.oro || 0;
-                document.getElementById('display-oro').innerText = goldBalance;
-                document.getElementById('btn-svip-status').style.display = data.svip ? 'block' : 'none';
-                if(data.cp) document.getElementById('display-cp').innerText = "💞 C.P: " + data.cp;
-            }
-        });
+        async function joinRoom() {
+            const room = document.getElementById('room-input').value;
+            if(!room) return alert("Pon un ID de sala");
+            
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            document.getElementById('room-title').innerText = "📍 SALA: " + room;
 
-        // AUDIO SIN BOTÓN EXTRA
-        const peer = new Peer('lluvia-1234-' + myID);
-        
-        async function controlMic() {
-            try {
-                if(!streamObj) {
-                    streamObj = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    document.getElementById('audio-stream').play(); // Inicia el audio receptor
-                    peer.on('call', call => { 
-                        call.answer(streamObj); 
-                        call.on('stream', s => document.getElementById('audio-stream').srcObject = s);
-                    });
+            // Iniciar PeerJS al entrar
+            peer = new Peer('lluvia-' + room + '-' + myID);
+            
+            // Forzar activación de audio receptor
+            document.getElementById('audio-stream').play();
+            
+            // Sincronizar Firebase
+            db.collection("usuarios").doc(myID).onSnapshot(doc => {
+                if(doc.exists) {
+                    const data = doc.data();
+                    goldBalance = data.oro || 0;
+                    document.getElementById('display-oro').innerText = goldBalance;
+                    document.getElementById('btn-svip-status').style.display = data.svip ? 'block' : 'none';
+                    if(data.cp) document.getElementById('display-cp').innerText = "💞 C.P: " + data.cp;
                 }
-                isMic = !isMic;
-                streamObj.getAudioTracks()[0].enabled = isMic;
-                document.getElementById('mic-toggle').className = isMic ? "circle-btn on" : "circle-btn off";
-                document.getElementById('silla-1').className = isMic ? "silla-icon silla-active" : "silla-icon";
-                document.getElementById('silla-1').innerText = isMic ? "🎙️" : "👤";
-            } catch (e) { alert("Permite el acceso al micrófono"); }
+            });
+        }
+
+        async function controlMic() {
+            if(!streamObj) {
+                streamObj = await navigator.mediaDevices.getUserMedia({ audio: true });
+                peer.on('call', call => { 
+                    call.answer(streamObj); 
+                    call.on('stream', s => document.getElementById('audio-stream').srcObject = s);
+                });
+            }
+            isMic = !isMic;
+            streamObj.getAudioTracks()[0].enabled = isMic;
+            document.getElementById('mic-toggle').className = isMic ? "circle-btn on" : "circle-btn off";
+            document.getElementById('silla-1').className = isMic ? "silla-icon silla-active" : "silla-icon";
+            document.getElementById('silla-1').innerText = isMic ? "🎙️" : "👤";
         }
 
         function controlSpk() {
@@ -163,30 +177,26 @@
             document.getElementById('spk-toggle').className = audio.muted ? "circle-btn off" : "circle-btn on";
         }
 
-        // MODALES Y ACCIONES
         function showM(id) { document.getElementById('m-overlay').style.display = 'block'; document.getElementById(id).style.display = 'block'; }
         function hideM() { document.getElementById('m-overlay').style.display = 'none'; document.querySelectorAll('.m-frame').forEach(f => f.style.display = 'none'); }
 
         function sendGift(cost) {
             if(goldBalance >= cost) {
                 db.collection("usuarios").doc(myID).update({ oro: firebase.firestore.FieldValue.increment(-cost) });
-                alert("🎁 ¡Regalo enviado con éxito!");
-                hideM();
-            } else { alert("❌ Oro insuficiente"); }
+                alert("¡Regalo enviado!"); hideM();
+            } else { alert("Oro insuficiente"); }
         }
 
         function addGold(amt) {
             db.collection("usuarios").doc(myID).update({ oro: firebase.firestore.FieldValue.increment(amt) });
-            alert("✅ Recarga de " + amt + " completada");
-            hideM();
+            alert("Recarga exitosa"); hideM();
         }
 
         function buySVIP() {
             if(goldBalance >= 2000) {
                 db.collection("usuarios").doc(myID).update({ oro: firebase.firestore.FieldValue.increment(-2000), svip: true });
-                alert("🔥 ¡Bienvenido al rango SVIP!");
-                hideM();
-            } else { alert("❌ Necesitas 2000 oros"); }
+                alert("¡Ya eres SVIP!"); hideM();
+            } else { alert("Faltan oros"); }
         }
 
         function linkCP() {
