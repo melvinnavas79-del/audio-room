@@ -3,119 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - PK CLANES</title>
+    <title>Lluvia Live - Fix Botones</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
         :root { --gold: #ffd700; --blue-pk: #0084ff; --red-pk: #ff004c; }
-        body { margin: 0; background: #0b0015; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; height: 100vh; overflow: hidden; }
+        body { margin: 0; background: #0b0015; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; height: 100vh; overflow: hidden; position: relative; }
         
-        /* BARRA DE PK GLOBAL / CLANES */
-        .pk-container { width: 100%; height: 50px; background: #222; display: flex; position: relative; border-bottom: 2px solid var(--gold); overflow: hidden; }
-        .pk-team { height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 2px black; }
-        .pk-blue { background: linear-gradient(90deg, #004e92, var(--blue-pk)); width: 50%; }
-        .pk-red { background: linear-gradient(90deg, var(--red-pk), #8e0000); width: 50%; }
-        .pk-timer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); padding: 2px 10px; border-radius: 10px; border: 1px solid var(--gold); font-size: 12px; z-index: 10; color: var(--gold); }
-        .pk-vs { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-style: italic; font-weight: 900; color: white; z-index: 5; opacity: 0.5; }
+        /* BARRA DE PK */
+        .pk-container { width: 100%; height: 45px; background: #111; display: flex; position: relative; border-bottom: 2px solid var(--gold); z-index: 100; }
+        .pk-team { height: 100%; transition: width 0.8s ease; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
+        .pk-blue { background: var(--blue-pk); width: 50%; }
+        .pk-red { background: var(--red-pk); width: 50%; }
+        .pk-timer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #000; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--gold); font-size: 11px; z-index: 110; }
 
-        /* HEADER USUARIO */
-        .header-card { background: rgba(20, 0, 40, 0.9); width: 94%; margin: 8px auto; padding: 10px; border-radius: 15px; border: 1px solid var(--gold); display: flex; align-items: center; gap: 10px; }
+        /* PERFIL */
+        .header-card { background: rgba(30, 0, 60, 0.9); width: 92%; margin: 10px auto; padding: 12px; border-radius: 15px; border: 1px solid var(--gold); display: flex; align-items: center; gap: 15px; }
         .avatar-small { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold); }
 
         /* SILLAS */
-        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 15px; }
-        .silla { background: rgba(255,255,255,0.05); width: 60px; height: 60px; border-radius: 50%; border: 1px solid #333; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 15px; z-index: 10; }
+        .silla { background: rgba(255,255,255,0.1); width: 65px; height: 65px; border-radius: 50%; border: 1px solid #444; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 24px; }
 
-        /* BOTONES ABAJO */
-        .footer-nav { position: fixed; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 15px; }
-        .btn-circle { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px black; }
-        
-        #btn-pk-start { position: fixed; top: 60px; right: 10px; background: var(--gold); color: black; border: none; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 10px; display: none; }
+        /* --- FIX DE BOTONES (NAVEGACIÓN INFERIOR) --- */
+        .footer-nav { 
+            position: fixed; 
+            bottom: 30px; 
+            left: 0;
+            width: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            gap: 20px; 
+            z-index: 99999 !important; /* Prioridad máxima sobre todo */
+            pointer-events: auto;
+        }
+
+        .btn-circle { 
+            width: 65px; 
+            height: 65px; 
+            border-radius: 50%; 
+            border: 2px solid var(--gold); 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 26px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+            transition: transform 0.1s active;
+            background: #1a1a1a;
+        }
+
+        .btn-circle:active { transform: scale(0.9); } /* Efecto de click */
+
+        .btn-regalo { 
+            width: 85px; 
+            height: 85px; 
+            background: #ff0000; 
+            font-size: 40px; 
+            border: 3px solid var(--gold);
+        }
+
+        /* MODALES */
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; border: 2px solid var(--gold); border-radius: 20px; padding: 25px; width: 80%; z-index: 100000; }
     </style>
 </head>
 <body>
 
     <div class="pk-container">
-        <div id="pk-bar-blue" class="pk-team pk-blue">CLAN A: <span id="pts-blue">0</span></div>
-        <div id="pk-bar-red" class="pk-team pk-red">CLAN B: <span id="pts-red">0</span></div>
-        <div class="pk-vs">VS</div>
-        <div class="pk-timer" id="timer">05:00</div>
+        <div id="pk-bar-blue" class="pk-team pk-blue">CLAN A: 0</div>
+        <div id="pk-bar-red" class="pk-team pk-red">CLAN B: 0</div>
+        <div class="pk-timer">05:00</div>
     </div>
 
-    <button id="btn-pk-start" onclick="iniciarPK()">INICIAR PK GLOBAL</button>
-
-    <div id="main-app">
-        <div class="header-card">
-            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="avatar-small">
-            <div style="text-align: left;">
-                <b id="nick">Melvin</b><br>
-                <small style="color:var(--gold);">💰 <span id="oro-txt">0</span></small>
-            </div>
-            <div style="margin-left: auto; font-size: 20px;" onclick="alert('Panel Admin')">⚙️</div>
+    <div class="header-card">
+        <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="avatar-small">
+        <div style="text-align: left;">
+            <b id="nick">Melvin</b><br>
+            <small style="color:var(--gold);">💰 <span id="oro-txt">0</span></small>
         </div>
+        <div style="margin-left:auto; cursor:pointer;" onclick="showM('m-admin')">⚙️</div>
+    </div>
 
-        <div class="grid-sala" id="sillas-box"></div>
+    <div class="grid-sala">
+        <div class="silla">👤</div><div class="silla">👤</div><div class="silla">👤</div>
+        <div class="silla">👤</div><div class="silla">👤</div><div class="silla">👤</div>
+        <div class="silla">👤</div><div class="silla">👤</div><div class="silla">👤</div>
+    </div>
 
-        <div class="footer-nav">
-            <button class="btn-circle" style="background:#222; border:1px solid #00ff00;">🏦</button>
-            <button class="btn-circle" style="background:red; width:80px; height:80px; border:2px solid gold;" onclick="sumarPuntosPK()">🎁</button>
-            <button class="btn-circle" style="background:#1a237e; border:1px solid gold;">👑</button>
-        </div>
+    <div class="footer-nav">
+        <button class="btn-circle" style="border-color:#00ff00;" onclick="showM('m-agentes')">🏦</button>
+        <button class="btn-circle btn-regalo" onclick="showM('m-regalos')">🎁</button>
+        <button class="btn-circle" style="background:#1a237e;" onclick="showM('m-tienda')">👑</button>
+    </div>
+
+    <div id="m-regalos" class="modal">
+        <h3 style="color:red">ENVIAR REGALO</h3>
+        <button style="width:100%; padding:10px; margin-bottom:10px;" onclick="closeM()">Rosa (10 Oro)</button>
+        <button style="width:100%; padding:10px; background:#444; color:white;" onclick="closeM()">Cerrar</button>
     </div>
 
     <script>
         const config = { apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4", projectId: "lluvia-live-69a05" };
         firebase.initializeApp(config);
         const db = firebase.firestore();
-
-        let user = "Melvin"; 
-        let ptsBlue = 0;
-        let ptsRed = 0;
-
-        for(let i=1; i<=9; i++) document.getElementById('sillas-box').innerHTML += `<div class="silla">👤</div>`;
-
-        // Sincronizar puntos de PK desde Firebase
-        db.collection("sala_actual").doc("pk_data").onSnapshot(doc => {
-            if(doc.exists) {
-                const d = doc.data();
-                ptsBlue = d.blue || 0;
-                ptsRed = d.red || 0;
-                actualizarBarraPK();
-            }
-        });
-
-        function actualizarBarraPK() {
-            const total = ptsBlue + ptsRed || 1;
-            const porcBlue = (ptsBlue / total) * 100;
-            const porcRed = (ptsRed / total) * 100;
-
-            document.getElementById('pk-bar-blue').style.width = porcBlue + "%";
-            document.getElementById('pk-bar-red').style.width = porcRed + "%";
-            document.getElementById('pts-blue').innerText = ptsBlue.toLocaleString();
-            document.getElementById('pts-red').innerText = ptsRed.toLocaleString();
-        }
-
-        // Simular que alguien tira un regalo (para probar)
-        async function sumarPuntosPK() {
-            // En una app real, esto se activaría al enviar un regalo 🎁
-            const equipo = Math.random() > 0.5 ? 'blue' : 'red';
-            await db.collection("sala_actual").doc("pk_data").update({
-                [equipo]: firebase.firestore.FieldValue.increment(1000)
-            });
-        }
-
-        function iniciarPK() {
-            alert("PK Global Iniciado: ¡Todos a regalar!");
-            db.collection("sala_actual").doc("pk_data").set({ blue: 0, red: 0, tiempo: Date.now() });
-        }
+        let user = "Melvin";
 
         db.collection("usuarios").doc(user).onSnapshot(doc => {
-            if(doc.exists) {
-                document.getElementById('oro-txt').innerText = (doc.data().oro || 0).toLocaleString();
-                if(doc.data().nivel_permiso >= 3) document.getElementById('btn-pk-start').style.display = 'block';
-            }
+            if(doc.exists) document.getElementById('oro-txt').innerText = (doc.data().oro || 0).toLocaleString();
         });
+
+        function showM(id) { document.getElementById(id).style.display = 'block'; }
+        function closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
     </script>
 </body>
 </html>
