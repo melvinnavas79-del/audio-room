@@ -3,69 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - Sistema de Jerarquías</title>
+    <title>Lluvia Live - Sistema Completo Melvin</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { --gold: #ffd700; --super: #ff00ff; --mod: #00ffcc; --robot: #00f2ff; }
+        :root { --gold: #ffd700; --super: #ff00ff; --mod: #00ffcc; --robot: #00f2ff; --owner: #ff0000; }
         body { margin: 0; background: #0b0015; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; height: 100vh; overflow: hidden; }
         
-        /* HEADER Y RANGOS */
-        .header-card { background: rgba(20, 0, 40, 0.95); width: 94%; margin: 10px auto; padding: 15px; border-radius: 20px; border: 2px solid var(--gold); position: relative; }
-        .tag-rango { font-size: 10px; padding: 2px 8px; border-radius: 5px; font-weight: bold; text-transform: uppercase; margin-top: 5px; display: inline-block; }
-        .rango-owner { background: red; color: white; }
-        .rango-super { background: var(--super); color: white; box-shadow: 0 0 10px var(--super); }
+        /* HEADER Y PERFIL */
+        .header-card { background: rgba(20, 0, 40, 0.95); width: 92%; margin: 10px auto; padding: 15px; border-radius: 20px; border: 2px solid var(--gold); position: relative; box-shadow: 0 0 15px rgba(255,215,0,0.3); }
+        .avatar-main { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto; border: 3px solid var(--gold); overflow: hidden; position: relative; }
+        .tag-rango { font-size: 10px; padding: 3px 10px; border-radius: 5px; font-weight: bold; text-transform: uppercase; margin-top: 8px; display: inline-block; }
+        .rango-owner { background: var(--owner); color: white; border: 1px solid white; }
+        .rango-super { background: var(--super); color: white; box-shadow: 0 0 8px var(--super); }
         .rango-mod { background: var(--mod); color: black; }
 
-        /* BEBÉ ROBOT ANUNCIO */
-        #bot-pago { position: fixed; top: 12%; left: 50%; transform: translateX(-50%); background: var(--robot); color: #000; padding: 12px 25px; border-radius: 50px; font-weight: bold; z-index: 30000; display: none; box-shadow: 0 0 20px var(--robot); }
+        /* ANUNCIO ROBOT */
+        #bot-pago { position: fixed; top: 12%; left: 50%; transform: translateX(-50%); background: var(--robot); color: #000; padding: 12px 25px; border-radius: 50px; font-weight: bold; z-index: 99999; display: none; box-shadow: 0 0 20px var(--robot); border: 2px solid white; }
 
         /* SILLAS */
-        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
-        .silla { background: #1a1a1a; width: 60px; height: 60px; border-radius: 50%; border: 2px solid #333; margin: 0 auto; display: flex; align-items: center; justify-content: center; position: relative; }
+        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px; margin-top: 10px; }
+        .silla { background: rgba(255,255,255,0.1); width: 65px; height: 65px; border-radius: 50%; border: 2px solid #444; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+
+        /* BOTONES DE CONTROL (FIJOS ABAJO) */
+        .footer-nav { position: fixed; bottom: 25px; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 9000; }
+        .btn-circle { width: 65px; height: 65px; border-radius: 50%; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
 
         /* MODALES */
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; border: 2px solid var(--gold); border-radius: 20px; padding: 20px; width: 88%; z-index: 10000; max-height: 85vh; overflow-y: auto; }
-        .btn-panel { background: #fff; color: #000; padding: 10px; margin: 5px 0; width: 100%; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; font-size: 13px; }
-        #btn-master-config { position: absolute; top: 5px; right: 5px; background: #4a148c; border: none; border-radius: 50%; width: 35px; height: 35px; color: white; display: none; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; border: 2px solid var(--gold); border-radius: 25px; padding: 25px; width: 85%; z-index: 10000; color: white; }
+        .btn-panel { background: white; color: black; width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; margin: 5px 0; border: none; }
+        #btn-admin-gears { position: absolute; top: 10px; right: 10px; background: #333; border: 1px solid var(--gold); border-radius: 50%; width: 40px; height: 40px; color: gold; display: none; cursor: pointer; font-size: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="bot-pago">🤖 BEBÉ ROBOT: ¡Transfiriendo 17M a <span id="win-name"></span>! 🤖</div>
+    <div id="bot-pago">🤖 BEBÉ ROBOT: ¡Pagando 17M a <span id="win-name">---</span>! 🤖</div>
 
     <div id="main-app">
         <div class="header-card">
-            <button id="btn-master-config" onclick="abrirAdmin()">⚙️</button>
-            <div id="f-user" style="width:70px; height:70px; border-radius:50%; margin:0 auto; border:3px solid var(--gold); overflow:hidden;">
+            <button id="btn-admin-gears" onclick="showM('m-admin-panel')">⚙️</button>
+            
+            <div class="avatar-main">
                 <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" style="width:100%;">
             </div>
-            <div style="margin-top:8px;">
-                <b id="nick">---</b> <span id="v-check" style="color:#1d9bf0; display:none;">☑️</span>
+            
+            <div style="margin-top:10px;">
+                <b id="nick" style="font-size: 18px;">Cargando...</b>
             </div>
-            <div id="my-tag" class="tag-rango">Usuario</div>
-            <div style="font-size:12px; color:var(--gold); margin-top:5px;">💰 Oro: <span id="oro-txt">0</span></div>
+            
+            <div id="my-tag" class="tag-rango">USUARIO</div><br>
+            
+            <div style="font-size:14px; color:var(--gold); margin-top:8px;">
+                💰 Oro: <span id="oro-txt">0</span>
+            </div>
         </div>
 
         <div class="grid-sala" id="sillas-box"></div>
+
+        <div class="footer-nav">
+            <button class="btn-circle" style="background:#222; color:#00ff00; border:2px solid #00ff00;" onclick="showM('m-agentes')">🏦</button>
+            <button class="btn-circle" style="background:red; width:85px; height:85px; font-size:40px; border:3px solid gold;" onclick="showM('m-regalos')">🎁</button>
+            <button class="btn-circle" style="background:#1a237e; border:2px solid gold;" onclick="showM('m-tienda')">👑</button>
+        </div>
     </div>
 
     <div id="m-admin-panel" class="modal">
-        <h2 style="color:var(--gold)">Panel de Control Real</h2>
+        <h2 style="color:var(--gold); margin-top:0;">Panel Master ⚙️</h2>
         
-        <div style="background:#1a237e; padding:10px; border-radius:10px; margin-bottom:10px;">
-            <b style="color:var(--robot)">🤖 BEBÉ ROBOT (Pago 17M)</b><br>
-            <input type="text" id="target-id" placeholder="ID del Ganador" style="width:85%; padding:8px; margin:10px 0; border-radius:5px;">
-            <button class="btn-panel" style="background:var(--robot)" onclick="robotPagar()">Ejecutar Pago de 17 Millones</button>
+        <div style="background:#002b36; padding:15px; border-radius:15px; margin-bottom:15px; border:1px solid var(--robot);">
+            <b style="color:var(--robot)">🤖 BEBÉ ROBOT (Auto-Pago 17M)</b><br>
+            <input type="text" id="target-id" placeholder="Nombre del Ganador" style="width:90%; padding:10px; margin:10px 0; border-radius:8px; border:none;">
+            <button class="btn-panel" style="background:var(--robot); color:black;" onclick="robotPagar()">PAGAR 17,000,000 ORO</button>
         </div>
 
-        <div style="background:#222; padding:10px; border-radius:10px;">
-            <b>👑 Gestión de Staff</b><br>
-            <div id="user-list-admin" style="text-align:left; font-size:12px; margin-top:10px;"></div>
+        <div style="background:#222; padding:15px; border-radius:15px;">
+            <b>👑 Gestión de Rangos</b><br>
+            <div id="user-list-admin" style="text-align:left; font-size:13px; margin-top:10px; max-height:150px; overflow-y:auto;"></div>
         </div>
 
-        <button class="btn-panel" style="margin-top:15px; background:#444; color:white" onclick="closeM()">Cerrar</button>
+        <button class="btn-panel" style="margin-top:15px; background:#cc0000; color:white;" onclick="closeM()">CERRAR PANEL</button>
+    </div>
+
+    <div id="m-agentes" class="modal">
+        <h3 style="color:#00ff00">🏦 Bancos de Recarga</h3>
+        <div style="background:#222; padding:15px; border-radius:10px; text-align:left;">
+            <b style="color:gold;">💰 Agente Melvin (Dueño)</b><br>
+            <small>WhatsApp: +1 234 567 890</small>
+        </div>
+        <button class="btn-panel" onclick="closeM()">Cerrar</button>
     </div>
 
     <script>
@@ -73,31 +99,37 @@
         firebase.initializeApp(config);
         const db = firebase.firestore();
 
-        let user = prompt("Tu nombre:"); 
-        let miPoder = 0; // 0:User, 1:Mod, 2:Supervisora, 3:Dueño
+        let user = prompt("Ingresa tu Nombre de Usuario:"); 
+        if(!user) user = "Invitado";
+        let miPoder = 0; 
 
+        // Dibujar sillas
         for(let i=1; i<=9; i++) document.getElementById('sillas-box').innerHTML += `<div class="silla">👤</div>`;
 
+        // ESCUCHAR DATOS EN TIEMPO REAL
         db.collection("usuarios").doc(user).onSnapshot(doc => {
             if(doc.exists) {
                 const d = doc.data();
                 miPoder = d.nivel_permiso || 0;
+                
                 document.getElementById('nick').innerText = user;
                 document.getElementById('oro-txt').innerText = (d.oro || 0).toLocaleString();
                 
-                // Mostrar botón de Admin si es Nivel 2 (Supervisora) o 3 (Dueño)
-                if(miPoder >= 2) document.getElementById('btn-master-config').style.display = 'block';
+                // Mostrar botón de Admin si eres Nivel 2 (Supervisora) o 3 (Owner)
+                if(miPoder >= 2) document.getElementById('btn-admin-gears').style.display = 'block';
 
-                // Actualizar Etiqueta de Rango
+                // Actualizar Etiquetas
                 const tag = document.getElementById('my-tag');
-                if(miPoder === 3) { tag.innerText = "OWNER"; tag.className = "tag-rango rango-owner"; }
+                if(miPoder === 3) { tag.innerText = "OWNER / MELVIN"; tag.className = "tag-rango rango-owner"; }
                 else if(miPoder === 2) { tag.innerText = "SUPERVISORA"; tag.className = "tag-rango rango-super"; }
                 else if(miPoder === 1) { tag.innerText = "MODERADOR"; tag.className = "tag-rango rango-mod"; }
                 else { tag.innerText = "USUARIO"; tag.className = "tag-rango"; }
+            } else {
+                db.collection("usuarios").doc(user).set({ oro: 0, nivel_permiso: 0 });
             }
         });
 
-        // LÓGICA DEL BEBÉ ROBOT
+        // BEBÉ ROBOT
         async function robotPagar() {
             const win = document.getElementById('target-id').value;
             if(!win) return alert("Escribe el nombre del ganador");
@@ -110,38 +142,39 @@
             document.getElementById('win-name').innerText = win;
             banner.style.display = 'block';
             setTimeout(() => banner.style.display = 'none', 6000);
-            alert("Pago de 17,000,000 procesado por el Bebé Robot.");
+            alert("Bebé Robot ha enviado 17,000,000 a " + win);
         }
 
-        // GESTIÓN DE RANGOS
-        async function abrirAdmin() {
-            showM('m-admin-panel');
+        // CARGAR LISTA PARA RANGOS
+        async function loadAdminList() {
             const container = document.getElementById('user-list-admin');
-            container.innerHTML = "Cargando usuarios...";
-            
-            const snap = await db.collection("usuarios").limit(10).get();
+            container.innerHTML = "Cargando...";
+            const snap = await db.collection("usuarios").limit(8).get();
             container.innerHTML = "";
             snap.forEach(uDoc => {
                 const u = uDoc.id;
                 container.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid #333; padding-bottom:5px;">
                         <span>${u}</span>
                         <div>
-                            <button onclick="asignarRol('${u}', 1)" style="background:var(--mod); border:none; border-radius:3px; font-size:10px;">Mod</button>
-                            <button onclick="asignarRol('${u}', 2)" style="background:var(--super); color:white; border:none; border-radius:3px; font-size:10px;">Super</button>
+                            <button onclick="asignarRol('${u}', 1)" style="background:var(--mod); border:none; padding:3px 6px; border-radius:4px; font-size:10px;">Mod</button>
+                            <button onclick="asignarRol('${u}', 2)" style="background:var(--super); color:white; border:none; padding:3px 6px; border-radius:4px; font-size:10px;">Super</button>
                         </div>
                     </div>`;
             });
         }
 
         async function asignarRol(uId, nivel) {
-            if(miPoder < 3) return alert("Solo el Dueño puede nombrar Supervisoras.");
+            if(miPoder < 3) return alert("Solo el Dueño puede nombrar supervisoras.");
             await db.collection("usuarios").doc(uId).update({ nivel_permiso: nivel });
-            alert(uId + " ahora tiene un nuevo rango.");
-            abrirAdmin();
+            alert("Rango actualizado para " + uId);
+            loadAdminList();
         }
 
-        function showM(id) { document.getElementById(id).style.display = 'block'; }
+        function showM(id) { 
+            document.getElementById(id).style.display = 'block'; 
+            if(id === 'm-admin-panel') loadAdminList();
+        }
         function closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
     </script>
 </body>
