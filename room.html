@@ -2,81 +2,194 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Lluvia Live - Store</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lluvia Live - VIP Fix</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
     <style>
-        :root { --gold: #ffd700; --bg: #0b0015; }
-        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; height: 100vh; }
+        body { margin: 0; background: #000; color: white; font-family: 'Arial', sans-serif; text-align: center; height: 100vh; overflow: hidden; }
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .logo-box { font-size: 45px; font-weight: bold; color: #00ff00; margin-bottom: 30px; }
+        .input-field { width: 80%; padding: 15px; margin: 10px 0; border-radius: 12px; border: none; font-size: 20px; text-align: center; }
+        .btn-row { display: flex; gap: 10px; width: 85%; margin-top: 20px; }
+        .btn-action { flex: 1; padding: 18px; border-radius: 12px; border: none; font-weight: bold; font-size: 18px; color: white; cursor: pointer; }
 
-        /* ... (Mantenemos tu diseño de PK y Sillas igual) ... */
-        .pk-container { width: 100%; height: 40px; display: flex; border-bottom: 2px solid var(--gold); background: #222; }
-        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px; }
-        .silla { background: rgba(255,255,255,0.1); width: 60px; height: 60px; border-radius: 50%; margin: 0 auto; border: 1px solid #444; }
-
-        /* NAVEGACIÓN INFERIOR */
-        .footer-nav { position: fixed; bottom: 60px; width: 100%; display: flex; justify-content: center; gap: 20px; z-index: 100; }
-        .btn-action { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--gold); background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 25px; cursor: pointer; }
-        .btn-main { width: 80px; height: 80px; background: red; font-size: 35px; }
-
-        /* --- MENÚ DE REGALOS ESTILO VOLA --- */
-        #gift-menu {
-            position: fixed; bottom: -100%; left: 0; width: 100%; height: 40%;
-            background: rgba(15, 0, 30, 0.95); border-top: 3px solid var(--gold);
-            border-radius: 20px 20px 0 0; transition: 0.4s ease; z-index: 1000;
-            padding: 20px; box-sizing: border-box;
-        }
-        #gift-menu.open { bottom: 0; }
-
-        .gift-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 10px; }
-        .gift-item { text-align: center; font-size: 10px; color: var(--gold); }
-        .gift-icon { font-size: 30px; display: block; margin-bottom: 5px; }
+        #main-app { display: none; background: #0f001e; height: 100vh; padding-top: 10px; }
+        .header-card { background: rgba(0,0,0,0.6); width: 92%; margin: 0 auto; padding: 15px; border-radius: 25px; border: 2px solid #ffd700; }
+        .badge-noble { background: linear-gradient(90deg, #b8860b, #ffd700); color: black; font-weight: bold; padding: 8px 25px; border-radius: 20px; display: inline-block; }
+        .tag-svip { background: #ff0000; color: white; padding: 5px 12px; border-radius: 10px; border: 1px solid white; font-size: 14px; font-weight: bold; margin-left: 5px; box-shadow: 0 0 10px red; display: none; }
         
-        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 20px; color: white; }
+        .audio-controls { display: flex; justify-content: center; gap: 30px; margin: 20px 0; }
+        .btn-circle { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; }
+        .btn-off { background: #ff3333; }
+        .btn-on { background: #00ff00; box-shadow: 0 0 15px #00ff00; }
+
+        .sala-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px; }
+        .silla-box { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #444; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto; }
+        .silla-on { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; }
+
+        .bottom-nav { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: center; align-items: center; gap: 20px; }
+        .nav-item { width: 60px; height: 60px; border-radius: 50%; border: none; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; }
+
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; border: 2px solid #ffd700; border-radius: 20px; padding: 25px; width: 80%; z-index: 10000; }
+        .modal-btn { background: #fff; color: #000; border: none; padding: 15px; margin: 8px 0; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="pk-container">
-        <div style="background:blue; width:50%; display:flex; align-items:center; justify-content:center;">CLAN A</div>
-        <div style="background:red; width:50%; display:flex; align-items:center; justify-content:center;">CLAN B</div>
-    </div>
-
-    <div class="grid-sala">
-        <div class="silla"></div><div class="silla"></div><div class="silla"></div>
-        <div class="silla"></div><div class="silla"></div><div class="silla"></div>
-    </div>
-
-    <div class="footer-nav">
-        <div class="btn-action" onclick="alert('Abriendo Banco')">🏦</div>
-        <div class="btn-action btn-main" onclick="toggleGifts()">🎁</div>
-        <div class="btn-action" onclick="alert('Abriendo VIP')">👑</div>
-    </div>
-
-    <div id="gift-menu">
-        <div class="close-btn" onclick="toggleGifts()">✕</div>
-        <h3 style="margin: 0; font-size: 16px;">Enviar Regalos</h3>
-        <div class="gift-grid">
-            <div class="gift-item" onclick="enviarRegalo('Rosa', 10)"><span class="gift-icon">🌹</span>10</div>
-            <div class="gift-item" onclick="enviarRegalo('Anillo', 500)"><span class="gift-icon">💍</span>500</div>
-            <div class="gift-item" onclick="enviarRegalo('Castillo', 5000)"><span class="gift-icon">🏰</span>5k</div>
-            <div class="gift-item" onclick="enviarRegalo('Cohete', 10000)"><span class="gift-icon">🚀</span>10k</div>
-            <div class="gift-item" onclick="enviarRegalo('Corona', 2000)"><span class="gift-icon">👑</span>2k</div>
-            <div class="gift-item" onclick="enviarRegalo('Carro', 8000)"><span class="gift-icon">🏎️</span>8k</div>
-            <div class="gift-item" onclick="enviarRegalo('Yate', 15000)"><span class="gift-icon">🛥️</span>15k</div>
-            <div class="gift-item" onclick="enviarRegalo('León', 30000)"><span class="gift-icon">🦁</span>30k</div>
+    <div id="login-screen">
+        <div class="logo-box">☔ Lluvia Live</div>
+        <input type="text" id="user-name" class="input-field" placeholder="Tu Nombre" value="Melvin">
+        <input type="text" id="room-id" class="input-field" placeholder="ID de Sala" value="1234">
+        <div class="btn-row">
+            <button class="btn-action" style="background:#008000" onclick="entrarSala('A')">Crear sala</button>
+            <button class="btn-action" style="background:#0000ff" onclick="entrarSala('B')">Entrar</button>
         </div>
     </div>
 
+    <div id="main-app">
+        <div class="header-card">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <span>💰 Oro: <b id="oro-txt">0</b></span>
+                <span style="color:#00ffcc">🛡️ Clan: Lluvia</span>
+            </div>
+            <div class="badge-noble">Noble (Aristocracia) <span id="svip-tag" class="tag-svip">SVIP</span></div>
+            <div id="id-label" style="color:#ffd700; font-size:14px; margin-top:5px;">📍 SALA: ---</div>
+        </div>
+
+        <div class="audio-controls">
+            <div onclick="toggleMicro()"><div id="mic-btn" class="btn-circle btn-off">🎙️</div><p>Micro</p></div>
+            <div onclick="toggleBocina()"><div id="spk-btn" class="btn-circle btn-on">🔊</div><p>Bocina</p></div>
+        </div>
+
+        <div class="sala-grid" id="grid-sillas"></div>
+
+        <div class="bottom-nav">
+            <button class="nav-item" style="background:#ffd700;" onclick="abrirModal('modal-wallet')">💳<br>Wallet</button>
+            <button class="nav-item" style="background:orange; width:80px; height:80px; font-size:35px;" onclick="abrirModal('modal-regalos')">🎁</button>
+            <button class="nav-item" style="background:#00d2ff;" onclick="abrirModal('modal-tienda')">👑<br>VIP</button>
+        </div>
+    </div>
+
+    <div id="modal-tienda" class="modal">
+        <h2 style="color:#00d2ff">Tienda VIP</h2>
+        <button class="modal-btn" onclick="comprarVIP('SVIP', 2000)">👑 Comprar SVIP (2000 Oro)</button>
+        <button class="modal-btn" onclick="alert('Próximamente...')">🛡️ Verificación (500 Oro)</button>
+        <button class="modal-btn" style="background:#ff3333; color:white;" onclick="cerrarModal()">Cerrar</button>
+    </div>
+
+    <div id="modal-regalos" class="modal">
+        <h2 style="color:#ff85a2">Enviar Regalos</h2>
+        <button class="modal-btn" onclick="enviarRegalo('Rosa', 10)">🌹 Rosa (10 Oro)</button>
+        <button class="modal-btn" onclick="enviarRegalo('Carro', 500)">🚗 Carro (500 Oro)</button>
+        <button class="modal-btn" style="background:#ff3333; color:white;" onclick="cerrarModal()">Cerrar</button>
+    </div>
+
+    <div id="modal-wallet" class="modal">
+        <h2 style="color:#ffd700">Wallet</h2>
+        <button class="modal-btn" style="background:#4CAF50; color:white" onclick="recargar(1000)">Recargar +1000 Oro ($0.99)</button>
+        <button class="modal-btn" onclick="cerrarModal()">Cerrar</button>
+    </div>
+
+    <audio id="remote-audio" autoplay playsinline></audio>
+
     <script>
-        function toggleGifts() {
-            document.getElementById('gift-menu').classList.toggle('open');
+        const firebaseConfig = { apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4", projectId: "lluvia-live-69a05" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let peer, localStream, role, room, nombre;
+
+        const grid = document.getElementById('grid-sillas');
+        for(let i=1; i<=9; i++) grid.innerHTML += `<div><div class="silla-box" id="silla-${i}">👤</div><div style="font-size:10px;margin-top:4px;">Silla ${i}</div></div>`;
+
+        async function entrarSala(tipo) {
+            nombre = document.getElementById('user-name').value;
+            room = document.getElementById('room-id').value;
+            role = tipo;
+            if(!nombre || !room) return alert("Faltan datos");
+
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            document.getElementById('id-label').innerText = "📍 SALA: " + room;
+
+            peer = new Peer('lluvia-' + room + '-' + role);
+
+            db.collection("usuarios").doc(nombre).onSnapshot(doc => {
+                if(doc.exists) {
+                    const data = doc.data();
+                    document.getElementById('oro-txt').innerText = data.oro || 0;
+                    document.getElementById('svip-tag').style.display = data.svip ? 'inline-block' : 'none';
+                }
+            });
+
+            peer.on('call', call => {
+                call.answer(localStream);
+                call.on('stream', s => { document.getElementById('remote-audio').srcObject = s; });
+            });
         }
 
-        function enviarRegalo(nombre, costo) {
-            alert("Has enviado un " + nombre + " por " + costo + " de oro.");
-            toggleGifts();
-            // Aquí es donde el contacto de Pakistán conectará la animación SVGA
+        async function toggleMicro() {
+            if (!localStream) {
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const destino = (role === 'A') ? 'B' : 'A';
+                    peer.call('lluvia-' + room + '-' + destino, localStream);
+                } catch (e) { alert("Permite el micrófono"); return; }
+            }
+            const estado = !localStream.getAudioTracks()[0].enabled;
+            localStream.getAudioTracks()[0].enabled = estado;
+            document.getElementById('mic-btn').className = estado ? "btn-circle btn-on" : "btn-circle btn-off";
+            const sId = (role === 'A') ? '1' : '2';
+            document.getElementById('silla-'+sId).className = estado ? "silla-box silla-on" : "silla-box";
         }
+
+        function toggleBocina() {
+            const audio = document.getElementById('remote-audio');
+            audio.muted = !audio.muted;
+            document.getElementById('spk-btn').className = audio.muted ? "btn-circle btn-off" : "btn-circle btn-on";
+        }
+
+        // LÓGICA DE COBRO DE REGALOS
+        async function enviarRegalo(item, costo) {
+            const userRef = db.collection("usuarios").doc(nombre);
+            const doc = await userRef.get();
+            const oroActual = doc.data()?.oro || 0;
+
+            if (oroActual >= costo) {
+                await userRef.update({ oro: firebase.firestore.FieldValue.increment(-costo) });
+                alert("¡Enviaste " + item + "!");
+                cerrarModal();
+            } else { alert("Oro insuficiente"); }
+        }
+
+        // LÓGICA DE COMPRA VIP (NUEVO)
+        async function comprarVIP(tipo, costo) {
+            const userRef = db.collection("usuarios").doc(nombre);
+            const doc = await userRef.get();
+            const oroActual = doc.data()?.oro || 0;
+
+            if (oroActual >= costo) {
+                await userRef.update({ 
+                    oro: firebase.firestore.FieldValue.increment(-costo),
+                    svip: true 
+                });
+                alert("¡Felicidades! Ahora eres " + tipo);
+                cerrarModal();
+            } else { alert("Oro insuficiente para el VIP"); }
+        }
+
+        function recargar(cant) {
+            db.collection("usuarios").doc(nombre).set({ 
+                oro: firebase.firestore.FieldValue.increment(cant) 
+            }, { merge: true });
+            alert("Recarga exitosa");
+        }
+
+        function abrirModal(id) { document.getElementById(id).style.display = 'block'; }
+        function cerrarModal() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
     </script>
 </body>
 </html>
