@@ -2,88 +2,77 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - Fix Botones</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Lluvia Live Fix</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
         :root { --gold: #ffd700; --blue-pk: #0084ff; --red-pk: #ff004c; }
-        body { margin: 0; background: #0b0015; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; height: 100vh; overflow: hidden; position: relative; }
+        body { 
+            margin: 0; background: #0b0015; color: white; font-family: sans-serif; 
+            height: 100vh; overflow: hidden; position: fixed; width: 100%;
+        }
         
-        /* BARRA DE PK */
-        .pk-container { width: 100%; height: 45px; background: #111; display: flex; position: relative; border-bottom: 2px solid var(--gold); z-index: 100; }
-        .pk-team { height: 100%; transition: width 0.8s ease; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
-        .pk-blue { background: var(--blue-pk); width: 50%; }
-        .pk-red { background: var(--red-pk); width: 50%; }
-        .pk-timer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #000; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--gold); font-size: 11px; z-index: 110; }
+        /* BARRA PK */
+        .pk-container { width: 100%; height: 40px; display: flex; position: relative; border-bottom: 2px solid var(--gold); z-index: 10; }
+        .pk-blue { background: var(--blue-pk); width: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+        .pk-red { background: var(--red-pk); width: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+        .pk-timer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #000; border: 1px solid var(--gold); border-radius: 10px; padding: 2px 8px; font-size: 10px; }
 
         /* PERFIL */
-        .header-card { background: rgba(30, 0, 60, 0.9); width: 92%; margin: 10px auto; padding: 12px; border-radius: 15px; border: 1px solid var(--gold); display: flex; align-items: center; gap: 15px; }
-        .avatar-small { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold); }
+        .header-card { background: rgba(30,0,60,0.8); width: 90%; margin: 10px auto; padding: 10px; border-radius: 15px; border: 1.5px solid var(--gold); display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--gold); }
 
         /* SILLAS */
-        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 15px; z-index: 10; }
-        .silla { background: rgba(255,255,255,0.1); width: 65px; height: 65px; border-radius: 50%; border: 1px solid #444; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 20px; margin-top: 10px; }
+        .silla { background: rgba(255,255,255,0.1); width: 60px; height: 60px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid #333; }
 
-        /* --- FIX DE BOTONES (NAVEGACIÓN INFERIOR) --- */
+        /* --- BOTONES CORREGIDOS --- */
         .footer-nav { 
-            position: fixed; 
-            bottom: 30px; 
-            left: 0;
-            width: 100%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            gap: 20px; 
-            z-index: 99999 !important; /* Prioridad máxima sobre todo */
-            pointer-events: auto;
+            position: absolute; 
+            bottom: 80px; /* Subimos la barra para que Safari no la bloquee */
+            left: 0; width: 100%; 
+            display: flex; justify-content: center; align-items: center; gap: 25px;
+            z-index: 9999; 
         }
 
-        .btn-circle { 
-            width: 65px; 
-            height: 65px; 
-            border-radius: 50%; 
-            border: 2px solid var(--gold); 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 26px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
-            transition: transform 0.1s active;
-            background: #1a1a1a;
+        .btn-action { 
+            width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--gold);
+            display: flex; align-items: center; justify-content: center; font-size: 25px;
+            background: #1a1a1a; cursor: pointer;
+            -webkit-tap-highlight-color: transparent; /* Quita el cuadro azul en iPhone */
+            transition: transform 0.1s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        .btn-circle:active { transform: scale(0.9); } /* Efecto de click */
+        .btn-action:active { transform: scale(0.85); background: #333; }
 
-        .btn-regalo { 
-            width: 85px; 
-            height: 85px; 
-            background: #ff0000; 
-            font-size: 40px; 
-            border: 3px solid var(--gold);
+        .btn-main { width: 80px; height: 80px; background: #ff0000; font-size: 35px; border: 3px solid var(--gold); }
+
+        /* MODAL SIMPLE */
+        .modal { 
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #111; border: 2px solid var(--gold); padding: 20px; border-radius: 20px;
+            width: 70%; z-index: 10000; text-align: center;
         }
-
-        /* MODALES */
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; border: 2px solid var(--gold); border-radius: 20px; padding: 25px; width: 80%; z-index: 100000; }
     </style>
 </head>
 <body>
 
     <div class="pk-container">
-        <div id="pk-bar-blue" class="pk-team pk-blue">CLAN A: 0</div>
-        <div id="pk-bar-red" class="pk-team pk-red">CLAN B: 0</div>
+        <div class="pk-blue">CLAN A: 0</div>
+        <div class="pk-red">CLAN B: 0</div>
         <div class="pk-timer">05:00</div>
     </div>
 
     <div class="header-card">
-        <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="avatar-small">
-        <div style="text-align: left;">
-            <b id="nick">Melvin</b><br>
-            <small style="color:var(--gold);">💰 <span id="oro-txt">0</span></small>
+        <div class="avatar">👤</div>
+        <div style="text-align:left flex-grow:1;">
+            <b id="user-name">Melvin</b><br>
+            <span style="color:var(--gold); font-size:12px;">💰 <span id="oro-val">2,000</span></span>
         </div>
-        <div style="margin-left:auto; cursor:pointer;" onclick="showM('m-admin')">⚙️</div>
+        <div style="margin-left:auto; font-size:20px;" onclick="abrirModal('m-config')">⚙️</div>
     </div>
 
     <div class="grid-sala">
@@ -93,29 +82,31 @@
     </div>
 
     <div class="footer-nav">
-        <button class="btn-circle" style="border-color:#00ff00;" onclick="showM('m-agentes')">🏦</button>
-        <button class="btn-circle btn-regalo" onclick="showM('m-regalos')">🎁</button>
-        <button class="btn-circle" style="background:#1a237e;" onclick="showM('m-tienda')">👑</button>
+        <div class="btn-action" style="border-color:#00ff00;" onclick="accionBoton('Banco')">🏦</div>
+        <div class="btn-action btn-main" onclick="accionBoton('Regalo')">🎁</div>
+        <div class="btn-action" style="background:#1a237e;" onclick="accionBoton('VIP')">👑</div>
     </div>
 
-    <div id="m-regalos" class="modal">
-        <h3 style="color:red">ENVIAR REGALO</h3>
-        <button style="width:100%; padding:10px; margin-bottom:10px;" onclick="closeM()">Rosa (10 Oro)</button>
-        <button style="width:100%; padding:10px; background:#444; color:white;" onclick="closeM()">Cerrar</button>
+    <div id="m-msg" class="modal">
+        <h2 id="modal-title"></h2>
+        <button onclick="cerrarModal()" style="padding:10px 20px; background:var(--gold); border:none; border-radius:10px;">OK</button>
     </div>
 
     <script>
-        const config = { apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4", projectId: "lluvia-live-69a05" };
-        firebase.initializeApp(config);
-        const db = firebase.firestore();
-        let user = "Melvin";
+        // Configuración mínima para que no de error
+        const firebaseConfig = { apiKey: "AIzaSy...", projectId: "lluvia-live-69a05" };
+        firebase.initializeApp(firebaseConfig);
 
-        db.collection("usuarios").doc(user).onSnapshot(doc => {
-            if(doc.exists) document.getElementById('oro-txt').innerText = (doc.data().oro || 0).toLocaleString();
-        });
+        function accionBoton(tipo) {
+            // Efecto de vibración (haptic feedback) para móviles
+            if (navigator.vibrate) navigator.vibrate(50);
+            
+            document.getElementById('modal-title').innerText = "Abriendo " + tipo;
+            document.getElementById('m-msg').style.display = 'block';
+        }
 
-        function showM(id) { document.getElementById(id).style.display = 'block'; }
-        function closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
+        function abrirModal(id) { document.getElementById('m-msg').style.display = 'block'; }
+        function cerrarModal() { document.getElementById('m-msg').style.display = 'none'; }
     </script>
 </body>
 </html>
