@@ -3,163 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live - Conexión de Sala</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <title>AudioRoom PRO - Control Total</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-
     <style>
-        body { margin: 0; background: #000; color: white; font-family: 'Arial', sans-serif; text-align: center; height: 100vh; overflow: hidden; }
+        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; }
+        .user-panel { background: rgba(0,0,0,0.6); width: 90%; margin: 20px auto; padding: 15px; border-radius: 20px; border: 1px solid #ffd700; }
+        .aristocracia-tag { background: linear-gradient(90deg, #ffd700, #ff8c00); color: #000; font-weight: bold; padding: 5px 20px; border-radius: 15px; margin: 10px 0; display: inline-block; }
         
-        /* PANTALLA DE INICIO (Estilo última foto) */
-        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .logo-text { font-size: 50px; font-weight: bold; color: #00ff00; margin: 20px 0; display: flex; align-items: center; gap: 10px; }
-        .login-input { width: 70%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; font-size: 20px; text-align: center; }
-        .button-group { display: flex; gap: 15px; width: 75%; margin-top: 20px; }
-        .btn-action { flex: 1; padding: 15px; border-radius: 10px; border: none; font-weight: bold; font-size: 18px; cursor: pointer; color: white; }
-        .btn-green { background: #008000; }
-        .btn-blue { background: #0000ff; }
+        .controls-row { display: flex; justify-content: center; gap: 40px; margin-top: 30px; }
+        .btn-circle { 
+            width: 75px; height: 75px; border-radius: 50%; border: none; font-size: 30px; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.3s;
+        }
 
-        /* INTERFAZ DE SALA */
-        #main-app { display: none; background: #0f001e; height: 100vh; }
-        .header-container { background: rgba(0,0,0,0.6); width: 92%; margin: 10px auto; padding: 15px; border-radius: 25px; border: 2px solid #ffd700; }
-        .stats-top { display: flex; justify-content: space-between; font-size: 14px; }
-        .rank-row { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 10px; }
-        .aristocracia-box { background: linear-gradient(90deg, #b8860b, #ffd700, #b8860b); color: black; font-weight: bold; padding: 8px 15px; border-radius: 20px; }
-        .svip-tag { background: #ff0000; color: white; font-weight: bold; padding: 5px 10px; border-radius: 10px; border: 1px solid white; font-size: 12px; }
-
-        /* Sillas en Rejilla */
-        .sala-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px; margin-top: 20px; }
-        .silla-unit { display: flex; flex-direction: column; align-items: center; }
-        .silla-icon { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #444; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 25px; transition: 0.3s; }
-        .silla-active { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; }
-
-        /* Controles Inferiores */
-        .bottom-nav { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 20px; }
-        .nav-item { width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); }
-        .btn-wallet { background: #ffd700; color: black; }
-        .btn-gift { width: 80px; height: 80px; background: linear-gradient(45deg, #ff0066, #ffcc00); border: none; font-size: 30px; }
-        .btn-vip { background: #00d2ff; color: black; }
+        /* Colores de estado */
+        .btn-on { background: #00ff00; color: black; border: 3px solid white; }
+        .btn-off { background: #ff3333; color: white; border: 3px solid #555; }
+        
+        .btn-audio { background: #ff0066; color: white; padding: 12px; border-radius: 10px; border: none; margin: 10px; font-weight: bold; }
+        #status-msg { margin-top: 15px; color: #00ffcc; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <div class="logo-text"><span>☔</span> Lluvia Live</div>
-        <input type="text" id="user-name" class="login-input" placeholder="Tu nombre..." value="Josue">
-        <input type="text" id="room-id" class="login-input" placeholder="ID de Sala (ej: 1234)" value="1234">
-        
-        <div class="button-group">
-            <button class="btn-action btn-green" onclick="iniciarApp()">Crear sala</button>
-            <button class="btn-action btn-blue" onclick="iniciarApp()">Entrar</button>
+    <div class="user-panel">
+        <div>💰 Oro: 1000 | 👑 Noble (Aristocracia)</div>
+        <div class="aristocracia-tag">🏆 Rango: Noble</div>
+    </div>
+
+    <div id="room-display">📍 Sala: Cargando...</div>
+    <button class="btn-audio" onclick="desbloquearSonido()">🔊 1. CLIC AQUÍ AL ENTRAR</button>
+
+    <div class="controls-row">
+        <div>
+            <button id="mic-btn" class="btn-circle btn-off" onclick="toggleMic()">🎙️</button>
+            <p>Micro</p>
+        </div>
+        <div>
+            <button id="spk-btn" class="btn-circle btn-on" onclick="toggleSpeaker()">🔊</button>
+            <p>Bocina</p>
         </div>
     </div>
 
-    <div id="main-app">
-        <div class="header-container">
-            <div class="stats-top">
-                <span>💰 Oro: <b id="display-oro">0</b></span>
-                <span>🛡️ Clan: Lluvia</span>
-            </div>
-            <div class="rank-row">
-                <div class="aristocracia-box">Noble (Aristocracia)</div>
-                <div id="svip-label" class="svip-tag" style="display:none;">SVIP</div>
-            </div>
-            <div style="color: #ff85a2; font-size: 12px; margin-top: 5px;">💞 C.P: Buscando pareja...</div>
-        </div>
-
-        <div style="margin-top: 10px; color: #ffd700;">📍 ID SALA: <span id="room-display">0</span></div>
-
-        <div style="display:flex; justify-content:center; gap:30px; margin: 20px 0;">
-            <div onclick="toggleMic()"><div id="btn-mic" class="silla-icon" style="border-color:red">🎙️</div><span>Micro</span></div>
-            <div onclick="toggleSpk()"><div id="btn-spk" class="silla-icon" style="border-color:#00ff00; background:#004400">🔊</div><span>Bocina</span></div>
-        </div>
-
-        <div class="sala-grid" id="sillas-container"></div>
-
-        <div class="bottom-nav">
-            <div class="nav-item btn-wallet" onclick="alert('Billetera abierta')">💳</div>
-            <button class="nav-item btn-gift">🎁</button>
-            <div class="nav-item btn-vip" onclick="alert('Tienda VIP')">👑</div>
-        </div>
-    </div>
-
+    <p id="status-msg">Pulsa el botón rosa y luego el Micro</p>
     <audio id="remote-audio" autoplay playsinline></audio>
 
     <script>
-        // Configuración básica (Asegúrate de usar tu propio Firebase si este expira)
-        const firebaseConfig = { apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4", projectId: "lluvia-live-69a05" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const roomID = prompt("Ingresa el ID de la sala:") || "100";
+        document.getElementById('room-display').innerText = "📍 Sala ID: " + roomID;
 
-        let myStream;
-        let peer;
-        let room;
-        let nombre;
+        const peer = new Peer('melvin-pro-' + roomID + (Math.random() > 0.5 ? 'A' : 'B'));
+        let localStream;
+        let micActivo = false;
+        let bocinaActiva = true;
 
-        // Crear las 9 sillas
-        const container = document.getElementById('sillas-container');
-        for(let i=1; i<=9; i++) {
-            container.innerHTML += `<div class="silla-unit"><div class="silla-icon" id="silla-${i}">👤</div><div style="font-size:10px; color:#777">Silla ${i}</div></div>`;
-        }
-
-        async function iniciarApp() {
-            nombre = document.getElementById('user-name').value;
-            room = document.getElementById('room-id').value;
-
-            if(!nombre || !room) return alert("Escribe tu nombre y el ID de sala");
-
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-            document.getElementById('room-display').innerText = room;
-
-            // Inicializar PeerJS con el ID de sala para que se encuentren
-            peer = new Peer('lluvia-' + room + '-' + nombre);
-
-            // Escuchar llamadas de otros (Josué, etc)
-            peer.on('call', call => {
-                call.answer(myStream);
-                call.on('stream', stream => {
-                    document.getElementById('remote-audio').srcObject = stream;
-                });
-            });
-
-            // Sincronizar Oro y Rango desde Firebase
-            db.collection("usuarios").doc(nombre).onSnapshot(doc => {
-                if(doc.exists) {
-                    document.getElementById('display-oro').innerText = doc.data().oro || 0;
-                    document.getElementById('svip-label').style.display = doc.data().svip ? 'block' : 'none';
-                }
-            });
+        function desbloquearSonido() {
+            document.getElementById('remote-audio').play();
+            alert("🔊 Sonido listo.");
         }
 
         async function toggleMic() {
-            if(!myStream) {
-                myStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            }
-            const enabled = myStream.getAudioTracks()[0].enabled;
-            myStream.getAudioTracks()[0].enabled = !enabled;
+            const btn = document.getElementById('mic-btn');
             
-            const btn = document.getElementById('btn-mic');
-            const silla = document.getElementById('silla-1');
+            if (!localStream) {
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    iniciarConexion();
+                } catch (e) { alert("Permite el micro en Chrome"); return; }
+            }
 
-            if(!enabled) { // Se activó
-                btn.style.borderColor = "#00ff00";
-                btn.style.background = "#004400";
-                silla.classList.add('silla-active');
-                silla.innerText = "🎙️";
-            } else { // Se desactivó
-                btn.style.borderColor = "red";
-                btn.style.background = "#1a1a1a";
-                silla.classList.remove('silla-active');
-                silla.innerText = "👤";
+            micActivo = !micActivo;
+            localStream.getAudioTracks()[0].enabled = micActivo;
+
+            if (micActivo) {
+                btn.className = "btn-circle btn-on";
+                btn.innerText = "🎙️";
+                document.getElementById('status-msg').innerText = "✅ HABLANDO...";
+            } else {
+                btn.className = "btn-circle btn-off";
+                btn.innerText = "🔇";
+                document.getElementById('status-msg').innerText = "🔇 MICRO SILENCIADO";
             }
         }
 
-        function toggleSpk() {
+        function toggleSpeaker() {
+            const btn = document.getElementById('spk-btn');
             const audio = document.getElementById('remote-audio');
-            audio.muted = !audio.muted;
-            document.getElementById('btn-spk').style.borderColor = audio.muted ? "red" : "#00ff00";
+            bocinaActiva = !bocinaActiva;
+            audio.muted = !bocinaActiva;
+
+            if (bocinaActiva) {
+                btn.className = "btn-circle btn-on";
+                btn.innerText = "🔊";
+            } else {
+                btn.className = "btn-circle btn-off";
+                btn.innerText = "🔈";
+            }
+        }
+
+        function iniciarConexion() {
+            peer.on('call', call => {
+                call.answer(localStream);
+                call.on('stream', remStream => {
+                    document.getElementById('remote-audio').srcObject = remStream;
+                });
+            });
+
+            const target = peer.id.endsWith('A') ? 'B' : 'A';
+            const call = peer.call('melvin-pro-' + roomID + target, localStream);
+            if (call) {
+                call.on('stream', remStream => {
+                    document.getElementById('remote-audio').srcObject = remStream;
+                });
+            }
         }
     </script>
 </body>
