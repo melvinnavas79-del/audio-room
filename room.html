@@ -2,112 +2,87 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - Versión Recuperada</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lluvia Live - Sala & Billetera</title>
     
-    <script src="https://resource.zegocloud.com/prebuilt/zegocloud-prebuilt.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AWOafs7E7hOuryPjXYaHIMvKeWhSgH65Fejg2eyY4b0BY_7xoClV0xhc45Zdr7Y5MhMGSCefLgl6X18&currency=USD"></script>
 
     <style>
-        body { 
-            margin: 0; 
-            background: #0d001a; 
-            color: white; 
-            font-family: sans-serif; 
-            text-align: center; 
-            overflow: hidden; 
-        }
+        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; overflow-x: hidden; }
         
-        /* Diseño de Cabecera de tus capturas */
-        .header-sala { 
-            background: rgba(20,20,20,0.95); 
-            padding: 15px; 
-            border: 2px solid #ffd700; 
-            border-radius: 20px; 
-            width: 90%; 
-            margin: 15px auto; 
-        }
+        /* Cabecera Principal */
+        .header-sala { background: rgba(0,0,0,0.6); padding: 15px; border: 2px solid #ffd700; border-radius: 15px; width: 90%; margin: 10px auto; box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+        .info-row { display: flex; justify-content: space-around; font-size: 16px; margin-top: 10px; font-weight: bold; }
         
-        /* Botones de Control Estilo Melvin */
-        .btn-control { 
-            background: #222; 
-            border: 2px solid #ffd700; 
-            border-radius: 15px; 
-            padding: 20px; 
-            width: 85%; 
-            color: white; 
-            font-weight: bold; 
-            font-size: 18px; 
-            margin-bottom: 15px; 
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
-        }
+        /* Aristocracia SVIP */
+        .aristocracia-box { border-top: 1px solid rgba(255,215,0,0.3); margin-top: 15px; padding-top: 10px; }
+        .txt-aristocracia { color: #ffd700; font-size: 17px; }
+        .txt-svip { color: #ff00ff; text-shadow: 0 0 8px #ff00ff; margin-left: 5px; }
         
-        .active { 
-            background: #ffd700 !important; 
-            color: black !important; 
-            box-shadow: 0 0 20px #ffd700; 
-        }
+        /* Contenedor del Micrófono */
+        .mic-section { margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .mic-btn { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #ffd700; background: #331a4d; cursor: pointer; font-size: 40px; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .mic-on { background: #ffd700; color: black; box-shadow: 0 0 30px #ffd700; }
 
-        .btn-billetera { 
-            background: #ffd700; 
-            color: black; 
-            padding: 20px; 
-            border-radius: 50px; 
-            width: 80%; 
-            font-weight: bold; 
-            border: none; 
-            font-size: 18px; 
-            position: fixed;
-            bottom: 40px;
-            left: 10%;
-        }
+        /* LA BOCINITA (Fundamental para el audio) */
+        .bocina-status { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 20px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 20px; width: fit-content; margin-left: auto; margin-right: auto; }
+        .icon-bocina { font-size: 30px; filter: drop-shadow(0 0 5px #fff); }
+
+        /* Billetera */
+        .wallet-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26, 0, 51, 0.99); z-index: 1000; padding-top: 30px; }
+        .wallet-card { background: #222; border: 2px solid #ffd700; border-radius: 20px; width: 85%; margin: auto; padding: 25px; }
+        .pack-btn { background: #333; border: 1px solid #ffd700; border-radius: 12px; padding: 20px; margin-bottom: 15px; cursor: pointer; display: flex; justify-content: space-between; width: 100%; color: white; font-size: 18px; }
         
-        /* Pantalla de Acceso */
-        .lobby { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #000; z-index: 9999; display: flex; 
-            flex-direction: column; justify-content: center; align-items: center; 
-        }
-        .input-melvin { 
-            padding: 15px; border-radius: 10px; border: 2px solid #ffd700; 
-            background: #111; color: white; width: 75%; font-size: 18px; 
-            margin-bottom: 15px; text-align: center; 
-        }
+        .btn-wallet-main { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #ffd700; color: black; padding: 18px 50px; border-radius: 40px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 0 25px #ffd700; font-size: 18px; }
     </style>
 </head>
 <body>
 
-    <div id="pantalla-inicio" class="lobby">
-        <h1 style="color: #ffd700; font-size: 35px;">☔ LLUVIA LIVE</h1>
-        <input type="text" id="user-nick" class="input-melvin" placeholder="Tu Nombre">
-        <input type="number" id="room-id" class="input-melvin" placeholder="ID de Sala">
-        <button onclick="activarVersionEstable()" style="background:#0000ff; color:white; padding:20px; width:80%; border-radius:12px; font-weight:bold; border:none; font-size:20px;">ENTRAR AHORA</button>
+    <div class="header-sala">
+        <div style="font-size: 24px; color: #ffd700; margin-bottom: 5px;">👤 100</div>
+        
+        <div class="info-row">
+            <span>💰 Oro: <span id="oro-txt" style="color:#ffd700;">...</span></span>
+            <span>🛡️ Clan: <span style="color:#ff4444;">Lluvia</span></span>
+        </div>
+
+        <div class="aristocracia-box">
+            <div class="txt-aristocracia">💎 Aristocracia <span class="txt-svip">SVIP</span></div>
+            <div style="color: #00ff00; margin-top: 8px; font-size: 14px;">📍 Sala: 100</div>
+        </div>
     </div>
 
-    <div id="sala-principal" style="display:none;">
-        <div class="header-sala">
-            <div style="font-size: 22px; color: #ffd700;">SALA ID: <span id="id-txt">---</span></div>
-            <div style="margin: 10px 0;">💰 Oro: <span id="oro-txt" style="color:#00ff00; font-weight:bold;">0</span> | 🛡️ Clan: <span style="color:red;">Lluvia</span></div>
-            <div style="display:flex; justify-content:space-around; font-size:12px; border-top:1px solid #333; padding-top:10px;">
-                <span>💎 Aristocracia</span>
-                <span>✨ SVIP</span>
-                <span>🔥 VIP</span>
-            </div>
+    <div class="mic-section">
+        <div id="btn-mic" class="mic-btn" onclick="toggleMic()">🎙️</div>
+        
+        <div class="bocina-status">
+            <span class="icon-bocina">🔊</span>
+            <span id="status-text" style="font-weight: bold; color: #00ff00;">Audio Activo</span>
         </div>
+    </div>
 
-        <div style="margin-top: 50px;">
-            <button id="btn-mic" class="btn-control" onclick="switchMicrofono()">🎙️ ENCENDER MICRO</button>
-            <button id="btn-audio" class="btn-control" onclick="activarBocina()">🔊 ACTIVAR BOCINA</button>
+    <button class="btn-wallet-main" onclick="abrirBilletera()">💳 IR A BILLETERA</button>
+
+    <div id="modal-billetera" class="wallet-container">
+        <div class="wallet-card">
+            <h2 style="color: #ffd700;">Recargar Oro</h2>
+            <button class="pack-btn" onclick="prepararPago('0.99', 100)">
+                <span>🪙 100 Oros</span> <b>$0.99</b>
+            </button>
+            <button class="pack-btn" onclick="prepararPago('9.99', 1100)">
+                <span>🪙 1100 Oros</span> <b>$9.99</b>
+            </button>
+            
+            <div id="paypal-button-container" style="margin-top: 20px;"></div>
+            
+            <button onclick="cerrarBilletera()" style="margin-top: 20px; background: none; border: 1px solid #ff4444; color: #ff4444; padding: 10px; width: 100%; border-radius: 10px;">Cerrar</button>
         </div>
-
-        <div id="zego-container" style="display:none;"></div>
-
-        <button class="btn-billetera" onclick="alert('Abriendo Billetera...')">💳 BILLETERA</button>
     </div>
 
     <script>
-        // Configuración Firebase Melvin
+        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
             authDomain: "lluvia-live-69a05.firebaseapp.com",
@@ -118,51 +93,56 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        let userId = "Melvin_User";
 
-        let zp = null;
-        let micStatus = false;
+        // Cargar Oro en tiempo real
+        db.collection("usuarios").doc(userId).onSnapshot(doc => {
+            if(doc.exists) {
+                document.getElementById('oro-txt').innerText = doc.data().oro || 0;
+            }
+        });
 
-        async function activarVersionEstable() {
-            const nombre = document.getElementById('user-nick').value || "Melvin";
-            const sala = document.getElementById('room-id').value || "100";
-            
-            document.getElementById('id-txt').innerText = sala;
-            document.getElementById('pantalla-inicio').style.display = 'none';
-            document.getElementById('sala-principal').style.display = 'block';
-
-            // Conexión Real de Audio (ZegoCloud)
-            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(1111976694, "25049a1d82f7cc4b219154a4f89d53f5", sala, "U"+Date.now(), nombre);
-            zp = ZegoUIKitPrebuilt.create(kitToken);
-            
-            await zp.joinRoom({
-                container: document.querySelector("#zego-container"),
-                scenario: { mode: ZegoUIKitPrebuilt.GroupCall },
-                showPreJoinView: false,
-                turnOnMicrophoneWhenJoining: false 
-            });
-
-            // Sincronización de Oros en Vivo
-            db.collection("usuarios").doc("Melvin_User").onSnapshot(doc => {
-                if(doc.exists) {
-                    document.getElementById('oro-txt').innerText = doc.data().oro || 0;
-                }
-            });
-        }
-
-        function switchMicrofono() {
-            micStatus = !micStatus;
-            zp.turnMicrophoneOn(micStatus);
+        // Función del Micrófono y Audio
+        let activo = false;
+        function toggleMic() {
+            activo = !activo;
             const btn = document.getElementById('btn-mic');
-            btn.innerText = micStatus ? "🎙️ MICRO: ENCENDIDO" : "🎙️ ENCENDER MICRO";
-            btn.className = micStatus ? "btn-control active" : "btn-control";
+            const txt = document.getElementById('status-text');
+            if(activo) {
+                btn.classList.add('mic-on');
+                txt.innerText = "Transmitiendo...";
+                txt.style.color = "#ffd700";
+            } else {
+                btn.classList.remove('mic-on');
+                txt.innerText = "Audio Activo";
+                txt.style.color = "#00ff00";
+            }
         }
 
-        function activarBocina() {
-            // Esto fuerza al navegador a permitir el audio de los demás
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            document.getElementById('btn-audio').className = "btn-control active";
-            document.getElementById('btn-audio').innerText = "🔊 BOCINA: ACTIVA";
+        function abrirBilletera() { document.getElementById('modal-billetera').style.display = 'block'; }
+        function cerrarBilletera() { 
+            document.getElementById('modal-billetera').style.display = 'none'; 
+            document.getElementById('paypal-button-container').innerHTML = "";
+        }
+
+        function prepararPago(monto, cantidad) {
+            document.getElementById('paypal-button-container').innerHTML = "";
+            paypal.Buttons({
+                createOrder: (data, actions) => {
+                    return actions.order.create({
+                        purchase_units: [{ amount: { value: monto } }]
+                    });
+                },
+                onApprove: (data, actions) => {
+                    return actions.order.capture().then(details => {
+                        db.collection("usuarios").doc(userId).update({
+                            oro: firebase.firestore.FieldValue.increment(cantidad)
+                        });
+                        alert("¡Oros agregados con éxito!");
+                        cerrarBilletera();
+                    });
+                }
+            }).render('#paypal-button-container');
         }
     </script>
 </body>
