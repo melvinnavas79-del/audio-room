@@ -3,80 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - SVIP Edition</title>
+    <title>Lluvia Live - PK CLANES</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { 
-            --gold: #ffd700; --silver: #c0c0c0; --bronze: #cd7f32;
-            --svip10: linear-gradient(45deg, #ff0000, #ffd700); 
-            --bg-dark: #0b0015;
-        }
-        body { margin: 0; background: var(--bg-dark); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; height: 100vh; overflow: hidden; }
+        :root { --gold: #ffd700; --blue-pk: #0084ff; --red-pk: #ff004c; }
+        body { margin: 0; background: #0b0015; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; height: 100vh; overflow: hidden; }
         
-        /* TARJETA DE PERFIL DINÁMICA */
-        .header-card { 
-            background: rgba(20, 0, 40, 0.95); width: 92%; margin: 10px auto; padding: 15px; 
-            border-radius: 20px; border: 2px solid var(--gold); position: relative;
-            transition: all 0.5s ease;
-        }
-        
-        /* MEDALLAS SVIP */
-        .svip-badge {
-            display: inline-block; padding: 2px 10px; border-radius: 20px;
-            font-weight: bold; font-size: 11px; margin-top: 5px;
-            box-shadow: 0 0 10px rgba(255,255,255,0.2);
-        }
-        .svip-1-3 { background: var(--bronze); color: white; }
-        .svip-4-7 { background: var(--silver); color: black; }
-        .svip-8-10 { background: var(--gold); color: black; animation: shine 2s infinite; }
+        /* BARRA DE PK GLOBAL / CLANES */
+        .pk-container { width: 100%; height: 50px; background: #222; display: flex; position: relative; border-bottom: 2px solid var(--gold); overflow: hidden; }
+        .pk-team { height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 2px black; }
+        .pk-blue { background: linear-gradient(90deg, #004e92, var(--blue-pk)); width: 50%; }
+        .pk-red { background: linear-gradient(90deg, var(--red-pk), #8e0000); width: 50%; }
+        .pk-timer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); padding: 2px 10px; border-radius: 10px; border: 1px solid var(--gold); font-size: 12px; z-index: 10; color: var(--gold); }
+        .pk-vs { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-style: italic; font-weight: 900; color: white; z-index: 5; opacity: 0.5; }
 
-        @keyframes shine { 0% { opacity: 0.8; } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.8; } }
-
-        /* BARRA DE PROGRESO SVIP */
-        .svip-bar-container { width: 80%; background: #333; height: 8px; border-radius: 10px; margin: 10px auto; overflow: hidden; border: 1px solid #555; }
-        #svip-progress { width: 0%; height: 100%; background: var(--gold); transition: width 1s ease; }
+        /* HEADER USUARIO */
+        .header-card { background: rgba(20, 0, 40, 0.9); width: 94%; margin: 8px auto; padding: 10px; border-radius: 15px; border: 1px solid var(--gold); display: flex; align-items: center; gap: 10px; }
+        .avatar-small { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold); }
 
         /* SILLAS */
-        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 10px; }
+        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 15px; }
         .silla { background: rgba(255,255,255,0.05); width: 60px; height: 60px; border-radius: 50%; border: 1px solid #333; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
 
         /* BOTONES ABAJO */
         .footer-nav { position: fixed; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 15px; }
-        .btn-circle { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 20px; cursor: pointer; }
-
-        #btn-admin { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; display: none; cursor: pointer; }
+        .btn-circle { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px black; }
+        
+        #btn-pk-start { position: fixed; top: 60px; right: 10px; background: var(--gold); color: black; border: none; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 10px; display: none; }
     </style>
 </head>
 <body>
 
+    <div class="pk-container">
+        <div id="pk-bar-blue" class="pk-team pk-blue">CLAN A: <span id="pts-blue">0</span></div>
+        <div id="pk-bar-red" class="pk-team pk-red">CLAN B: <span id="pts-red">0</span></div>
+        <div class="pk-vs">VS</div>
+        <div class="pk-timer" id="timer">05:00</div>
+    </div>
+
+    <button id="btn-pk-start" onclick="iniciarPK()">INICIAR PK GLOBAL</button>
+
     <div id="main-app">
-        <div id="card-main" class="header-card">
-            <button id="btn-admin" onclick="alert('Abriendo Panel...')">⚙️</button>
-            <div style="width:75px; height:75px; border-radius:50%; border:3px solid var(--gold); margin: 0 auto; overflow:hidden;">
-                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" style="width:100%;">
+        <div class="header-card">
+            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="avatar-small">
+            <div style="text-align: left;">
+                <b id="nick">Melvin</b><br>
+                <small style="color:var(--gold);">💰 <span id="oro-txt">0</span></small>
             </div>
-            
-            <div style="margin-top:10px;">
-                <b id="nick" style="font-size: 18px;">---</b>
-            </div>
-
-            <div id="svip-label" class="svip-badge">SVIP 0</div>
-            
-            <div class="svip-bar-container">
-                <div id="svip-progress"></div>
-            </div>
-            <div style="font-size: 10px; color: #aaa;">Próximo nivel: <span id="next-svip">---</span></div>
-
-            <div style="font-size:14px; color:var(--gold); margin-top:10px;">💰 Oro: <span id="oro-txt">0</span></div>
+            <div style="margin-left: auto; font-size: 20px;" onclick="alert('Panel Admin')">⚙️</div>
         </div>
 
         <div class="grid-sala" id="sillas-box"></div>
 
         <div class="footer-nav">
             <button class="btn-circle" style="background:#222; border:1px solid #00ff00;">🏦</button>
-            <button class="btn-circle" style="background:red; width:75px; height:75px; border:2px solid gold;">🎁</button>
+            <button class="btn-circle" style="background:red; width:80px; height:80px; border:2px solid gold;" onclick="sumarPuntosPK()">🎁</button>
             <button class="btn-circle" style="background:#1a237e; border:1px solid gold;">👑</button>
         </div>
     </div>
@@ -86,42 +69,51 @@
         firebase.initializeApp(config);
         const db = firebase.firestore();
 
-        let user = "Melvin"; // Asegúrate de que este nombre sea igual al de tu Firebase
+        let user = "Melvin"; 
+        let ptsBlue = 0;
+        let ptsRed = 0;
 
         for(let i=1; i<=9; i++) document.getElementById('sillas-box').innerHTML += `<div class="silla">👤</div>`;
 
-        db.collection("usuarios").doc(user).onSnapshot(doc => {
+        // Sincronizar puntos de PK desde Firebase
+        db.collection("sala_actual").doc("pk_data").onSnapshot(doc => {
             if(doc.exists) {
                 const d = doc.data();
-                const svip = d.svip_level || 1;
-                const oro = d.oro || 0;
+                ptsBlue = d.blue || 0;
+                ptsRed = d.red || 0;
+                actualizarBarraPK();
+            }
+        });
 
-                document.getElementById('nick').innerText = user;
-                document.getElementById('oro-txt').innerText = oro.toLocaleString();
-                
-                // LÓGICA VISUAL SVIP 1-10
-                const label = document.getElementById('svip-label');
-                const bar = document.getElementById('svip-progress');
-                const card = document.getElementById('card-main');
+        function actualizarBarraPK() {
+            const total = ptsBlue + ptsRed || 1;
+            const porcBlue = (ptsBlue / total) * 100;
+            const porcRed = (ptsRed / total) * 100;
 
-                label.innerText = `SVIP ${svip}`;
-                bar.style.width = `${svip * 10}%`; // La barra llena según el nivel
-                document.getElementById('next-svip').innerText = svip < 10 ? `SVIP ${svip + 1}` : "MÁXIMO";
+            document.getElementById('pk-bar-blue').style.width = porcBlue + "%";
+            document.getElementById('pk-bar-red').style.width = porcRed + "%";
+            document.getElementById('pts-blue').innerText = ptsBlue.toLocaleString();
+            document.getElementById('pts-red').innerText = ptsRed.toLocaleString();
+        }
 
-                // Cambiar colores según rango
-                if(svip >= 8) {
-                    label.className = "svip-badge svip-8-10";
-                    card.style.borderColor = "var(--gold)";
-                    card.style.boxShadow = "0 0 20px rgba(255,215,0,0.5)";
-                } else if(svip >= 4) {
-                    label.className = "svip-badge svip-4-7";
-                    card.style.borderColor = "var(--silver)";
-                } else {
-                    label.className = "svip-badge svip-1-3";
-                    card.style.borderColor = "var(--bronze)";
-                }
+        // Simular que alguien tira un regalo (para probar)
+        async function sumarPuntosPK() {
+            // En una app real, esto se activaría al enviar un regalo 🎁
+            const equipo = Math.random() > 0.5 ? 'blue' : 'red';
+            await db.collection("sala_actual").doc("pk_data").update({
+                [equipo]: firebase.firestore.FieldValue.increment(1000)
+            });
+        }
 
-                if(d.nivel_permiso >= 2) document.getElementById('btn-admin').style.display = 'block';
+        function iniciarPK() {
+            alert("PK Global Iniciado: ¡Todos a regalar!");
+            db.collection("sala_actual").doc("pk_data").set({ blue: 0, red: 0, tiempo: Date.now() });
+        }
+
+        db.collection("usuarios").doc(user).onSnapshot(doc => {
+            if(doc.exists) {
+                document.getElementById('oro-txt').innerText = (doc.data().oro || 0).toLocaleString();
+                if(doc.data().nivel_permiso >= 3) document.getElementById('btn-pk-start').style.display = 'block';
             }
         });
     </script>
