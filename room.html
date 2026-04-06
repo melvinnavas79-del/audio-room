@@ -2,9 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudioRoom PRO - Sala en Vivo</title>
-    <script src="https://unpkg.com/zegocloud-zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AudioRoom PRO - Oficial</title>
+    
+    <script src="https://resource.zegocloud.com/prebuilt/zegocloud-prebuilt.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         body {
             margin: 0;
@@ -17,14 +21,11 @@
             height: 100vh;
             overflow: hidden;
         }
-        .header {
-            margin-top: 30px;
-            text-align: center;
-        }
+        .header { margin-top: 30px; text-align: center; }
         .stats {
             background: rgba(0,0,0,0.3);
-            padding: 15px;
-            border-radius: 15px;
+            padding: 20px;
+            border-radius: 20px;
             width: 80%;
             margin-top: 20px;
         }
@@ -33,111 +34,141 @@
             justify-content: center;
             align-items: center;
             gap: 10px;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             margin: 10px 0;
+            font-weight: bold;
         }
         .noble-badge {
             background: #442255;
-            padding: 10px 40px;
-            border-radius: 20px;
+            padding: 10px 50px;
+            border-radius: 25px;
             border: 1px solid #9966ff;
             margin-top: 20px;
-        }
-        /* Contenedor de la BOCINA (Invisible pero necesaria) */
-        #remote-audio-container {
-            display: none;
+            font-weight: bold;
         }
         .controls {
             position: fixed;
             bottom: 40px;
             display: flex;
-            gap: 20px;
+            gap: 25px;
             width: 100%;
             justify-content: center;
         }
         .btn {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             border: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-size: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             cursor: pointer;
         }
-        .btn-mic { background-color: #555; color: white; }
+        .btn-mic { background-color: #555; color: white; border: 2px solid white; }
+        .btn-mic.on { background-color: #00ff00; color: black; }
         .btn-music { background-color: #00b894; color: white; }
         .btn-gift { background-color: #fdcb6e; color: white; }
         
-        #status-msg {
-            margin-top: 10px;
-            font-weight: bold;
-            color: #ffff00;
+        #status-msg { margin-top: 15px; font-weight: bold; color: #ffff00; font-size: 1.1rem; }
+
+        /* Pantalla de Acceso para activar Audio en iOS */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #1a0033; z-index: 9999; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+        }
+        .input-pro {
+            padding: 15px; border-radius: 12px; border: 1px solid #9966ff;
+            background: #331a4d; color: white; width: 75%; margin-bottom: 15px; text-align: center; font-size: 18px;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>🎤 AudioRoom PRO</h1>
+    <div id="login-screen">
+        <h1 style="color: #00ff00; margin-bottom: 30px;">🎤 AudioRoom PRO</h1>
+        <input type="text" id="user-name" class="input-pro" placeholder="Tu Nombre">
+        <input type="number" id="room-id" class="input-pro" placeholder="ID de Sala (Ej: 2026)">
+        <button onclick="iniciarAppPRO()" style="background:#8a2be2; color:white; padding:20px 60px; border-radius:15px; font-weight:bold; border:none; font-size:20px; box-shadow: 0 0 20px #8a2be2;">ENTRAR</button>
     </div>
 
-    <div class="stats">
-        <div class="stat-item">💰 Oro: 1000</div>
-        <div class="stat-item">👑 VIP: 0</div>
-        <div class="stat-item">💎 SVIP: 0</div>
-    </div>
+    <div id="app-pro" style="display:none; width: 100%; text-align: center;">
+        <div class="header">
+            <h1>🎤 AudioRoom PRO</h1>
+        </div>
 
-    <div class="noble-badge">🏆 Noble</div>
+        <div class="stats">
+            <div class="stat-item">💰 Oro: <span id="oro-count">0</span></div>
+            <div style="display: flex; justify-content: space-around; font-size: 1rem; color: #ccc;">
+                <span>👑 VIP: 0</span>
+                <span>💎 SVIP: 0</span>
+            </div>
+        </div>
 
-    <div id="status-msg">Conectando audio...</div>
+        <div class="noble-badge">🏆 Noble</div>
 
-    <div id="remote-audio-container"></div>
+        <div id="status-msg">Conectando...</div>
 
-    <div class="controls">
-        <button class="btn btn-mic" id="mic-btn" onclick="toggleMic()">🎤</button>
-        <button class="btn btn-music">🎶</button>
-        <button class="btn btn-gift">🎁</button>
+        <div id="audio-engine-container" style="display:none;"></div>
+
+        <div class="controls">
+            <button class="btn btn-mic" id="mic-btn" onclick="toggleMic()">🎤</button>
+            <button class="btn btn-music" onclick="alert('Billetera próximamente')">🎶</button>
+            <button class="btn btn-gift" onclick="alert('Regalos próximamente')">🎁</button>
+        </div>
     </div>
 
     <script>
-        // Configuración de ZegoCloud (Tu motor de audio)
-        const roomID = "sala_principal"; 
-        const userID = "user_" + Math.floor(Math.random() * 1000);
-        const userName = "Melvin_" + userID;
-        const appID = 123456789; // Reemplaza con tu AppID real si lo tienes
-        const serverSecret = "tu_secret_aqui"; // Reemplaza con tu Secret real
+        // Configuración Firebase (Para tus monedas reales)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
+            authDomain: "lluvia-live-69a05.firebaseapp.com",
+            projectId: "lluvia-live-69a05",
+            storageBucket: "lluvia-live-69a05.firebasestorage.app",
+            messagingSenderId: "909704512499",
+            appId: "1:909704512499:web:a8f0d658fb6dbd3f610886"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        let isMicOn = false;
+        let zegoInstance = null;
+        let micActive = false;
 
-        async function initAudio() {
-            const status = document.getElementById('status-msg');
-            try {
-                // Esto activa la BOCINA para escuchar a otros teléfonos
-                status.innerText = "¡CONECTADO A RENDER! ✅";
-                status.style.color = "#00ff00";
-                alert("Micrófono activo 🎤. Dale a Aceptar y presiona el micro para hablar.");
-            } catch (err) {
-                status.innerText = "Error al conectar audio";
-                console.error(err);
-            }
+        async function iniciarAppPRO() {
+            const nombre = document.getElementById('user-name').value || "Melvin";
+            const sala = document.getElementById('room-id').value || "2026";
+            
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-pro').style.display = 'block';
+
+            // Conexión Real de Audio (ZegoCloud)
+            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(1111976694, "25049a1d82f7cc4b219154a4f89d53f5", sala, "U"+Date.now(), nombre);
+            zegoInstance = ZegoUIKitPrebuilt.create(kitToken);
+            
+            await zegoInstance.joinRoom({
+                container: document.querySelector("#audio-engine-container"),
+                scenario: { mode: ZegoUIKitPrebuilt.GroupCall },
+                showPreJoinView: false,
+                turnOnMicrophoneWhenJoining: false 
+            });
+
+            document.getElementById('status-msg').innerText = "✅ CONECTADO EN VIVO";
+
+            // Sincronizar Monedas Reales desde Firebase
+            db.collection("usuarios").doc("Melvin_User").onSnapshot(doc => {
+                if(doc.exists) document.getElementById('oro-count').innerText = doc.data().oro || 0;
+            });
         }
 
         function toggleMic() {
+            micActive = !micActive;
+            zegoInstance.turnMicrophoneOn(micActive);
             const btn = document.getElementById('mic-btn');
-            isMicOn = !isMicOn;
-            if(isMicOn) {
-                btn.style.backgroundColor = "#6c5ce7"; // Morado cuando hablas
-                document.getElementById('status-msg').innerText = "🎤 TRANSMITIENDO EN VIVO";
-            } else {
-                btn.style.backgroundColor = "#555"; // Gris cuando callado
-                document.getElementById('status-msg').innerText = "¡CONECTADO A RENDER! ✅";
-            }
+            btn.className = micActive ? "btn btn-mic on" : "btn btn-mic";
+            document.getElementById('status-msg').innerText = micActive ? "🎤 TRANSMITIENDO EN VIVO" : "✅ CONECTADO EN VIVO";
         }
-
-        window.onload = initAudio;
     </script>
 </body>
 </html>
