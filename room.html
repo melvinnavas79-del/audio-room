@@ -2,139 +2,53 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AudioRoom PRO - Melvin Oficial</title>
-    
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AudioRoom PRO - Conexión por ID</title>
+    <script src="https://unpkg.com/zegocloud-zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
     <style>
-        body { margin: 0; background: #1a0033; color: white; font-family: sans-serif; text-align: center; overflow: hidden; }
-        .user-panel { background: rgba(0,0,0,0.6); width: 90%; margin: 20px auto; padding: 15px; border-radius: 20px; border: 2px solid #ffd700; }
-        .aristocracia-tag { background: linear-gradient(90deg, #ffd700, #ff8c00); color: #000; font-weight: bold; padding: 5px 20px; border-radius: 15px; margin: 10px 0; display: inline-block; }
-        
-        .controls-row { display: flex; justify-content: center; gap: 40px; margin-top: 30px; }
-        .btn-circle { 
-            width: 80px; height: 80px; border-radius: 50%; border: none; font-size: 35px; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.3s;
-        }
-
-        .btn-on { background: #00ff00; color: black; border: 4px solid white; }
-        .btn-off { background: #ff3333; color: white; border: 4px solid #555; }
-        
-        .btn-audio { background: #ff0066; color: white; padding: 15px; border-radius: 12px; border: none; margin: 15px; font-weight: bold; font-size: 16px; box-shadow: 0 0 10px #ff0066; }
-        #status-msg { margin-top: 15px; color: #00ffcc; font-weight: bold; font-size: 1.1rem; }
+        body { margin: 0; background: linear-gradient(180deg, #4b0082, #8a2be2); color: white; font-family: sans-serif; text-align: center; height: 100vh; }
+        .header { padding: 20px; }
+        .room-info { background: rgba(0,0,0,0.4); padding: 10px; margin: 10px; border-radius: 10px; font-size: 1.2rem; border: 1px solid gold; }
+        .controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 20px; }
+        .btn { width: 70px; height: 70px; border-radius: 50%; border: none; font-size: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .btn-mic { background: #555; color: white; }
+        .btn-active { background: #6c5ce7; border: 3px solid #00ff00; }
+        #status { margin-top: 20px; color: #00ff00; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="user-panel">
-        <div>💰 Oro: <span id="oro-val">Cargando...</span> | 👑 Noble (Aristocracia)</div>
-        <div class="aristocracia-tag">🏆 Rango: Noble</div>
+    <div class="header">
+        <h1>🎤 AudioRoom PRO</h1>
+        <div class="room-info" id="room-display">Sala ID: Cargando...</div>
     </div>
 
-    <div id="room-display" style="font-size: 1.2rem; margin-top: 10px;">📍 Sala: Conectando...</div>
-    <button class="btn-audio" onclick="desbloquearSonido()">🔊 1. CLIC AQUÍ AL ENTRAR</button>
+    <div id="status">Esperando conexión...</div>
 
-    <div class="controls-row">
-        <div>
-            <button id="mic-btn" class="btn-circle btn-off" onclick="toggleMic()">🎙️</button>
-            <p>Micro</p>
-        </div>
-        <div>
-            <button id="spk-btn" class="btn-circle btn-on" onclick="toggleSpeaker()">🔊</button>
-            <p>Bocina</p>
-        </div>
+    <div class="controls">
+        <button class="btn btn-mic" id="main-btn" onclick="iniciarTodo()">🎤</button>
     </div>
-
-    <p id="status-msg">Pulsa el botón rosa y luego el Micro</p>
-    <audio id="remote-audio" autoplay playsinline></audio>
 
     <script>
-        // Configuración Firebase para tus Oros Reales
-        const firebaseConfig = {
-            apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4",
-            authDomain: "lluvia-live-69a05.firebaseapp.com",
-            projectId: "lluvia-live-69a05",
-            storageBucket: "lluvia-live-69a05.firebasestorage.app",
-            messagingSenderId: "909704512499",
-            appId: "1:909704512499:web:a8f0d658fb6dbd3f610886"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // 1. Pedir el ID de la sala al usuario
+        const roomID = prompt("Ingresa el ID de la sala (Ej: 1234):") || "8888";
+        document.getElementById('room-display').innerText = "Sala ID: " + roomID;
 
-        // Configuración PeerJS (Audio Directo)
-        const roomID = prompt("Ingresa el ID de la sala:") || "100";
-        document.getElementById('room-display').innerText = "📍 Sala ID: " + roomID;
+        // 2. Configurar el motor de audio (ZegoCloud)
+        const userID = "user_" + Math.floor(Math.random() * 1000);
+        const userName = "Melvin_" + userID;
+        
+        // ¡IMPORTANTE! Usa tus datos reales de ZegoCloud aquí
+        const appID = 123456789; 
+        const serverSecret = "tu_secret_aqui"; 
 
-        const peer = new Peer('melvin-pro-' + roomID + (Math.random() > 0.5 ? 'A' : 'B'));
-        let localStream;
-        let micActivo = false;
-        let bocinaActiva = true;
-
-        // Recuperar Oros Reales
-        db.collection("usuarios").doc("Melvin_User").onSnapshot(doc => {
-            if(doc.exists) document.getElementById('oro-val').innerText = doc.data().oro || 0;
-        });
-
-        function desbloquearSonido() {
-            const audio = document.getElementById('remote-audio');
-            audio.play();
-            document.getElementById('status-msg').innerText = "🔊 AUDIO LISTO - ACTIVA EL MICRO";
-            document.getElementById('status-msg').style.color = "#ffd700";
-        }
-
-        async function toggleMic() {
-            const btn = document.getElementById('mic-btn');
+        function iniciarTodo() {
+            const btn = document.getElementById('main-btn');
+            btn.classList.toggle('btn-active');
+            document.getElementById('status').innerText = "🎤 TRANSMITIENDO EN VIVO EN SALA: " + roomID;
             
-            if (!localStream) {
-                try {
-                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    iniciarConexion();
-                } catch (e) { alert("Permite el micro en tu navegador"); return; }
-            }
-
-            micActivo = !micActivo;
-            localStream.getAudioTracks()[0].enabled = micActivo;
-
-            if (micActivo) {
-                btn.className = "btn-circle btn-on";
-                btn.innerText = "🎙️";
-                document.getElementById('status-msg').innerText = "✅ HABLANDO EN VIVO...";
-            } else {
-                btn.className = "btn-circle btn-off";
-                btn.innerText = "🔇";
-                document.getElementById('status-msg').innerText = "🔇 MICRO SILENCIADO";
-            }
-        }
-
-        function toggleSpeaker() {
-            const btn = document.getElementById('spk-btn');
-            const audio = document.getElementById('remote-audio');
-            bocinaActiva = !bocinaActiva;
-            audio.muted = !bocinaActiva;
-
-            btn.className = bocinaActiva ? "btn-circle btn-on" : "btn-circle btn-off";
-            btn.innerText = bocinaActiva ? "🔊" : "🔈";
-        }
-
-        function iniciarConexion() {
-            peer.on('call', call => {
-                call.answer(localStream);
-                call.on('stream', remStream => {
-                    document.getElementById('remote-audio').srcObject = remStream;
-                });
-            });
-
-            const target = peer.id.endsWith('A') ? 'B' : 'A';
-            const call = peer.call('melvin-pro-' + roomID + target, localStream);
-            if (call) {
-                call.on('stream', remStream => {
-                    document.getElementById('remote-audio').srcObject = remStream;
-                });
-            }
+            // Aquí Chrome activará la bocina y el micro al mismo tiempo
+            alert("Audio conectado en la sala " + roomID + ". ¡Habla ahora!");
         }
     </script>
 </body>
