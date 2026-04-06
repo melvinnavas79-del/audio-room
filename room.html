@@ -2,21 +2,21 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live - Full Version</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lluvia Live - Edición Reforzada</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
     <style>
-        body { margin: 0; background: #000; color: white; font-family: 'Arial', sans-serif; text-align: center; height: 100vh; overflow-y: auto; }
+        body { margin: 0; background: #000; color: white; font-family: 'Arial', sans-serif; text-align: center; min-height: 100vh; overflow-x: hidden; }
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .logo-box { font-size: 45px; font-weight: bold; color: #00ff00; margin-bottom: 30px; }
         .input-field { width: 80%; padding: 15px; margin: 10px 0; border-radius: 12px; border: none; font-size: 20px; text-align: center; }
         .btn-row { display: flex; gap: 10px; width: 85%; margin-top: 20px; }
         .btn-action { flex: 1; padding: 18px; border-radius: 12px; border: none; font-weight: bold; font-size: 18px; color: white; cursor: pointer; }
 
-        #main-app { display: none; background: #0f001e; min-height: 100vh; padding-top: 10px; padding-bottom: 100px; }
+        #main-app { display: none; background: #0f001e; min-height: 100vh; padding-top: 10px; padding-bottom: 180px; }
         .header-card { background: rgba(0,0,0,0.6); width: 92%; margin: 0 auto; padding: 15px; border-radius: 25px; border: 2px solid #ffd700; }
         .badge-noble { background: linear-gradient(90deg, #b8860b, #ffd700); color: black; font-weight: bold; padding: 8px 25px; border-radius: 20px; display: inline-block; }
         .tag-svip { background: #ff0000; color: white; padding: 5px 12px; border-radius: 10px; border: 1px solid white; font-size: 14px; font-weight: bold; margin-left: 5px; box-shadow: 0 0 10px red; display: none; }
@@ -27,18 +27,17 @@
         .btn-on { background: #00ff00; box-shadow: 0 0 15px #00ff00; }
 
         .sala-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px; }
-        .silla-box { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #444; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto; }
-        .silla-on { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; }
+        .silla-box { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #444; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto; transition: 0.3s; }
+        .silla-on { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; transform: scale(1.1); }
 
-        /* Estilos de la Lista de Usuarios */
-        #lista-conectados { margin: 20px auto; width: 90%; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 15px; border: 1px solid #00ffcc; }
-        #usuarios-lista { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; }
-        .user-tag { background: #1a1a1a; padding: 5px 15px; border-radius: 20px; border: 1px solid #ffd700; font-size: 14px; display: flex; align-items: center; gap: 5px; }
+        #lista-conectados { margin: 20px auto; width: 90%; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; border: 1px solid #00ffcc; }
+        #usuarios-lista { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 10px; }
+        .user-tag { background: #222; padding: 6px 12px; border-radius: 15px; border: 1px solid #ffd700; font-size: 13px; }
 
-        .bottom-nav { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: center; align-items: center; gap: 20px; z-index: 1000; }
-        .nav-item { width: 60px; height: 60px; border-radius: 50%; border: none; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; }
+        .bottom-nav { position: fixed; bottom: 25px; width: 100%; display: flex; justify-content: center; align-items: center; gap: 15px; z-index: 1000; pointer-events: auto; }
+        .nav-item { width: 60px; height: 60px; border-radius: 50%; border: none; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
 
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; border: 2px solid #ffd700; border-radius: 20px; padding: 25px; width: 80%; z-index: 10000; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; border: 2px solid #ffd700; border-radius: 20px; padding: 25px; width: 85%; z-index: 10000; }
         .modal-btn { background: #fff; color: #000; border: none; padding: 15px; margin: 8px 0; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
@@ -64,11 +63,11 @@
             <div id="id-label" style="color:#ffd700; font-size:14px; margin-top:5px;">📍 SALA: ---</div>
         </div>
 
-        <div id="work-panel" style="margin: 20px auto; width: 90%; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; border: 1px dashed #666;">
+        <div id="work-panel" style="margin: 15px auto; width: 90%; background: rgba(255,152,0,0.1); padding: 12px; border-radius: 20px; border: 1px solid #ff9800;">
             <button id="btn-ponchar" class="btn-action" style="background: #ff9800; width: 100%;" onclick="gestionarTurno()">
                 🚀 Iniciar Turno (Ponchar)
             </button>
-            <div id="timer-txt" style="margin-top: 10px; font-size: 16px; color: #00ff00; display: none; font-weight: bold;">
+            <div id="timer-txt" style="margin-top: 10px; font-size: 15px; color: #00ff00; display: none;">
                 ⏱️ Tiempo: <span id="minutos">0</span> min | Honor: +<span id="honor-preview">0</span>
             </div>
         </div>
@@ -87,40 +86,38 @@
 
         <div class="bottom-nav">
             <button class="nav-item" style="background:#ffd700;" onclick="abrirModal('modal-wallet')">💳<br>Wallet</button>
-            <button class="nav-item" style="background:orange; width:80px; height:80px; font-size:35px;" onclick="abrirModal('modal-regalos')">🎁</button>
+            <button class="nav-item" style="background:orange; width:75px; height:75px; font-size:32px;" onclick="abrirModal('modal-regalos')">🎁</button>
             <button class="nav-item" style="background:#00d2ff;" onclick="abrirModal('modal-tienda')">👑<br>VIP</button>
         </div>
     </div>
 
     <div id="modal-tienda" class="modal">
-        <h2 style="color:#00d2ff">Tienda VIP</h2>
+        <h2>Tienda VIP</h2>
         <button class="modal-btn" onclick="comprarVIP('SVIP', 2000)">👑 Comprar SVIP (2000 Oro)</button>
         <button class="modal-btn" style="background:#ff3333; color:white;" onclick="cerrarModal()">Cerrar</button>
     </div>
 
     <div id="modal-regalos" class="modal">
-        <h2 style="color:#ff85a2">Enviar Regalos</h2>
+        <h2>Enviar Regalos</h2>
         <button class="modal-btn" onclick="enviarRegalo('Rosa', 10)">🌹 Rosa (10 Oro)</button>
         <button class="modal-btn" onclick="enviarRegalo('Carro', 500)">🚗 Carro (500 Oro)</button>
         <button class="modal-btn" style="background:#ff3333; color:white;" onclick="cerrarModal()">Cerrar</button>
     </div>
 
     <div id="modal-wallet" class="modal">
-        <h2 style="color:#ffd700">Wallet</h2>
+        <h2>Wallet</h2>
         <button class="modal-btn" style="background:#4CAF50; color:white" onclick="recargar(1000)">Recargar +1000 Oro ($0.99)</button>
         <button class="modal-btn" onclick="cerrarModal()">Cerrar</button>
     </div>
 
-    <audio id="remote-audio" autoplay playsinline></audio>
+    <audio id="remote-audio" autoplay playsinline webkit-playsinline></audio>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4", projectId: "lluvia-live-69a05" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let peer, localStream, role, room, nombre;
-        let inicioTurno = null;
-        let intervalo = null;
+        let peer, localStream, role, room, nombre, inicioTurno, intervalo;
 
         // Dibujar sillas
         const grid = document.getElementById('grid-sillas');
@@ -138,7 +135,7 @@
 
             peer = new Peer('lluvia-' + room + '-' + role);
 
-            // Escuchar mis datos personales
+            // Perfil personal
             db.collection("usuarios").doc(nombre).onSnapshot(doc => {
                 if(doc.exists) {
                     const data = doc.data();
@@ -147,34 +144,35 @@
                 }
             });
 
-            // Registrarme en la sala para la LISTA DE USUARIOS
+            // Registro en sala
             db.collection("salas").doc(room).collection("usuarios").doc(nombre).set({
-                nombre: nombre,
-                unido: Date.now()
+                nombre: nombre, unido: Date.now()
             }, { merge: true });
 
-            // Monitor de la LISTA DE USUARIOS
+            // Lista visual de usuarios
             db.collection("salas").doc(room).collection("usuarios").onSnapshot(snapshot => {
                 const contenedor = document.getElementById('usuarios-lista');
                 contenedor.innerHTML = "";
                 snapshot.forEach(doc => {
-                    const user = doc.data();
-                    contenedor.innerHTML += `<div class="user-tag"><span>${user.nombre}</span> <span style="color:#00ff00; font-size:10px;">●</span></div>`;
+                    const u = doc.data();
+                    contenedor.innerHTML += `<div class="user-tag">${u.nombre} ●</div>`;
                 });
             });
 
             peer.on('call', call => {
                 call.answer(localStream);
-                call.on('stream', s => { document.getElementById('remote-audio').srcObject = s; });
+                call.on('stream', s => { 
+                    const audio = document.getElementById('remote-audio');
+                    audio.srcObject = s;
+                    audio.play().catch(e => console.log("Iphone bloqueó audio inicial"));
+                });
             });
         }
 
-        // --- LÓGICA DE PONCHAR ---
+        // LÓGICA DE PONCHAR
         async function gestionarTurno() {
             const btn = document.getElementById('btn-ponchar');
             const timerDiv = document.getElementById('timer-txt');
-            const userRef = db.collection("usuarios").doc(nombre);
-
             if (!inicioTurno) {
                 inicioTurno = new Date();
                 btn.innerText = "🛑 Finalizar Turno";
@@ -186,10 +184,10 @@
                     document.getElementById('honor-preview').innerText = dif;
                 }, 1000);
             } else {
-                const minutos = Math.floor((new Date() - inicioTurno) / 60000);
+                const min = Math.floor((new Date() - inicioTurno) / 60000);
                 clearInterval(intervalo);
-                await userRef.update({ puntos_honor: firebase.firestore.FieldValue.increment(minutos) });
-                alert("Turno guardado: +" + minutos + " Puntos de Honor");
+                await db.collection("usuarios").doc(nombre).update({ puntos_honor: firebase.firestore.FieldValue.increment(min) });
+                alert("Turno guardado: +" + min + " Honor");
                 inicioTurno = null;
                 btn.innerText = "🚀 Iniciar Turno (Ponchar)";
                 btn.style.background = "#ff9800";
@@ -197,14 +195,21 @@
             }
         }
 
-        // --- TU LÓGICA ORIGINAL DE AUDIO ---
+        // AUDIO REFORZADO PARA IPHONE
         async function toggleMicro() {
             if (!localStream) {
                 try {
-                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    localStream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
+                    });
                     const destino = (role === 'A') ? 'B' : 'A';
-                    peer.call('lluvia-' + room + '-' + destino, localStream);
-                } catch (e) { alert("Permite el micrófono"); return; }
+                    const call = peer.call('lluvia-' + room + '-' + destino, localStream);
+                    call.on('stream', s => {
+                        const audio = document.getElementById('remote-audio');
+                        audio.srcObject = s;
+                        audio.play();
+                    });
+                } catch (e) { alert("Error de Micro: Revisa permisos en Safari"); return; }
             }
             const estado = !localStream.getAudioTracks()[0].enabled;
             localStream.getAudioTracks()[0].enabled = estado;
@@ -222,8 +227,7 @@
         async function enviarRegalo(item, costo) {
             const userRef = db.collection("usuarios").doc(nombre);
             const doc = await userRef.get();
-            const oroActual = doc.data()?.oro || 0;
-            if (oroActual >= costo) {
+            if ((doc.data()?.oro || 0) >= costo) {
                 await userRef.update({ oro: firebase.firestore.FieldValue.increment(-costo) });
                 alert("¡Enviaste " + item + "!");
                 cerrarModal();
@@ -233,8 +237,7 @@
         async function comprarVIP(tipo, costo) {
             const userRef = db.collection("usuarios").doc(nombre);
             const doc = await userRef.get();
-            const oroActual = doc.data()?.oro || 0;
-            if (oroActual >= costo) {
+            if ((doc.data()?.oro || 0) >= costo) {
                 await userRef.update({ oro: firebase.firestore.FieldValue.increment(-costo), svip: true });
                 alert("¡Felicidades! Ahora eres SVIP");
                 cerrarModal();
