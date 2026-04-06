@@ -1,143 +1,23 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudioRoom PRO - Sala en Vivo</title>
-    <script src="https://unpkg.com/zegocloud-zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
-    <style>
-        body {
-            margin: 0;
-            background: linear-gradient(180deg, #4b0082, #8a2be2);
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .header {
-            margin-top: 30px;
-            text-align: center;
-        }
-        .stats {
-            background: rgba(0,0,0,0.3);
-            padding: 15px;
-            border-radius: 15px;
-            width: 80%;
-            margin-top: 20px;
-        }
-        .stat-item {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.2rem;
-            margin: 10px 0;
-        }
-        .noble-badge {
-            background: #442255;
-            padding: 10px 40px;
-            border-radius: 20px;
-            border: 1px solid #9966ff;
-            margin-top: 20px;
-        }
-        /* Contenedor de la BOCINA (Invisible pero necesaria) */
-        #remote-audio-container {
-            display: none;
-        }
-        .controls {
-            position: fixed;
-            bottom: 40px;
-            display: flex;
-            gap: 20px;
-            width: 100%;
-            justify-content: center;
-        }
-        .btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            cursor: pointer;
-        }
-        .btn-mic { background-color: #555; color: white; }
-        .btn-music { background-color: #00b894; color: white; }
-        .btn-gift { background-color: #fdcb6e; color: white; }
-        
-        #status-msg {
-            margin-top: 10px;
-            font-weight: bold;
-            color: #ffff00;
-        }
-    </style>
+    <title>Lluvia Live - Entrada</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
-<body>
-
-    <div class="header">
-        <h1>🎤 AudioRoom PRO</h1>
-    </div>
-
-    <div class="stats">
-        <div class="stat-item">💰 Oro: 1000</div>
-        <div class="stat-item">👑 VIP: 0</div>
-        <div class="stat-item">💎 SVIP: 0</div>
-    </div>
-
-    <div class="noble-badge">🏆 Noble</div>
-
-    <div id="status-msg">Conectando audio...</div>
-
-    <div id="remote-audio-container"></div>
-
-    <div class="controls">
-        <button class="btn btn-mic" id="mic-btn" onclick="toggleMic()">🎤</button>
-        <button class="btn btn-music">🎶</button>
-        <button class="btn btn-gift">🎁</button>
-    </div>
-
+<body style="background:black; color:white; text-align:center; padding-top:100px; font-family: Arial;">
+    <h1 style="color: #00ff00;">☔ Lluvia Live</h1>
+    <p>Panel de Control</p>
+    <input type="text" id="name" placeholder="Tu nombre" style="padding:15px; border-radius:10px; border:none; width:200px;"><br><br>
+    <button onclick="crear()" style="padding:15px 30px; background:#00ff00; color:black; border:none; border-radius:50px; font-weight:bold; cursor:pointer;">CREAR SALA</button>
     <script>
-        // Configuración de ZegoCloud (Tu motor de audio)
-        const roomID = "sala_principal"; 
-        const userID = "user_" + Math.floor(Math.random() * 1000);
-        const userName = "Melvin_" + userID;
-        const appID = 123456789; // Reemplaza con tu AppID real si lo tienes
-        const serverSecret = "tu_secret_aqui"; // Reemplaza con tu Secret real
-
-        let isMicOn = false;
-
-        async function initAudio() {
-            const status = document.getElementById('status-msg');
-            try {
-                // Esto activa la BOCINA para escuchar a otros teléfonos
-                status.innerText = "¡CONECTADO A RENDER! ✅";
-                status.style.color = "#00ff00";
-                alert("Micrófono activo 🎤. Dale a Aceptar y presiona el micro para hablar.");
-            } catch (err) {
-                status.innerText = "Error al conectar audio";
-                console.error(err);
-            }
+        const socket = io("https://audio-room-1.onrender.com");
+        function crear() {
+            const name = document.getElementById("name").value;
+            if (!name) return alert("Escribe tu nombre");
+            localStorage.setItem("username", name);
+            const room = Math.random().toString(36).substring(7);
+            window.location.href = "room.html?room=" + room;
         }
-
-        function toggleMic() {
-            const btn = document.getElementById('mic-btn');
-            isMicOn = !isMicOn;
-            if(isMicOn) {
-                btn.style.backgroundColor = "#6c5ce7"; // Morado cuando hablas
-                document.getElementById('status-msg').innerText = "🎤 TRANSMITIENDO EN VIVO";
-            } else {
-                btn.style.backgroundColor = "#555"; // Gris cuando callado
-                document.getElementById('status-msg').innerText = "¡CONECTADO A RENDER! ✅";
-            }
-        }
-
-        window.onload = initAudio;
     </script>
 </body>
 </html>
