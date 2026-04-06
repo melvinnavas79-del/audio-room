@@ -3,190 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live</title>
+    <title>Lluvia Live - Sistema de Jerarquías</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
     <style>
-        body { margin: 0; background: #0b0015; color: white; font-family: 'Segoe UI', Roboto, sans-serif; text-align: center; height: 100vh; overflow: hidden; }
+        :root { --gold: #ffd700; --super: #ff00ff; --mod: #00ffcc; --robot: #00f2ff; }
+        body { margin: 0; background: #0b0015; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; height: 100vh; overflow: hidden; }
         
-        /* LOGIN */
-        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .input-field { width: 80%; padding: 15px; margin: 10px 0; border-radius: 15px; border: none; font-size: 18px; text-align: center; }
-        .btn-entrar { width: 85%; padding: 15px; border-radius: 15px; border: none; font-weight: bold; font-size: 18px; color: white; cursor: pointer; margin-top: 10px; }
+        /* HEADER Y RANGOS */
+        .header-card { background: rgba(20, 0, 40, 0.95); width: 94%; margin: 10px auto; padding: 15px; border-radius: 20px; border: 2px solid var(--gold); position: relative; }
+        .tag-rango { font-size: 10px; padding: 2px 8px; border-radius: 5px; font-weight: bold; text-transform: uppercase; margin-top: 5px; display: inline-block; }
+        .rango-owner { background: red; color: white; }
+        .rango-super { background: var(--super); color: white; box-shadow: 0 0 10px var(--super); }
+        .rango-mod { background: var(--mod); color: black; }
 
-        /* HEADER */
-        #main-app { display: none; height: 100vh; position: relative; }
-        .header-card { background: rgba(20, 0, 40, 0.8); width: 92%; margin: 10px auto; padding: 15px; border-radius: 25px; border: 2px solid #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
-        .badge-noble { background: linear-gradient(90deg, #b8860b, #ffd700, #b8860b); color: black; font-weight: bold; padding: 10px 30px; border-radius: 20px; display: inline-block; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .tag-svip { background: #ff0000; color: white; padding: 4px 12px; border-radius: 10px; font-size: 14px; font-weight: bold; margin-left: 8px; box-shadow: 0 0 10px red; display: none; }
-
-        /* CONTROLES AUDIO */
-        .audio-row { display: flex; justify-content: center; gap: 40px; margin: 20px 0; }
-        .btn-circle { width: 75px; height: 75px; border-radius: 50%; border: 3px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 30px; }
-        .btn-off { background: #ff4444; }
-        .btn-on { background: #00ff44; box-shadow: 0 0 20px #00ff44; }
+        /* BEBÉ ROBOT ANUNCIO */
+        #bot-pago { position: fixed; top: 12%; left: 50%; transform: translateX(-50%); background: var(--robot); color: #000; padding: 12px 25px; border-radius: 50px; font-weight: bold; z-index: 30000; display: none; box-shadow: 0 0 20px var(--robot); }
 
         /* SILLAS */
-        .sala-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 10px 25px; }
-        .silla { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #333; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto; }
-        .silla-activa { border-color: #00ff44; box-shadow: 0 0 15px #00ff44; }
+        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+        .silla { background: #1a1a1a; width: 60px; height: 60px; border-radius: 50%; border: 2px solid #333; margin: 0 auto; display: flex; align-items: center; justify-content: center; position: relative; }
 
-        /* NAVEGACIÓN */
-        .bottom-nav { position: fixed; bottom: 35px; width: 100%; display: flex; justify-content: center; align-items: center; gap: 25px; }
-        .nav-btn { width: 65px; height: 65px; border-radius: 50%; border: none; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; }
-
-        /* MODALES CORREGIDOS */
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; border: 2px solid #ffd700; border-radius: 25px; padding: 25px; width: 80%; z-index: 10000; box-shadow: 0 0 30px #000; }
-        .modal-item { background: #fff; color: #000; padding: 15px; margin: 10px 0; width: 100%; border-radius: 12px; font-weight: bold; border: none; font-size: 16px; }
-        .btn-vip-buy { background: linear-gradient(90deg, #ff0000, #900); color: white; border: 1px solid #fff; }
+        /* MODALES */
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; border: 2px solid var(--gold); border-radius: 20px; padding: 20px; width: 88%; z-index: 10000; max-height: 85vh; overflow-y: auto; }
+        .btn-panel { background: #fff; color: #000; padding: 10px; margin: 5px 0; width: 100%; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; font-size: 13px; }
+        #btn-master-config { position: absolute; top: 5px; right: 5px; background: #4a148c; border: none; border-radius: 50%; width: 35px; height: 35px; color: white; display: none; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <h1 style="color: #00ff00; font-size: 40px; margin-bottom: 20px;">☔ Lluvia Live</h1>
-        <input type="text" id="user-name" class="input-field" placeholder="Tu Nombre">
-        <input type="text" id="room-id" class="input-field" placeholder="ID de Sala (Ej: 1234)">
-        <button class="btn-entrar" style="background: #008000;" onclick="entrar('A')">Crear Sala</button>
-        <button class="btn-entrar" style="background: #0000ff;" onclick="entrar('B')">Entrar</button>
-    </div>
+    <div id="bot-pago">🤖 BEBÉ ROBOT: ¡Transfiriendo 17M a <span id="win-name"></span>! 🤖</div>
 
     <div id="main-app">
         <div class="header-card">
-            <div style="display:flex; justify-content:space-between; font-size: 18px; margin-bottom: 10px;">
-                <span>💰 Oro: <b id="oro-txt" style="color: #ffd700;">0</b></span>
-                <span style="color: #00ffcc;">🛡️ Lluvia</span>
+            <button id="btn-master-config" onclick="abrirAdmin()">⚙️</button>
+            <div id="f-user" style="width:70px; height:70px; border-radius:50%; margin:0 auto; border:3px solid var(--gold); overflow:hidden;">
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" style="width:100%;">
             </div>
-            <div class="badge-noble">Noble (Aristocracia) <span id="svip-tag" class="tag-svip">SVIP</span></div>
-            <div style="color: #ff85a2; font-size: 14px; margin-top: 8px;">💕 C.P: Buscando pareja...</div>
-            <div id="sala-label" style="color: #ffd700; font-weight: bold; margin-top: 5px;">📍 ID SALA: ---</div>
+            <div style="margin-top:8px;">
+                <b id="nick">---</b> <span id="v-check" style="color:#1d9bf0; display:none;">☑️</span>
+            </div>
+            <div id="my-tag" class="tag-rango">Usuario</div>
+            <div style="font-size:12px; color:var(--gold); margin-top:5px;">💰 Oro: <span id="oro-txt">0</span></div>
         </div>
 
-        <div class="audio-row">
-            <div onclick="toggleMic()"><div id="mic-btn" class="btn-circle btn-off">🎙️</div><p>Micro</p></div>
-            <div onclick="toggleSpk()"><div id="spk-btn" class="btn-circle btn-on">🔊</div><p>Bocina</p></div>
+        <div class="grid-sala" id="sillas-box"></div>
+    </div>
+
+    <div id="m-admin-panel" class="modal">
+        <h2 style="color:var(--gold)">Panel de Control Real</h2>
+        
+        <div style="background:#1a237e; padding:10px; border-radius:10px; margin-bottom:10px;">
+            <b style="color:var(--robot)">🤖 BEBÉ ROBOT (Pago 17M)</b><br>
+            <input type="text" id="target-id" placeholder="ID del Ganador" style="width:85%; padding:8px; margin:10px 0; border-radius:5px;">
+            <button class="btn-panel" style="background:var(--robot)" onclick="robotPagar()">Ejecutar Pago de 17 Millones</button>
         </div>
 
-        <div class="sala-grid" id="sillas-container"></div>
-
-        <div class="bottom-nav">
-            <button class="nav-btn" style="background: #ffd700;" onclick="showM('modal-w')">💳<br>Wallet</button>
-            <button class="nav-btn" style="background: linear-gradient(#ff9800, #f44336); width: 85px; height: 85px; font-size: 40px;" onclick="showM('modal-g')">🎁</button>
-            <button class="nav-btn" style="background: #00d2ff;" onclick="showM('modal-v')">👑<br>VIP</button>
+        <div style="background:#222; padding:10px; border-radius:10px;">
+            <b>👑 Gestión de Staff</b><br>
+            <div id="user-list-admin" style="text-align:left; font-size:12px; margin-top:10px;"></div>
         </div>
-    </div>
 
-    <div id="modal-g" class="modal">
-        <h2 style="color: #ff85a2; margin-top: 0;">Enviar Regalo</h2>
-        <button class="modal-item" onclick="sendG('Rosa', 10)">🌹 Rosa (10 Oro)</button>
-        <button class="modal-item" onclick="sendG('Carro', 500)">🚗 Carro (500 Oro)</button>
-        <button class="modal-item" style="background:#444; color:white;" onclick="closeM()">Cerrar</button>
+        <button class="btn-panel" style="margin-top:15px; background:#444; color:white" onclick="closeM()">Cerrar</button>
     </div>
-
-    <div id="modal-v" class="modal">
-        <h2 style="color: #00d2ff; margin-top: 0;">Tienda VIP</h2>
-        <div style="background: #333; padding: 10px; border-radius: 10px; text-align: left; font-size: 14px; margin-bottom: 10px;">
-            <p style="color: #ffd700; margin: 0;">✓ Etiqueta SVIP Roja</p>
-            <p style="color: #ffd700; margin: 5px 0 0 0;">✓ Entrada especial</p>
-        </div>
-        <button class="modal-item btn-vip-buy" onclick="buyV()">👑 ACTIVAR SVIP (2000 Oro)</button>
-        <button class="modal-item" style="background:#444; color:white;" onclick="closeM()">Cerrar</button>
-    </div>
-
-    <div id="modal-w" class="modal">
-        <h2 style="color: #ffd700; margin-top: 0;">Wallet</h2>
-        <button class="modal-item" style="background:#28a745; color:white;" onclick="recharge()">Recargar +1000 Oro</button>
-        <button class="modal-item" onclick="closeM()">Cerrar</button>
-    </div>
-
-    <audio id="audio-player" autoplay playsinline></audio>
 
     <script>
         const config = { apiKey: "AIzaSyA9sd0fg7f55DX7Ej_TK_BJHrNFTmtr5J4", projectId: "lluvia-live-69a05" };
         firebase.initializeApp(config);
         const db = firebase.firestore();
 
-        let peer, stream, role, room, user;
+        let user = prompt("Tu nombre:"); 
+        let miPoder = 0; // 0:User, 1:Mod, 2:Supervisora, 3:Dueño
 
-        // Crear sillas
-        const container = document.getElementById('sillas-container');
-        for(let i=1; i<=9; i++) {
-            container.innerHTML += `<div><div class="silla" id="s-${i}">👤</div><div style="font-size:11px; color:#888; margin-top:5px;">Silla ${i}</div></div>`;
-        }
+        for(let i=1; i<=9; i++) document.getElementById('sillas-box').innerHTML += `<div class="silla">👤</div>`;
 
-        async function entrar(t) {
-            user = document.getElementById('user-name').value;
-            room = document.getElementById('room-id').value;
-            role = t;
-            if(!user || !room) return alert("Completa los datos");
+        db.collection("usuarios").doc(user).onSnapshot(doc => {
+            if(doc.exists) {
+                const d = doc.data();
+                miPoder = d.nivel_permiso || 0;
+                document.getElementById('nick').innerText = user;
+                document.getElementById('oro-txt').innerText = (d.oro || 0).toLocaleString();
+                
+                // Mostrar botón de Admin si es Nivel 2 (Supervisora) o 3 (Dueño)
+                if(miPoder >= 2) document.getElementById('btn-master-config').style.display = 'block';
 
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-            document.getElementById('sala-label').innerText = "📍 ID SALA: " + room;
-
-            peer = new Peer('lluvia-' + room + '-' + role);
-
-            // Escuchar cambios de Oro y VIP
-            db.collection("usuarios").doc(user).onSnapshot(doc => {
-                if(doc.exists) {
-                    const d = doc.data();
-                    document.getElementById('oro-txt').innerText = d.oro || 0;
-                    document.getElementById('svip-tag').style.display = d.svip ? 'inline-block' : 'none';
-                }
-            });
-
-            peer.on('call', call => {
-                call.answer(stream);
-                call.on('stream', s => { document.getElementById('audio-player').srcObject = s; });
-            });
-        }
-
-        async function toggleMic() {
-            if (!stream) {
-                try {
-                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    const target = (role === 'A') ? 'B' : 'A';
-                    peer.call('lluvia-' + room + '-' + target, stream);
-                } catch (e) { alert("Activa el micro"); return; }
+                // Actualizar Etiqueta de Rango
+                const tag = document.getElementById('my-tag');
+                if(miPoder === 3) { tag.innerText = "OWNER"; tag.className = "tag-rango rango-owner"; }
+                else if(miPoder === 2) { tag.innerText = "SUPERVISORA"; tag.className = "tag-rango rango-super"; }
+                else if(miPoder === 1) { tag.innerText = "MODERADOR"; tag.className = "tag-rango rango-mod"; }
+                else { tag.innerText = "USUARIO"; tag.className = "tag-rango"; }
             }
-            const active = !stream.getAudioTracks()[0].enabled;
-            stream.getAudioTracks()[0].enabled = active;
-            document.getElementById('mic-btn').className = active ? "btn-circle btn-on" : "btn-circle btn-off";
-            const sId = (role === 'A') ? 's-1' : 's-2';
-            document.getElementById(sId).className = active ? "silla silla-activa" : "silla";
+        });
+
+        // LÓGICA DEL BEBÉ ROBOT
+        async function robotPagar() {
+            const win = document.getElementById('target-id').value;
+            if(!win) return alert("Escribe el nombre del ganador");
+
+            await db.collection("usuarios").doc(win).update({
+                oro: firebase.firestore.FieldValue.increment(17000000)
+            });
+
+            const banner = document.getElementById('bot-pago');
+            document.getElementById('win-name').innerText = win;
+            banner.style.display = 'block';
+            setTimeout(() => banner.style.display = 'none', 6000);
+            alert("Pago de 17,000,000 procesado por el Bebé Robot.");
         }
 
-        function toggleSpk() {
-            const a = document.getElementById('audio-player');
-            a.muted = !a.muted;
-            document.getElementById('spk-btn').className = a.muted ? "btn-circle btn-off" : "btn-circle btn-on";
+        // GESTIÓN DE RANGOS
+        async function abrirAdmin() {
+            showM('m-admin-panel');
+            const container = document.getElementById('user-list-admin');
+            container.innerHTML = "Cargando usuarios...";
+            
+            const snap = await db.collection("usuarios").limit(10).get();
+            container.innerHTML = "";
+            snap.forEach(uDoc => {
+                const u = uDoc.id;
+                container.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;">
+                        <span>${u}</span>
+                        <div>
+                            <button onclick="asignarRol('${u}', 1)" style="background:var(--mod); border:none; border-radius:3px; font-size:10px;">Mod</button>
+                            <button onclick="asignarRol('${u}', 2)" style="background:var(--super); color:white; border:none; border-radius:3px; font-size:10px;">Super</button>
+                        </div>
+                    </div>`;
+            });
         }
 
-        async function sendG(name, cost) {
-            const ref = db.collection("usuarios").doc(user);
-            const doc = await ref.get();
-            if ((doc.data()?.oro || 0) >= cost) {
-                await ref.update({ oro: firebase.firestore.FieldValue.increment(-cost) });
-                alert("¡Regalo " + name + " enviado!");
-                closeM();
-            } else { alert("Oro insuficiente"); }
-        }
-
-        async function buyV() {
-            const ref = db.collection("usuarios").doc(user);
-            const doc = await ref.get();
-            if ((doc.data()?.oro || 0) >= 2000) {
-                await ref.update({ oro: firebase.firestore.FieldValue.increment(-2000), svip: true });
-                alert("¡Felicidades! Ya eres SVIP");
-                closeM();
-            } else { alert("Necesitas 2000 de oro"); }
-        }
-
-        function recharge() {
-            db.collection("usuarios").doc(user).set({ oro: firebase.firestore.FieldValue.increment(1000) }, { merge: true });
-            alert("Recarga exitosa");
+        async function asignarRol(uId, nivel) {
+            if(miPoder < 3) return alert("Solo el Dueño puede nombrar Supervisoras.");
+            await db.collection("usuarios").doc(uId).update({ nivel_permiso: nivel });
+            alert(uId + " ahora tiene un nuevo rango.");
+            abrirAdmin();
         }
 
         function showM(id) { document.getElementById(id).style.display = 'block'; }
