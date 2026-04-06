@@ -1,165 +1,136 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Lluvia Live PRO - Audio Fix</title>
-<style>
-:root { --gold:#ffd700; --blue:#0084ff; --red:#ff004c; }
-body { margin:0; background:#0b0015; color:white; font-family: sans-serif; height:100vh; overflow:hidden; position: fixed; width: 100%; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Lluvia Live - Conexión Dual</title>
+    <style>
+        :root { --gold:#ffd700; --red:#ff004c; --blue:#0084ff; }
+        body { margin:0; background:#0b0015; color:white; font-family: sans-serif; overflow:hidden; height:100vh; width:100%; position:fixed; }
+        
+        /* PANTALLA DE INICIO (ESTO ES LO QUE TE FALTABA) */
+        #pantalla-inicio {
+            position: fixed; inset:0; background:#0b0015; z-index:9999;
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            padding: 20px; text-align: center;
+        }
+        .logo { color: var(--gold); font-size: 32px; font-weight: bold; margin-bottom: 30px; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        .input-sala { 
+            background:#1a1a1a; border:2px solid var(--gold); padding:18px; 
+            border-radius:15px; color:white; width:80%; margin-bottom:20px; 
+            text-align:center; font-size: 18px;
+        }
+        .btn-entrar { 
+            background:var(--gold); color:black; padding:18px 60px; 
+            border-radius:35px; font-weight:bold; border:none; font-size: 20px;
+            box-shadow: 0 5px 15px rgba(255,215,0,0.3);
+        }
 
-/* ACCESO PARA ACTIVAR AUDIO GRATIS */
-#pantalla-acceso {
-    position: fixed; top:0; left:0; width:100%; height:100%; 
-    background:#0b0015; z-index: 5000; display: flex; flex-direction: column; 
-    align-items: center; justify-content: center;
-}
-.btn-entrar { 
-    background: var(--gold); color: black; padding: 18px 50px; 
-    border-radius: 40px; font-weight: bold; font-size: 20px; border: none;
-}
+        /* INTERFAZ DE SALA */
+        #sala-audio { display:none; }
+        .header-clanes { display:flex; height:50px; border-bottom:2px solid var(--gold); }
+        .clan { flex:1; display:flex; align-items:center; justify-content:center; font-weight:bold; }
+        
+        .grid-usuarios { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:30px 20px; }
+        .perfil { width:70px; height:70px; border-radius:50%; background:rgba(255,255,255,0.1); border:1px solid #444; margin:auto; display:flex; align-items:center; justify-content:center; font-size:28px; position:relative; }
+        .perfil.hablando { border-color:#00ff00; box-shadow:0 0 20px #00ff00; }
+        .num-silla { position:absolute; bottom:-5px; background:var(--gold); color:black; font-size:11px; padding:2px 6px; border-radius:10px; font-weight:bold; }
 
-/* INTERFAZ */
-#app-principal { display: none; }
-.pk-bar { display:flex; height:45px; border-bottom: 2px solid var(--gold); }
-.pk-team { width: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
-
-.sala { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; }
-.silla { background: rgba(255,255,255,0.1); width:65px; height:65px; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; border: 1px solid #444; position: relative; font-size: 24px; }
-.silla-on { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; color: #00ff00; }
-
-/* CONTROLES FLOTANTES */
-.controles-footer {
-    position: absolute; bottom: 120px; width: 100%;
-    display: flex; flex-direction: column; align-items: center; gap: 15px;
-}
-.row-audio { display: flex; gap: 15px; width: 90%; justify-content: center; }
-.btn-audio { 
-    flex: 1; background: #111; border: 2px solid var(--gold); 
-    padding: 12px; border-radius: 25px; color: var(--gold); 
-    font-weight: bold; text-align: center; font-size: 14px;
-}
-.activo { background: var(--red); color: white; border-color: white; }
-
-.botones-lujo { display: flex; gap: 20px; align-items: center; margin-top: 10px; }
-.circulo { width: 65px; height: 65px; border-radius: 50%; border: 2px solid var(--gold); background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 30px; }
-
-/* REGALOS */
-#capa-animada { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index: 1000; display:flex; align-items:center; justify-content:center; }
-.panel { position: fixed; bottom: -100%; left: 0; width: 100%; height: 50%; background: #150028; border-top: 3px solid var(--gold); border-radius: 25px 25px 0 0; transition: 0.4s; z-index: 3000; padding: 20px; box-sizing: border-box; }
-.panel.open { bottom: 0; }
-</style>
+        /* CONTROLES INFERIORES */
+        .controles { position:absolute; bottom:120px; width:100%; display:flex; flex-direction:column; align-items:center; gap:20px; }
+        .btn-accion { width:90%; display:flex; gap:10px; }
+        .btn-web { flex:1; padding:18px; border-radius:35px; border:2.5px solid var(--gold); font-weight:bold; background:#111; color:var(--gold); font-size: 14px; }
+        .btn-web.activo { background:var(--red); color:white; border-color:white; box-shadow: 0 0 15px var(--red); }
+        
+        .iconos-extra { display:flex; gap:25px; align-items:center; }
+        .circulo-btn { width:60px; height:60px; border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:25px; background:#1a1a1a; }
+    </style>
 </head>
 <body>
 
-<div id="pantalla-acceso">
-    <h1 style="color:var(--gold)">LLUVIA LIVE</h1>
-    <p>Toca para activar Audio y Micro</p>
-    <button class="btn-entrar" onclick="iniciarTodo()">ENTRAR A SALA</button>
+<div id="pantalla-inicio">
+    <div class="logo">LLUVIA LIVE</div>
+    <p style="margin-bottom:20px; opacity:0.8;">Introduce el ID para entrar o abrir sala</p>
+    <input type="number" id="id-input" class="input-sala" placeholder="ID de Sala (Ej: 555)">
+    <button class="btn-entrar" onclick="abrirSala()">ABRIR SALA</button>
 </div>
 
-<div id="app-principal">
-    <div class="pk-bar">
-        <div class="pk-team" style="background:var(--blue)">CLAN NAVAS</div>
-        <div class="pk-team" style="background:var(--red)">CLAN RIVAL</div>
+<div id="sala-audio">
+    <div class="header-clanes">
+        <div class="clan" style="background:var(--blue)">CLAN NAVAS: 0</div>
+        <div class="clan" style="background:var(--red)">CLAN RIVAL: 0</div>
     </div>
 
-    <div id="capa-animada"></div>
+    <div style="padding:15px; font-weight:bold;">SALA ID: <span id="sala-display" style="color:var(--gold)">--</span></div>
 
-    <div class="sala">
-        <div class="silla" id="s1">👤</div>
-        <div class="silla">👤</div>
-        <div class="silla">👤</div>
-        <div class="silla">👤</div>
-        <div class="silla">👤</div>
-        <div class="silla">👤</div>
+    <div class="grid-usuarios">
+        <div class="perfil" id="yo">👤<div class="num-silla">1</div></div>
+        <div class="perfil">👤<div class="num-silla">2</div></div>
+        <div class="perfil">👤<div class="num-silla">3</div></div>
+        <div class="perfil">👤<div class="num-silla">4</div></div>
+        <div class="perfil">👤<div class="num-silla">5</div></div>
+        <div class="perfil">👤<div class="num-silla">6</div></div>
     </div>
 
-    <div class="controles-footer">
-        <div class="row-audio">
-            <div class="btn-audio" id="btn-mic" onclick="toggleMicro()">🎤 MICRO: OFF</div>
-            <div class="btn-audio" id="btn-bocina" onclick="toggleBocina()">🔊 BOCINA: ON</div>
+    <div class="controles">
+        <div class="btn-accion">
+            <button id="btn-mic" class="btn-web" onclick="toggleMic()">🎤 MICRO: OFF</button>
+            <button id="btn-spk" class="btn-web" onclick="toggleSpk()">🔊 BOCINA: ON</button>
         </div>
-
-        <div class="botones-lujo">
-            <div class="circulo" style="border-color:#00ff00" onclick="ver('p-banco')">🏦</div>
-            <div class="circulo" style="background:red; width:80px; height:80px;" onclick="ver('p-regalo')">🎁</div>
-            <div class="circulo" style="background:#1a237e" onclick="alert('VIP')">👑</div>
+        
+        <div class="iconos-extra">
+            <div class="circulo-btn" onclick="alert('Banco Abierto')">🏦</div>
+            <div class="circulo-btn" style="background:red; width:80px; height:80px; font-size:40px;" onclick="alert('Regalos')">🎁</div>
+            <div class="circulo-btn">👑</div>
         </div>
-    </div>
-</div>
-
-<div id="p-banco" class="panel">
-    <div style="display:flex; justify-content:space-between;"><b>BANCO</b> <span onclick="ver('p-banco')">✕</span></div>
-    <div onclick="recarga()" style="background:#222; padding:15px; border-radius:10px; margin-top:15px;">📦 RECARGAR 5,000 ORO</div>
-</div>
-
-<div id="p-regalo" class="panel">
-    <div style="display:flex; justify-content:space-between;"><b>REGALOS</b> <span onclick="ver('p-regalo')">✕</span></div>
-    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-top:15px;">
-        <div style="background:#222; padding:15px; border-radius:10px; text-align:center;" onclick="animar('🌹')">🌹</div>
-        <div style="background:#222; padding:15px; border-radius:10px; text-align:center;" onclick="animar('💎')">💎</div>
-        <div style="background:#222; padding:15px; border-radius:10px; text-align:center;" onclick="animar('🦁')">🦁</div>
     </div>
 </div>
 
 <script>
-let audioActivado = false;
-let microStatus = false;
-let bocinaStatus = true;
+    let micStatus = false;
+    let spkStatus = true;
 
-function iniciarTodo() {
-    // EL "ACUERDO" GRATIS: Activamos el motor de audio al entrar
-    window.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    document.getElementById('pantalla-acceso').style.display = 'none';
-    document.getElementById('app-principal').style.display = 'block';
-    console.log("Audio activado por el usuario");
-}
+    function abrirSala() {
+        const id = document.getElementById('id-input').value;
+        if(!id) return alert("Por favor, pon un ID de sala");
 
-function toggleMicro() {
-    microStatus = !microStatus;
-    const btn = document.getElementById('btn-mic');
-    const s1 = document.getElementById('s1');
-    if(microStatus) {
-        btn.innerText = "🔴 MICRO: ON";
-        btn.classList.add('activo');
-        s1.classList.add('silla-on');
-        s1.innerHTML = "🎤";
-        navigator.mediaDevices.getUserMedia({audio:true}).catch(()=>alert("Revisa permisos de Micro"));
-    } else {
-        btn.innerText = "🎤 MICRO: OFF";
-        btn.classList.remove('activo');
-        s1.classList.remove('silla-on');
-        s1.innerHTML = "👤";
+        // DESBLOQUEO DE AUDIO (El "Acuerdo" que mencionaste)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        document.getElementById('sala-display').innerText = id;
+        document.getElementById('pantalla-inicio').style.display = 'none';
+        document.getElementById('sala-audio').style.display = 'block';
+        
+        console.log("Sala " + id + " abierta. Audio desbloqueado.");
     }
-}
 
-function toggleBocina() {
-    bocinaStatus = !bocinaStatus;
-    const btn = document.getElementById('btn-bocina');
-    if(bocinaStatus) {
-        btn.innerText = "🔊 BOCINA: ON";
-        btn.style.background = "#111";
-        btn.style.color = "var(--gold)";
-    } else {
-        btn.innerText = "🔇 BOCINA: MUTE";
-        btn.style.background = "#444";
-        btn.style.color = "white";
+    function toggleMic() {
+        micStatus = !micStatus;
+        const btn = document.getElementById('btn-mic');
+        const yo = document.getElementById('yo');
+        if(micStatus) {
+            btn.innerText = "🔴 MICRO: ON";
+            btn.classList.add('activo');
+            yo.classList.add('hablando');
+            yo.innerHTML = "🎤<div class='num-silla'>1</div>";
+            // Pedir permiso real al iPhone
+            navigator.mediaDevices.getUserMedia({audio:true}).catch(() => {
+                alert("Debes permitir el micrófono en los ajustes de Safari.");
+            });
+        } else {
+            btn.innerText = "🎤 MICRO: OFF";
+            btn.classList.remove('activo');
+            yo.classList.remove('hablando');
+            yo.innerHTML = "👤<div class='num-silla'>1</div>";
+        }
     }
-}
 
-function ver(id) { document.getElementById(id).classList.toggle('open'); }
-
-function recarga() { alert("Oro sumado"); ver('p-banco'); }
-
-function animar(emoji) {
-    const capa = document.getElementById('capa-animada');
-    const div = document.createElement('div');
-    div.innerHTML = `<span style="font-size:100px">${emoji}</span>`;
-    capa.appendChild(div);
-    ver('p-regalo');
-    setTimeout(() => div.remove(), 2000);
-}
+    function toggleSpk() {
+        spkStatus = !spkStatus;
+        const btn = document.getElementById('btn-spk');
+        btn.innerText = spkStatus ? "🔊 BOCINA: ON" : "🔇 BOCINA: MUTE";
+        btn.style.opacity = spkStatus ? "1" : "0.5";
+    }
 </script>
 </body>
 </html>
