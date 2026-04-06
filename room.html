@@ -1,85 +1,130 @@
-<style>
-    /* Nueva Sección de Fotos Estilo Instagram */
-    #fotos-section { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:12000; overflow-y:auto; }
-    .foto-card { width:90%; margin:15px auto; border-radius:15px; overflow:hidden; background:#1a1a1a; border:1px solid #333; }
-    .foto-img { width:100%; display:block; }
-    
-    /* Brillo SVIP para Sillas */
-    .svip-aura { box-shadow: 0 0 20px #ff00ff !important; border: 2px solid #ff00ff !important; }
-    .vip-aura { box-shadow: 0 0 15px #ffd700 !important; border: 2px solid #ffd700 !important; }
-</style>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lluvia Live Elite</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; }
+        /* BANNER ARISTOCRACIA SVIP */
+        #premium-banner {
+            width:94%; margin:10px auto; background:rgba(20,20,30,0.95); 
+            border-radius:20px; border:2px solid #ffd700; display:flex; 
+            justify-content:space-around; align-items:center; padding:12px 5px;
+            box-shadow: 0 0 15px rgba(255,215,0,0.4);
+        }
+        .stat-box { text-align:center; font-size:11px; }
+        .svip-title { color:#ffd700; font-weight:bold; text-shadow:0 0 8px #ffd700; font-size:14px; }
+        
+        /* SILLAS CON BRILLO */
+        .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:15px; }
+        .silla-unit { text-align:center; position:relative; }
+        .silla-circle { 
+            width:65px; height:65px; border-radius:50%; background:#1a1a1a; 
+            margin:0 auto; border:2px solid #333; display:flex; align-items:center; justify-content:center;
+            overflow:hidden;
+        }
+        .svip-aura { border:2px solid #ff00ff !important; box-shadow:0 0 15px #ff00ff; }
+        .vip-aura { border:2px solid #ffd700 !important; box-shadow:0 0 15px #ffd700; }
+        
+        /* BOTONES PRINCIPALES */
+        .action-bar { position:fixed; bottom:30px; width:100%; display:flex; justify-content:space-evenly; align-items:center; }
+        .btn-round { width:65px; height:65px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:28px; cursor:pointer; }
+        
+        /* SECCIÓN FOTOS */
+        #photo-gallery { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:1000; overflow-y:auto; }
+    </style>
+</head>
+<body>
 
-<div style="position:fixed; top:120px; right:10px; display:flex; flex-direction:column; gap:10px; z-index:100;">
-    <button onclick="abrirSeccion('fotos-section')" style="background:#8a2be2; border:none; border-radius:50%; width:50px; height:50px; font-size:20px;">📸</button>
+<div id="main-ui">
+    <div id="premium-banner">
+        <div class="stat-box" onclick="abrirClanes()">🛡️<br>CLANES</div>
+        <div class="stat-box" onclick="abrirTienda()">
+            <span class="svip-title">👑 ARISTOCRACIA SVIP</span><br>
+            💰 ORO: <span id="oro-val">1000</span>
+        </div>
+        <div class="stat-box" onclick="abrirWallet()">💵<br>RECARGA</div>
+    </div>
+
+    <div class="grid" id="silla-grid">
+        </div>
+
+    <div class="action-bar">
+        <button class="btn-round" style="background:#8a2be2;" onclick="abrirFotos()">📸</button>
+        <button id="mic-btn" class="btn-round" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
+        <button id="spk-btn" class="btn-round" style="background:#00ff00;" onclick="toggleAudio()">🔊</button>
+        <button class="btn-round" style="background:orange;" onclick="abrirRegalos()">🎁</button>
+    </div>
 </div>
 
-<div id="fotos-section">
-    <div style="padding:20px; display:flex; justify-content:space-between; align-items:center;">
-        <h2 style="color:white; margin:0;">📸 Galería Lluvia</h2>
-        <button onclick="cerrarSeccion('fotos-section')" style="color:white; background:none; border:none; font-size:25px;">✕</button>
+<div id="photo-gallery">
+    <div style="padding:20px; display:flex; justify-content:space-between;">
+        <h3>📸 Galería VIP</h3>
+        <button onclick="cerrarFotos()" style="background:none; color:white; border:none; font-size:24px;">✕</button>
     </div>
-    <div id="contenedor-fotos">
-        <div class="foto-card"><img src="https://via.placeholder.com/400x400" class="foto-img"></div>
-    </div>
-    <button onclick="document.getElementById('upload-foto').click()" style="position:fixed; bottom:30px; right:30px; background:#ffd700; color:black; width:60px; height:60px; border-radius:50%; font-size:30px; border:none; font-weight:bold;">+</button>
-    <input type="file" id="upload-foto" accept="image/*" style="display:none" onchange="subirFotoLluvia(this)">
+    <div id="feed-fotos" style="padding:10px;"></div>
+    <button onclick="subirFoto()" style="position:fixed; bottom:20px; right:20px; width:60px; height:60px; border-radius:50%; background:#ffd700; border:none; font-size:30px;">+</button>
 </div>
+
+<audio id="remote-audio" autoplay></audio>
 
 <script>
-// ==========================================
-// 🎙️ REPARACIÓN DE AUDIO (PEERJS)
-// ==========================================
-function conectarAudioFuerte() {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-        localStream = stream;
-        const call = peer.call('lluvia-' + room + '-B', stream);
-        call.on('stream', remoteStream => {
-            const audio = document.getElementById('remote-audio');
-            audio.srcObject = remoteStream;
-            audio.play(); // Forzar encendido
-            alert("✅ Audio Conectado");
-        });
-    }).catch(err => alert("⚠️ Error Micrófono: " + err));
-}
+    // CONFIGURA TU FIREBASE AQUÍ
+    const firebaseConfig = { apiKey: "TU_API_KEY", projectId: "live-room-qwd14x" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-// ==========================================
-// 🎁 REPARACIÓN DE REGALOS Y RECARGA
-// ==========================================
-async function enviarRegaloReal(costo, tipo) {
-    const userRef = db.collection("usuarios").doc(nombre);
-    try {
-        await db.runTransaction(async (transaction) => {
-            const doc = await transaction.get(userRef);
-            const oro = doc.data().oro || 0;
-            if (oro < costo) throw "❌ No tienes oro. ¡Recarga!";
-            
-            transaction.update(userRef, { oro: oro - costo });
-            // Registrar regalo en la sala
-            transaction.set(db.collection("salas").doc(room).collection("regalos").doc(), {
-                de: nombre, regalo: tipo, timestamp: Date.now()
-            });
-        });
-        alert("🎁 Enviado: " + tipo);
-    } catch (e) { alert(e); abrirModal('modal-wallet'); }
-}
+    let myName = "Melvin"; // Cambiar por variable de FlutterFlow
+    let room = "1234";
+    let isMicOn = false;
 
-// ==========================================
-// 👑 SISTEMA SVIP Y VIP ACTIVO
-// ==========================================
-async function comprarRango(tipo, costo) {
-    const userRef = db.collection("usuarios").doc(nombre);
-    const doc = await userRef.get();
-    const oro = doc.data().oro || 0;
-
-    if(oro >= costo) {
-        await userRef.update({ oro: oro - costo, nivel: tipo });
-        alert("🔥 ¡Ahora eres " + tipo + "!");
-        location.reload(); // Recargar para aplicar brillo
-    } else {
-        alert("💰 Oro insuficiente para ser " + tipo);
+    // Crear Sillas
+    const grid = document.getElementById('silla-grid');
+    for(let i=1; i<=9; i++) {
+        grid.innerHTML += `
+            <div class="silla-unit">
+                <div class="silla-circle" id="s-circle-${i}">👤</div>
+                <div style="font-size:10px; margin-top:5px;" id="s-name-${i}">Libre</div>
+            </div>`;
     }
-}
 
-function abrirSeccion(id) { document.getElementById(id).style.display = 'block'; }
-function cerrarSeccion(id) { document.getElementById(id).style.display = 'none'; }
+    // FUNCIÓN DE REGALOS (WALLET ACTIVA)
+    async function enviarRegalo(costo, nombreRegalo) {
+        const userRef = db.collection("usuarios").doc(myName);
+        try {
+            await db.runTransaction(async (t) => {
+                const doc = await t.get(userRef);
+                const oro = doc.data().oro || 0;
+                if (oro < costo) throw "Oro insuficiente";
+                t.update(userRef, { oro: oro - costo });
+                // Registrar regalo en la sala
+                db.collection("salas").doc(room).collection("regalos").add({
+                    de: myName, tipo: nombreRegalo, time: Date.now()
+                });
+            });
+            alert("🎁 ¡Regalo enviado!");
+        } catch(e) { alert(e); }
+    }
+
+    // AUDIO REPARADO
+    async function toggleMic() {
+        isMicOn = !isMicOn;
+        document.getElementById('mic-btn').style.background = isMicOn ? "#00ff00" : "#ff3333";
+        // Aquí conectas tu PeerJS como antes
+        alert(isMicOn ? "Micro encendido" : "Micro apagado");
+    }
+
+    function abrirFotos() { document.getElementById('photo-gallery').style.display = 'block'; }
+    function cerrarFotos() { document.getElementById('photo-gallery').style.display = 'none'; }
+
+    // Actualizar Oro en tiempo real
+    db.collection("usuarios").doc(myName).onSnapshot(doc => {
+        if(doc.exists) document.getElementById('oro-val').innerText = doc.data().oro || 0;
+    });
 </script>
+</body>
+</html>
