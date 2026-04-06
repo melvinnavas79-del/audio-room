@@ -1,220 +1,82 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lluvia Live PRO</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Lluvia Live - Store</title>
+    <style>
+        :root { --gold: #ffd700; --bg: #0b0015; }
+        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; height: 100vh; }
 
-<style>
-:root { --gold:#ffd700; --red:#ff004c; --blue:#0084ff; }
+        /* ... (Mantenemos tu diseño de PK y Sillas igual) ... */
+        .pk-container { width: 100%; height: 40px; display: flex; border-bottom: 2px solid var(--gold); background: #222; }
+        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px; }
+        .silla { background: rgba(255,255,255,0.1); width: 60px; height: 60px; border-radius: 50%; margin: 0 auto; border: 1px solid #444; }
 
-body { margin:0; background:#0b0015; color:white; font-family:sans-serif; overflow:hidden; }
+        /* NAVEGACIÓN INFERIOR */
+        .footer-nav { position: fixed; bottom: 60px; width: 100%; display: flex; justify-content: center; gap: 20px; z-index: 100; }
+        .btn-action { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--gold); background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 25px; cursor: pointer; }
+        .btn-main { width: 80px; height: 80px; background: red; font-size: 35px; }
 
-#pantalla-inicio {
-position:fixed; inset:0; background:#0b0015; z-index:9999;
-display:flex; flex-direction:column; align-items:center; justify-content:center;
-}
+        /* --- MENÚ DE REGALOS ESTILO VOLA --- */
+        #gift-menu {
+            position: fixed; bottom: -100%; left: 0; width: 100%; height: 40%;
+            background: rgba(15, 0, 30, 0.95); border-top: 3px solid var(--gold);
+            border-radius: 20px 20px 0 0; transition: 0.4s ease; z-index: 1000;
+            padding: 20px; box-sizing: border-box;
+        }
+        #gift-menu.open { bottom: 0; }
 
-.logo { color:gold; font-size:30px; margin-bottom:20px; }
-
-.input-sala {
-padding:15px; border-radius:10px; border:2px solid gold;
-background:#111; color:white;
-}
-
-.btn-entrar {
-margin-top:10px; padding:15px 40px; border:none;
-background:gold; border-radius:30px;
-}
-
-/* SALA */
-#sala-audio { display:none; }
-
-.header-clanes { display:flex; }
-.clan { flex:1; text-align:center; padding:10px; }
-
-.grid-usuarios {
-display:grid; grid-template-columns:repeat(3,1fr);
-gap:20px; padding:20px;
-}
-
-.perfil {
-width:70px;height:70px;border-radius:50%;
-background:#222; display:flex;align-items:center;justify-content:center;
-margin:auto; position:relative;
-}
-
-.num-silla {
-position:absolute; bottom:-5px;
-background:gold; color:black; border-radius:10px;
-font-size:10px; padding:2px 5px;
-}
-
-/* BOTONES */
-.controles { position:absolute; bottom:100px; width:100%; text-align:center; }
-
-.iconos-extra { display:flex; justify-content:center; gap:20px; }
-
-.circulo-btn {
-width:60px;height:60px;border-radius:50%;
-border:2px solid gold; display:flex;align-items:center;justify-content:center;
-background:#1a1a1a;
-}
-
-/* MODAL */
-.modal {
-display:none; position:fixed; top:50%; left:50%;
-transform:translate(-50%,-50%);
-background:#111; border:2px solid gold;
-padding:20px; border-radius:15px;
-text-align:center;
-}
-</style>
+        .gift-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 10px; }
+        .gift-item { text-align: center; font-size: 10px; color: var(--gold); }
+        .gift-icon { font-size: 30px; display: block; margin-bottom: 5px; }
+        
+        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 20px; color: white; }
+    </style>
 </head>
-
 <body>
 
-<!-- PANTALLA INICIO -->
-<div id="pantalla-inicio">
-<div class="logo">LLUVIA LIVE</div>
-<input id="id-input" class="input-sala" placeholder="ID sala">
-<button class="btn-entrar" onclick="abrirSala()">Entrar</button>
-</div>
+    <div class="pk-container">
+        <div style="background:blue; width:50%; display:flex; align-items:center; justify-content:center;">CLAN A</div>
+        <div style="background:red; width:50%; display:flex; align-items:center; justify-content:center;">CLAN B</div>
+    </div>
 
-<!-- SALA -->
-<div id="sala-audio">
-<div class="header-clanes">
-<div class="clan" style="background:blue">CLAN A</div>
-<div class="clan" style="background:red">CLAN B</div>
-</div>
+    <div class="grid-sala">
+        <div class="silla"></div><div class="silla"></div><div class="silla"></div>
+        <div class="silla"></div><div class="silla"></div><div class="silla"></div>
+    </div>
 
-<div style="padding:10px;">
-SALA ID: <span id="sala-display"></span> |
-💰 <span id="oro">2000</span>
-</div>
+    <div class="footer-nav">
+        <div class="btn-action" onclick="alert('Abriendo Banco')">🏦</div>
+        <div class="btn-action btn-main" onclick="toggleGifts()">🎁</div>
+        <div class="btn-action" onclick="alert('Abriendo VIP')">👑</div>
+    </div>
 
-<div class="grid-usuarios">
-<div class="perfil">👤<div class="num-silla">1</div></div>
-<div class="perfil">👤<div class="num-silla">2</div></div>
-<div class="perfil">👤<div class="num-silla">3</div></div>
-</div>
+    <div id="gift-menu">
+        <div class="close-btn" onclick="toggleGifts()">✕</div>
+        <h3 style="margin: 0; font-size: 16px;">Enviar Regalos</h3>
+        <div class="gift-grid">
+            <div class="gift-item" onclick="enviarRegalo('Rosa', 10)"><span class="gift-icon">🌹</span>10</div>
+            <div class="gift-item" onclick="enviarRegalo('Anillo', 500)"><span class="gift-icon">💍</span>500</div>
+            <div class="gift-item" onclick="enviarRegalo('Castillo', 5000)"><span class="gift-icon">🏰</span>5k</div>
+            <div class="gift-item" onclick="enviarRegalo('Cohete', 10000)"><span class="gift-icon">🚀</span>10k</div>
+            <div class="gift-item" onclick="enviarRegalo('Corona', 2000)"><span class="gift-icon">👑</span>2k</div>
+            <div class="gift-item" onclick="enviarRegalo('Carro', 8000)"><span class="gift-icon">🏎️</span>8k</div>
+            <div class="gift-item" onclick="enviarRegalo('Yate', 15000)"><span class="gift-icon">🛥️</span>15k</div>
+            <div class="gift-item" onclick="enviarRegalo('León', 30000)"><span class="gift-icon">🦁</span>30k</div>
+        </div>
+    </div>
 
-<div class="controles">
-<div class="iconos-extra">
-<div class="circulo-btn" onclick="abrirBanco()">🏦</div>
-<div class="circulo-btn" style="background:red;" onclick="abrirRegalos()">🎁</div>
-<div class="circulo-btn" onclick="abrirVIP()">👑</div>
-</div>
+    <script>
+        function toggleGifts() {
+            document.getElementById('gift-menu').classList.toggle('open');
+        }
 
-<br>
-
-<button onclick="activarAudio()" style="padding:10px 20px;border-radius:20px;">
-🎤 Activar Micrófono
-</button>
-
-</div>
-</div>
-
-<!-- MODAL -->
-<div id="modal" class="modal"></div>
-
-<script>
-
-// 🔓 ENTRAR A SALA
-function abrirSala(){
-let id = document.getElementById("id-input").value;
-if(!id) return alert("Pon ID");
-
-document.getElementById("sala-display").innerText = id;
-document.getElementById("pantalla-inicio").style.display="none";
-document.getElementById("sala-audio").style.display="block";
-}
-
-// 🎤 AUDIO
-async function activarAudio(){
-try{
-await navigator.mediaDevices.getUserMedia({audio:true});
-alert("Micrófono activado 🎤");
-}catch(e){
-alert("Permite el micrófono");
-}
-}
-
-// 🏦 BANCO
-function abrirBanco(){
-mostrar("Banco próximamente 💰");
-}
-
-// 👑 VIP
-function abrirVIP(){
-mostrar("VIP próximamente 👑");
-}
-
-// 🎁 REGALOS
-const regalos = [
- {nombre:"🌹 Rosa", precio:100},
- {nombre:"💎 Diamante", precio:500},
- {nombre:"🚗 Carro", precio:1000}
-];
-
-function abrirRegalos(){
-let html="<h3>Enviar regalo</h3>";
-
-regalos.forEach(r=>{
-html += `<button onclick="enviar('${r.nombre}',${r.precio})"
-style="display:block;margin:10px;padding:10px;">
-${r.nombre} - ${r.precio}
-</button>`;
-});
-
-html += `<br><button onclick="cerrar()">Cerrar</button>`;
-
-document.getElementById("modal").innerHTML = html;
-document.getElementById("modal").style.display = "block";
-}
-
-function enviar(nombre,precio){
-let oro = parseInt(document.getElementById("oro").innerText);
-
-if(oro < precio){
-alert("No tienes oro");
-return;
-}
-
-oro -= precio;
-document.getElementById("oro").innerText = oro;
-
-animacion(nombre);
-cerrar();
-}
-
-// 🎉 ANIMACIÓN
-function animacion(nombre){
-let div = document.createElement("div");
-div.innerText = nombre;
-div.style.position="absolute";
-div.style.top="50%";
-div.style.left="50%";
-div.style.transform="translate(-50%,-50%)";
-div.style.fontSize="30px";
-div.style.color="gold";
-
-document.body.appendChild(div);
-
-setTimeout(()=>div.remove(),2000);
-}
-
-// MODAL
-function mostrar(txt){
-document.getElementById("modal").innerHTML = txt + "<br><br><button onclick='cerrar()'>OK</button>";
-document.getElementById("modal").style.display = "block";
-}
-
-function cerrar(){
-document.getElementById("modal").style.display="none";
-}
-
-</script>
-
+        function enviarRegalo(nombre, costo) {
+            alert("Has enviado un " + nombre + " por " + costo + " de oro.");
+            toggleGifts();
+            // Aquí es donde el contacto de Pakistán conectará la animación SVGA
+        }
+    </script>
 </body>
 </html>
