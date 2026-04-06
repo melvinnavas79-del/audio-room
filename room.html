@@ -1,82 +1,169 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Lluvia Live - Store</title>
-    <style>
-        :root { --gold: #ffd700; --bg: #0b0015; }
-        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; height: 100vh; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Lluvia Live PRO</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 
-        /* ... (Mantenemos tu diseño de PK y Sillas igual) ... */
-        .pk-container { width: 100%; height: 40px; display: flex; border-bottom: 2px solid var(--gold); background: #222; }
-        .grid-sala { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px; }
-        .silla { background: rgba(255,255,255,0.1); width: 60px; height: 60px; border-radius: 50%; margin: 0 auto; border: 1px solid #444; }
+<style>
+:root { --gold:#ffd700; --blue-pk:#0084ff; --red-pk:#ff004c; --dark-bg:#0b0015; }
 
-        /* NAVEGACIÓN INFERIOR */
-        .footer-nav { position: fixed; bottom: 60px; width: 100%; display: flex; justify-content: center; gap: 20px; z-index: 100; }
-        .btn-action { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--gold); background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 25px; cursor: pointer; }
-        .btn-main { width: 80px; height: 80px; background: red; font-size: 35px; }
+body { margin:0; background:var(--dark-bg); color:white; font-family: 'Segoe UI', Roboto, sans-serif; height:100vh; overflow:hidden; position: fixed; width: 100%; }
 
-        /* --- MENÚ DE REGALOS ESTILO VOLA --- */
-        #gift-menu {
-            position: fixed; bottom: -100%; left: 0; width: 100%; height: 40%;
-            background: rgba(15, 0, 30, 0.95); border-top: 3px solid var(--gold);
-            border-radius: 20px 20px 0 0; transition: 0.4s ease; z-index: 1000;
-            padding: 20px; box-sizing: border-box;
-        }
-        #gift-menu.open { bottom: 0; }
+/* BARRA PK MEJORADA */
+.pk-container { display:flex; height:45px; position: relative; border-bottom: 2px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+.pk-team { width:50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; text-shadow: 1px 1px 2px black; }
+.pk-blue { background: linear-gradient(90deg, #004e92, var(--blue-pk)); }
+.pk-red { background: linear-gradient(90deg, var(--red-pk), #8e0000); }
+.pk-timer { position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); background: #000; border: 1px solid var(--gold); padding: 2px 10px; border-radius: 12px; font-size: 11px; z-index: 5; color: var(--gold); }
 
-        .gift-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 10px; }
-        .gift-item { text-align: center; font-size: 10px; color: var(--gold); }
-        .gift-icon { font-size: 30px; display: block; margin-bottom: 5px; }
-        
-        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 20px; color: white; }
-    </style>
+/* PERFIL CABECERA */
+.header-card { background: rgba(255,255,255,0.05); width:92%; margin:12px auto; padding:12px; border-radius:18px; border:1px solid rgba(255,215,0,0.3); display:flex; align-items: center; gap:12px; }
+.avatar-frame { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold); overflow: hidden; background: #333; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+
+/* SILLAS DE AUDIO */
+.grid-sala { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:15px; margin-top: 10px; }
+.silla { background: rgba(255,255,255,0.08); width:65px; height:65px; border-radius:50%; display:flex; flex-direction: column; align-items:center; justify-content:center; border: 1px solid rgba(255,255,255,0.1); position: relative; }
+.silla-active { border-color: #00ff00; box-shadow: 0 0 10px #00ff00; }
+.silla-num { position: absolute; bottom: -5px; background: var(--gold); color: black; font-size: 10px; padding: 1px 5px; border-radius: 5px; font-weight: bold; }
+
+/* BOTONES DE ACCIÓN */
+.footer-nav { position:absolute; bottom:90px; width:100%; display:flex; justify-content:center; align-items: center; gap:25px; z-index: 10; }
+.btn-action { width:62px; height:62px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; background:#1a1a1a; border:2px solid var(--gold); box-shadow: 0 5px 15px rgba(0,0,0,0.6); transition: 0.1s; }
+.btn-action:active { transform: scale(0.9); }
+.btn-main { width:85px; height:85px; background: linear-gradient(135deg, #ff0000, #b30000); border-width: 3px; font-size: 38px; }
+
+/* BOTÓN MICRÓFONO */
+.mic-container { position: absolute; bottom: 15px; width: 100%; display: flex; justify-content: center; }
+.mic-btn { background: #111; border: 2px solid var(--gold); padding: 10px 25px; border-radius: 25px; font-weight: bold; color: var(--gold); display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.3s; }
+.mic-on { background: #ff004c; color: white; border-color: white; box-shadow: 0 0 15px #ff004c; }
+
+/* PANEL DE REGALOS (ESTILO VOLA) */
+.gift-panel { position: fixed; bottom: -100%; left: 0; width: 100%; height: 45%; background: rgba(15, 0, 35, 0.98); border-top: 3px solid var(--gold); border-radius: 25px 25px 0 0; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; padding: 20px; box-sizing: border-box; }
+.gift-panel.open { bottom: 0; }
+.gift-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.gift-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; overflow-y: auto; height: 80%; }
+.gift-card { background: rgba(255,255,255,0.05); padding: 10px 5px; border-radius: 12px; text-align: center; border: 1px solid transparent; }
+.gift-card:active { border-color: var(--gold); background: rgba(255,215,0,0.1); }
+.gift-icon { font-size: 30px; display: block; margin-bottom: 5px; }
+.gift-price { font-size: 11px; color: var(--gold); font-weight: bold; }
+
+/* ANIMACIÓN REGALO */
+.gift-anim { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); z-index: 500; pointer-events: none; text-align: center; animation: popUp 1.5s forwards; }
+@keyframes popUp { 0% { transform: translate(-50%, 0%) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -60%) scale(1.2); opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(-50%, -100%) scale(1); opacity: 0; } }
+</style>
 </head>
+
 <body>
 
-    <div class="pk-container">
-        <div style="background:blue; width:50%; display:flex; align-items:center; justify-content:center;">CLAN A</div>
-        <div style="background:red; width:50%; display:flex; align-items:center; justify-content:center;">CLAN B</div>
+<div class="pk-container">
+    <div class="pk-team pk-blue">CLAN NAVAS: 0</div>
+    <div class="pk-team pk-red">CLAN RIVAL: 0</div>
+    <div class="pk-timer" id="pk-timer">05:00</div>
+</div>
+
+<div class="header-card">
+    <div class="avatar-frame">👤</div>
+    <div style="flex-grow: 1;">
+        <b style="font-size: 18px;">Melvin</b><br>
+        <span style="color:var(--gold); font-weight: bold;">💰 <span id="oro-val">2000</span></span>
     </div>
+    <div style="font-size: 22px; cursor: pointer;" onclick="alert('Admin Panel')">⚙️</div>
+</div>
 
-    <div class="grid-sala">
-        <div class="silla"></div><div class="silla"></div><div class="silla"></div>
-        <div class="silla"></div><div class="silla"></div><div class="silla"></div>
+<div class="grid-sala">
+    <div class="silla silla-active" id="silla-1">🎤<div class="silla-num">1</div></div>
+    <div class="silla">👤<div class="silla-num">2</div></div>
+    <div class="silla">👤<div class="silla-num">3</div></div>
+    <div class="silla">👤<div class="silla-num">4</div></div>
+    <div class="silla">👤<div class="silla-num">5</div></div>
+    <div class="silla">👤<div class="silla-num">6</div></div>
+    <div class="silla">👤<div class="silla-num">7</div></div>
+    <div class="silla">👤<div class="silla-num">8</div></div>
+    <div class="silla">👤<div class="silla-num">9</div></div>
+</div>
+
+<div class="footer-nav">
+    <div class="btn-action" style="border-color:#00ff00;" onclick="alert('Agentes y Recargas')">🏦</div>
+    <div class="btn-action btn-main" onclick="toggleGifts()">🎁</div>
+    <div class="btn-action" style="background:#1a237e;" onclick="alert('Tienda VIP')">👑</div>
+</div>
+
+<div class="mic-container">
+    <div class="mic-btn" id="mic-trigger" onclick="toggleMic()">🎤 Activar Mic</div>
+</div>
+
+<div id="gift-panel" class="gift-panel">
+    <div class="gift-header">
+        <b style="color:var(--gold)">TIENDA DE REGALOS</b>
+        <span onclick="toggleGifts()" style="font-size: 24px; cursor: pointer;">✕</span>
     </div>
-
-    <div class="footer-nav">
-        <div class="btn-action" onclick="alert('Abriendo Banco')">🏦</div>
-        <div class="btn-action btn-main" onclick="toggleGifts()">🎁</div>
-        <div class="btn-action" onclick="alert('Abriendo VIP')">👑</div>
+    <div class="gift-grid">
+        <div class="gift-card" onclick="enviarRegalo('Rosa', 10, '🌹')"><span class="gift-icon">🌹</span><span class="gift-price">10</span></div>
+        <div class="gift-card" onclick="enviarRegalo('Diamante', 500, '💎')"><span class="gift-icon">💎</span><span class="gift-price">500</span></div>
+        <div class="gift-card" onclick="enviarRegalo('Anillo', 1000, '💍')"><span class="gift-icon">💍</span><span class="gift-price">1k</span></div>
+        <div class="gift-card" onclick="enviarRegalo('Carro', 5000, '🏎️')"><span class="gift-icon">🏎️</span><span class="gift-price">5k</span></div>
+        <div class="gift-card" onclick="enviarRegalo('Avión', 10000, '✈️')"><span class="gift-icon">✈️</span><span class="gift-price">10k</span></div>
+        <div class="gift-card" onclick="enviarRegalo('Castillo', 25000, '🏰')"><span class="gift-icon">🏰</span><span class="gift-price">25k</span></div>
+        <div class="gift-card" onclick="enviarRegalo('León', 50000, '🦁')"><span class="gift-icon">🦁</span><span class="gift-price">50k</span></div>
+        <div class="gift-card" onclick="enviarRegalo('Cohete', 100000, '🚀')"><span class="gift-icon">🚀</span><span class="gift-price">100k</span></div>
     </div>
+</div>
 
-    <div id="gift-menu">
-        <div class="close-btn" onclick="toggleGifts()">✕</div>
-        <h3 style="margin: 0; font-size: 16px;">Enviar Regalos</h3>
-        <div class="gift-grid">
-            <div class="gift-item" onclick="enviarRegalo('Rosa', 10)"><span class="gift-icon">🌹</span>10</div>
-            <div class="gift-item" onclick="enviarRegalo('Anillo', 500)"><span class="gift-icon">💍</span>500</div>
-            <div class="gift-item" onclick="enviarRegalo('Castillo', 5000)"><span class="gift-icon">🏰</span>5k</div>
-            <div class="gift-item" onclick="enviarRegalo('Cohete', 10000)"><span class="gift-icon">🚀</span>10k</div>
-            <div class="gift-item" onclick="enviarRegalo('Corona', 2000)"><span class="gift-icon">👑</span>2k</div>
-            <div class="gift-item" onclick="enviarRegalo('Carro', 8000)"><span class="gift-icon">🏎️</span>8k</div>
-            <div class="gift-item" onclick="enviarRegalo('Yate', 15000)"><span class="gift-icon">🛥️</span>15k</div>
-            <div class="gift-item" onclick="enviarRegalo('León', 30000)"><span class="gift-icon">🦁</span>30k</div>
-        </div>
-    </div>
+<script>
+// VARIABLES
+let micActivo = false;
 
-    <script>
-        function toggleGifts() {
-            document.getElementById('gift-menu').classList.toggle('open');
-        }
+// 🎤 MICRÓFONO
+async function toggleMic(){
+    micActivo = !micActivo;
+    const btn = document.getElementById("mic-trigger");
+    const silla = document.getElementById("silla-1");
 
-        function enviarRegalo(nombre, costo) {
-            alert("Has enviado un " + nombre + " por " + costo + " de oro.");
-            toggleGifts();
-            // Aquí es donde el contacto de Pakistán conectará la animación SVGA
-        }
-    </script>
+    if(micActivo){
+        btn.innerText = "🔴 HABLANDO...";
+        btn.classList.add("mic-on");
+        silla.classList.add("silla-active");
+        try { await navigator.mediaDevices.getUserMedia({audio:true}); } catch(e) { alert("Mic bloqueado"); }
+    } else {
+        btn.innerText = "🎤 Activar Mic";
+        btn.classList.remove("mic-on");
+        silla.classList.remove("silla-active");
+    }
+}
+
+// 🎁 REGALOS
+function toggleGifts() {
+    document.getElementById("gift-panel").classList.toggle("open");
+}
+
+function enviarRegalo(nombre, valor, emoji) {
+    let oroTxt = document.getElementById("oro-val");
+    let oro = parseInt(oroTxt.innerText.replace(',', ''));
+
+    if(oro < valor) {
+        alert("¡Necesitas más oro, Melvin!");
+        return;
+    }
+
+    oro -= valor;
+    oroTxt.innerText = oro.toLocaleString();
+    
+    toggleGifts();
+    lanzarAnimacion(nombre, emoji);
+}
+
+function lanzarAnimacion(nombre, emoji) {
+    const anim = document.createElement("div");
+    anim.className = "gift-anim";
+    anim.innerHTML = `<span style="font-size:60px">${emoji}</span><br><b>${nombre}</b>`;
+    document.body.appendChild(anim);
+    
+    // Aquí puedes sumar puntos al PK automáticamente
+    setTimeout(() => anim.remove(), 1500);
+}
+</script>
+
 </body>
 </html>
