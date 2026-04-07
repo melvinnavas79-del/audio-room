@@ -2,106 +2,212 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live Fix</title>
-    <script src="https://resource.zegocloud.com/prebuilt/ZegoExpressWebRTC.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Lluvia Live PRO v2.0</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; display:flex; flex-direction:column; height:100vh; }
+        :root { --gold: #ffd700; --vip: #ff00ff; --king: #ff4500; }
+        body { margin:0; background:#0b001a; color:white; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow:hidden; height:100vh; }
         
-        /* Ajuste para que nada se corte en Android */
-        #main-container { flex: 1; display: flex; flex-direction: column; padding-bottom: 100px; overflow-y: auto; }
+        /* LOGIN & REGISTRO REAL */
+        #login-screen { position:fixed; inset:0; background:linear-gradient(135deg, #1a0033 0%, #000 100%); z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .input-group { width:80%; margin-bottom:15px; }
+        input { width:100%; padding:15px; border-radius:12px; border:1px solid #444; background:#1a1a1a; color:white; box-sizing:border-box; font-size:16px; }
+        .btn-entrar { width:80%; padding:18px; border-radius:30px; border:none; font-weight:bold; font-size:16px; cursor:pointer; margin:5px; transition:0.3s; }
 
-        #premium-banner { width:90%; margin:10px auto; background:rgba(30,0,60,0.8); border-radius:20px; border:2px solid #ffd700; display:flex; justify-content:space-around; align-items:center; padding:10px; }
+        /* HEADER INFO (BILLETERA & ARISTOCRACIA) */
+        .header-pro { display:flex; justify-content:space-between; align-items:center; padding:15px; background:rgba(0,0,0,0.5); border-bottom:1px solid #333; }
+        .badge { background:var(--gold); color:black; padding:4px 10px; border-radius:10px; font-weight:bold; font-size:12px; }
+        .wallet { display:flex; align-items:center; gap:5px; color:var(--gold); font-weight:bold; }
 
-        #sillas-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:15px; }
-        .silla-wrapper { text-align:center; }
-        .silla { width:65px; height:65px; border-radius:50%; background:#1e1e2e; border:2px solid #444; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:24px; }
-        .silla.activa { border-color:#00ff00; box-shadow: 0 0 15px #00ff00; }
+        /* SILLAS Y CLANES */
+        .main-room { flex:1; overflow-y:auto; padding-bottom:120px; }
+        .sillas-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; }
+        .silla-box { position:relative; text-align:center; }
+        .avatar { width:75px; height:75px; border-radius:50%; background:#1e1e2e; border:3px solid #444; display:flex; align-items:center; justify-content:center; margin:auto; position:relative; }
+        .avatar.talking { border-color:#00ff00; box-shadow: 0 0 15px #00ff00; }
+        .clan-tag { position:absolute; top:-10px; right:0; background:red; font-size:10px; padding:2px 5px; border-radius:5px; border:1px solid white; }
 
-        /* BARRA SUBIDA PARA ANDROID */
-        .action-bar { position: fixed; bottom: 20px; width: 100%; display: flex; justify-content: space-around; padding-bottom: 10px; z-index: 100; }
-        .btn-round { width:55px; height:55px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        /* BARRA DE ACCIONES (SUBIDA PARA ANDROID) */
+        .action-bar { position:fixed; bottom:25px; left:0; width:100%; display:flex; justify-content:space-around; align-items:center; padding-bottom:15px; z-index:100; }
+        .btn-action { width:55px; height:55px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 5px 15px rgba(0,0,0,0.5); }
+        
+        /* REELS / ESTADOS */
+        .reels-btn { position:absolute; top:80px; right:15px; background:rgba(255,255,255,0.1); border-radius:15px; padding:10px; border:1px solid #555; }
 
-        #login { position:fixed; inset:0; background:#0b001a; z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-        .input-box { padding:15px; width:80%; border-radius:15px; border:1px solid #444; background:#1a1a1a; color:white; margin-bottom:10px; text-align:center; }
+        /* NOTIFICACIONES EN TIEMPO REAL */
+        #room-logs { height:60px; overflow:hidden; font-size:12px; color:#aaa; margin:10px 20px; background:rgba(0,0,0,0.3); border-radius:10px; padding:10px; }
     </style>
 </head>
 <body>
 
-<div id="login">
-    <h1 style="color:gold;">☔ LLUVIA LIVE</h1>
-    <input type="text" id="user-name" class="input-box" placeholder="Tu Apodo">
-    <input type="text" id="room-id" class="input-box" placeholder="ID Sala (ej: 100)">
-    <button onclick="conectarZego()" style="background:#00ff00; padding:15px 50px; border-radius:30px; border:none; font-weight:bold;">ENTRAR Y ACTIVAR AUDIO</button>
-</div>
-
-<div id="main-container">
-    <div id="premium-banner">
-        <div>👑 <span style="color:gold;">SVIP</span></div>
-        <div>💰 ORO: <span id="oro-val" style="color:gold;">3800</span></div>
+<div id="login-screen">
+    <h1 style="color:var(--gold); letter-spacing:2px; font-size:35px;">☔ LLUVIA LIVE</h1>
+    <div class="input-group">
+        <input type="text" id="nombre" placeholder="Apodo de Usuario">
     </div>
-    <div id="sillas-grid"></div>
+    <div class="input-group">
+        <input type="text" id="clan-name" placeholder="Tu Clan (Opcional)">
+    </div>
+    <div class="input-group">
+        <input type="text" id="room" placeholder="ID de Sala VIP">
+    </div>
+    <button onclick="iniciar(true)" class="btn-entrar" style="background:var(--gold); color:black;">👑 CREAR COMO REY</button>
+    <button onclick="iniciar(false)" class="btn-entrar" style="background:white; color:black;">🚪 ENTRAR A SALA</button>
 </div>
 
-<div class="action-bar">
-    <button class="btn-round" style="background:#8a2be2;">🎬</button>
-    <button class="btn-round" style="background:#00aaff;">📸</button>
-    <button id="mic-btn" class="btn-round" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
-    <button class="btn-round" style="background:orange;">🎁</button>
-    <button id="vol-btn" class="btn-round" style="background:#00ff00;" onclick="toggleVol()">🔊</button>
+<div id="app" style="display:none; flex-direction:column; height:100vh;">
+    <div class="header-pro">
+        <div id="user-aristocracia" class="badge">CABALLERO 🛡️</div>
+        <div class="wallet">💰 ORO: <span id="saldo">3800</span></div>
+        <button onclick="recargar()" style="background:var(--gold); border:none; border-radius:5px; font-weight:bold;">+</button>
+    </div>
+
+    <div id="room-logs">
+        <div>Bienvenido a Lluvia Live PRO...</div>
+    </div>
+
+    <div class="reels-btn" onclick="verReels()">🎬 Reels</div>
+
+    <div class="main-room">
+        <h2 id="roomTitle" style="font-size:18px; color:var(--gold); margin-left:20px;">SALA VIP #---</h2>
+        <div class="sillas-grid" id="sillas"></div>
+    </div>
+
+    <audio id="remoteAudio" autoplay playsinline></audio>
+
+    <div class="action-bar">
+        <button class="btn-action" style="background:#8a2be2;" title="Ver Perfil">👤</button>
+        <button id="btn-mic" class="btn-action" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
+        <button class="btn-action" style="background:var(--gold);" onclick="regaloEspecial()">🦁</button>
+        <button class="btn-action" style="background:orange;" onclick="enviarCombo()">🎁</button>
+        <button id="btn-spk" class="btn-action" style="background:#00ff00;" onclick="toggleAudio()">🔊</button>
+    </div>
 </div>
 
 <script>
-    // TUS DATOS REALES DE ZEGO
-    const appID = 249373029;
-    const server = "wss://webliveroom" + appID + "-api.zegocloud.com/ws";
-    let zg, localStream;
-    let micOn = false;
+    let peer, stream, myID, roomID, miNombre, miClan;
+    let micActivo = false;
+    let oro = 3800;
 
-    async function conectarZego() {
-        const user = document.getElementById('user-name').value || "User_" + Math.floor(Math.random()*100);
-        const room = document.getElementById('room-id').value || "100";
-        document.getElementById('login').style.display = 'none';
-
-        // Inicializar motor de audio
-        zg = new ZegoExpressEngine(appID, server);
+    async function iniciar(esRey) {
+        miNombre = document.getElementById('nombre').value || "User";
+        roomID = document.getElementById('room').value || "101";
+        miClan = document.getElementById('clan-name').value || "Sin Clan";
         
-        // Generar las sillas visuales
-        const grid = document.getElementById('sillas-grid');
-        for(let i=1; i<=9; i++) {
-            grid.innerHTML += `<div class="silla-wrapper"><div class="silla" id="s-${i}" onclick="sentarse(${i})">👤</div><div style="font-size:10px;margin-top:5px;">Vacío</div></div>`;
+        if(!document.getElementById('room').value) return alert("Pon un ID de Sala VIP");
+
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({audio: true});
+            stream.getAudioTracks()[0].enabled = false;
+        } catch(e) {
+            alert("Error: Activa el micro para entrar."); return;
         }
+
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        document.getElementById('roomTitle').innerText = "SALA VIP #" + roomID;
         
-        alert("Audio listo. Siéntate en una silla y abre el micro.");
+        if(esRey) {
+            document.getElementById('user-aristocracia').innerText = "REY 👑";
+            document.getElementById('user-aristocracia').style.background = "var(--king)";
+        }
+
+        conectarPeer(esRey);
+        crearSillas();
+        addLog(`✅ ${miNombre} ha entrado a la sala`);
     }
 
-    async function toggleMic() {
-        if (!zg) return;
-        micOn = !micOn;
-        const btn = document.getElementById('mic-btn');
-        
-        if(micOn) {
-            btn.style.background = "#00ff00";
-            // Aquí se activa el micro real del celular
-            localStream = await zg.createStream({camera: {audio: true, video: false}});
-            zg.startPublishingStream("stream_" + Date.now(), localStream);
-        } else {
-            btn.style.background = "#ff3333";
-            zg.stopPublishingStream("stream_" + Date.now());
-            zg.destroyStream(localStream);
+    function conectarPeer(esRey) {
+        myID = "lluvia-" + roomID + "-" + (esRey ? "admin" : Math.floor(Math.random()*999));
+        peer = new Peer(myID);
+
+        peer.on('open', (id) => {
+            console.log("Mi ID Peer:", id);
+            if(!esRey) llamarAlAdmin();
+        });
+
+        peer.on('call', (call) => {
+            call.answer(stream);
+            call.on('stream', (remoteStream) => {
+                document.getElementById('remoteAudio').srcObject = remoteStream;
+            });
+        });
+    }
+
+    function llamarAlAdmin() {
+        const call = peer.call("lluvia-" + roomID + "-admin", stream);
+        call.on('stream', (remoteStream) => {
+            document.getElementById('remoteAudio').srcObject = remoteStream;
+        });
+    }
+
+    function toggleMic() {
+        micActivo = !micActivo;
+        stream.getAudioTracks()[0].enabled = micActivo;
+        const btn = document.getElementById('btn-mic');
+        btn.style.background = micActivo ? "#00ff00" : "#ff3333";
+        addLog(micActivo ? "🎙️ Estás en el aire" : "🔇 Micrófono apagado");
+    }
+
+    function crearSillas() {
+        const grid = document.getElementById('sillas');
+        for(let i=1; i<=9; i++) {
+            grid.innerHTML += `
+                <div class="silla-box" onclick="sentarse(${i})">
+                    <div class="avatar" id="silla-${i}">👤</div>
+                    <div style="font-size:11px; margin-top:5px; font-weight:bold;" id="label-${i}">Vacío</div>
+                </div>`;
         }
     }
 
     function sentarse(id) {
-        document.querySelectorAll('.silla').forEach(s => s.classList.remove('activa'));
-        document.getElementById(`s-${id}`).classList.add('activa');
-        document.getElementById(`s-${id}`).innerText = "🎤";
+        const silla = document.getElementById(`silla-${id}`);
+        const label = document.getElementById(`label-${id}`);
+        
+        if(silla.classList.contains('talking')) {
+            silla.classList.remove('talking');
+            silla.innerHTML = "👤";
+            label.innerText = "Vacío";
+        } else {
+            silla.classList.add('talking');
+            silla.innerHTML = `<div class="clan-tag">${miClan}</div>🎤`;
+            label.innerText = miNombre;
+            label.style.color = "var(--gold)";
+            addLog(`🪑 ${miNombre} tomó la silla ${id}`);
+        }
     }
 
-    function toggleVol() {
-        const v = document.getElementById('vol-btn');
-        v.innerText = v.innerText === "🔊" ? "🔇" : "🔊";
-        v.style.background = v.innerText === "🔊" ? "#00ff00" : "#666";
+    function regaloEspecial() {
+        if(oro >= 1000) {
+            oro -= 1000;
+            document.getElementById('saldo').innerText = oro;
+            addLog(`🎁 ¡${miNombre} envió un LEÓN DE ORO! 🦁`);
+            alert("🦁 EFECTO ESPECIAL: ¡LEÓN EN PANTALLA!");
+        } else {
+            alert("No tienes suficiente Oro, Rey.");
+        }
+    }
+
+    function addLog(msg) {
+        const log = document.getElementById('room-logs');
+        log.innerHTML = `<div>${msg}</div>` + log.innerHTML;
+    }
+
+    function toggleAudio() {
+        const audio = document.getElementById('remoteAudio');
+        audio.muted = !audio.muted;
+        document.getElementById('btn-spk').style.background = audio.muted ? "#666" : "#00ff00";
+    }
+
+    function verReels() {
+        alert("Abriendo Lluvia Reels... Próximamente integración con fotos reales.");
+    }
+    
+    function recargar() {
+        oro += 1000;
+        document.getElementById('saldo').innerText = oro;
+        addLog("💰 Recarga exitosa: +1000 Oro");
     }
 </script>
 </body>
