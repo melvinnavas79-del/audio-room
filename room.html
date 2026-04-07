@@ -1,143 +1,146 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Lluvia Live - CP Edition</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <style>
-        :root { --gold: #ffd700; --cp-pink: #ff69b4; --neon-blue: #00f2ff; }
-        body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; height:100vh; }
-        
-        .header-pro { display:flex; justify-content:space-between; align-items:center; padding:15px; background:rgba(0,0,0,0.8); border-bottom:1px solid #444; }
-        
-        /* SISTEMA DE SILLAS CON ANILLOS C.P. */
-        .sillas-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; }
-        .avatar-container { position:relative; width:85px; height:85px; margin:auto; }
-        .avatar-frame { width:100%; height:100%; border-radius:50%; background:#1a1a2e; border:2px solid #444; overflow:hidden; display:flex; align-items:center; justify-content:center; transition: 0.3s; }
-        
-        /* ANILLO DE PAREJA (EFECTO C.P.) */
-        .cp-ring { 
-            position:absolute; top:-12px; left:50%; transform:translateX(-50%);
-            font-size:24px; filter: drop-shadow(0 0 8px var(--cp-pink));
-            display:none; z-index:10;
-        }
-        .cp-active .cp-ring { display:block; }
-        .cp-active .avatar-frame { border:3px solid var(--cp-pink); box-shadow: 0 0 15px var(--cp-pink); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Lluvia Live - CP & Audio PRO</title>
 
-        /* PANEL DE REGALOS Y ACCIONES */
-        #gift-panel { position:fixed; bottom:100px; width:100%; background:rgba(0,0,0,0.95); display:none; grid-template-columns:repeat(4,1fr); padding:20px; border-radius:25px 25px 0 0; border-top:2px solid var(--cp-pink); z-index:500; }
-        .gift-item { text-align:center; padding:10px; }
-        
-        .action-bar { position:fixed; bottom:25px; width:100%; display:flex; justify-content:space-around; }
-        .btn-round { width:55px; height:55px; border-radius:50%; border:none; font-size:24px; color:white; display:flex; align-items:center; justify-content:center; }
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://resource.zegocloud.com/prebuilt/ZegoExpressWebRTC.js"></script>
 
-        #room-log { height:40px; background:rgba(255,105,180,0.1); margin:5px 20px; border-radius:10px; padding:8px; font-size:12px; color:var(--cp-pink); text-align:center; }
-    </style>
+<style>
+:root { --gold:#ffd700; --cp-pink:#ff69b4; --neon-blue:#00f2ff; }
+body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; }
+
+/* HEADER MEJORADO */
+.header-pro { display:flex; justify-content:space-between; align-items:center; padding:15px; background:rgba(0,0,0,0.9); border-bottom:1px solid #333; }
+.btn-vinculo { background:var(--cp-pink); border:none; color:white; padding:8px 12px; border-radius:15px; font-weight:bold; font-size:12px; box-shadow: 0 0 10px var(--cp-pink); }
+
+/* SILLAS CON EFECTO */
+.sillas-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; }
+.avatar-container { position:relative; width:85px; height:85px; margin:auto; }
+.avatar-frame { width:100%; height:100%; border-radius:50%; background:#1a1a2e; border:2px solid #444; display:flex; align-items:center; justify-content:center; overflow:hidden; transition: 0.3s; }
+
+/* ANILLO QUE FLOTA */
+.cp-ring { position:absolute; top:-12px; left:50%; transform:translateX(-50%); font-size:24px; display:none; filter: drop-shadow(0 0 5px var(--cp-pink)); z-index:10; animation: flotar 2s infinite ease-in-out; }
+.cp-active .cp-ring { display:block; }
+.cp-active .avatar-frame { border:3px solid var(--cp-pink); box-shadow: 0 0 15px var(--cp-pink); }
+
+@keyframes flotar { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }
+
+/* BARRA DE ACCIÓN SUBIDA PARA ANDROID */
+.action-bar { position:fixed; bottom:30px; width:100%; display:flex; justify-content:space-around; align-items:center; }
+.btn-round { width:60px; height:60px; border-radius:50%; border:none; font-size:26px; color:white; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 15px rgba(0,0,0,0.6); background: linear-gradient(145deg, #2a0055, #0b001a); border: 1px solid #444; }
+
+#gift-panel { position:fixed; bottom:110px; width:100%; display:none; grid-template-columns:repeat(4,1fr); background:rgba(0,0,0,0.95); padding:20px; border-radius:20px 20px 0 0; border-top: 1px solid var(--gold); }
+#room-log { text-align:center; color:var(--cp-pink); font-size:12px; font-weight:bold; margin-top:5px; }
+</style>
 </head>
+
 <body>
 
-    <div class="header-pro">
-        <div style="color:var(--gold); font-weight:bold;">💰 <span id="oro-val">3800</span></div>
-        <div style="color:var(--cp-pink); font-weight:bold;">💞 SISTEMA C.P. ACTIVO</div>
-        <button onclick="activarCP()" style="background:var(--cp-pink); border:none; color:white; padding:8px 12px; border-radius:15px; font-weight:bold; font-size:12px;">VINCULAR C.P.</button>
-    </div>
+<div class="header-pro">
+    <div>💰 <span id="oro-val">3800</span></div>
+    <div style="font-size:12px; color:var(--gold);">SALA: GLOBAL</div>
+    <button class="btn-vinculo" onclick="activarCP()">VINCULAR 💍</button>
+</div>
 
-    <div id="room-log">Esperando conexión de pareja...</div>
+<div id="room-log">Sincronizando con Lluvia Live...</div>
 
-    <div class="sillas-grid" id="grid"></div>
+<div class="sillas-grid" id="grid"></div>
 
-    <div id="gift-panel">
-        <div class="gift-item" onclick="enviarRegalo('💍', 10000, 'ANILLO ETERNO')">
-            <span>💍</span><div style="color:var(--neon-blue)">10K</div>
-        </div>
-        <div class="gift-item" onclick="enviarRegalo('🌹', 10, 'ROSA')">
-            <span>🌹</span><div style="color:var(--gold)">10</div>
-        </div>
-        <div class="gift-item" onclick="enviarRegalo('🏰', 5000, 'CASTILLO')">
-            <span>🏰</span><div style="color:var(--gold)">5K</div>
-        </div>
-        <div class="gift-item" onclick="enviarRegalo('🦁', 1000, 'LEÓN')">
-            <span>🦁</span><div style="color:var(--gold)">1K</div>
-        </div>
-    </div>
+<div id="gift-panel">
+    <div onclick="enviarRegalo('💍',10000)">💍</div>
+    <div onclick="enviarRegalo('🌹',10)">🌹</div>
+    <div onclick="enviarRegalo('🏰',5000)">🏰</div>
+    <div onclick="enviarRegalo('🦁',1000)">🦁</div>
+</div>
 
-    <div class="action-bar">
-        <button class="btn-round" style="background:#ff69b4;" onclick="document.getElementById('gift-panel').style.display='grid'">🎁</button>
-        <button id="mic-btn" class="btn-round" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
-        <button class="btn-round" style="background:#00aaff;" onclick="subirFoto()">📸</button>
-        <button class="btn-round" style="background:#00ff00;" onclick="sentarse(1)">🪑</button>
-    </div>
+<div class="action-bar">
+    <button class="btn-round" onclick="toggleGifts()">🎁</button>
+    <button class="btn-round" onclick="subirFoto()">📸</button>
+    <button class="btn-round" id="btn-mic" onclick="toggleMic()" style="background:linear-gradient(#ff3333, #aa0000);">🎙️</button>
+    <button class="btn-round" onclick="sentarse(1)">🪑</button>
+</div>
 
-    <input type="file" id="foto-input" hidden onchange="cargarFoto(event)">
+<input type="file" id="foto-input" hidden onchange="cargarFoto(event)">
 
-    <script>
-        let oro = 3800;
-        let esCP = false;
-        let miFoto = null;
+<script>
+// 🔥 CONFIGURACIÓN FIREBASE (Usa tu ID de proyecto)
+const firebaseConfig = { projectId: "lluvia-live-69a05" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-        function initSillas() {
-            const grid = document.getElementById('grid');
-            for(let i=1; i<=9; i++) {
-                grid.innerHTML += `
-                <div class="avatar-container" id="cont-${i}" onclick="seleccionarSilla(${i})">
-                    <div class="cp-ring">💍</div>
-                    <div class="avatar-frame" id="silla-${i}">👤</div>
-                    <div style="font-size:10px; text-align:center; margin-top:5px; color:#aaa;">Silla ${i}</div>
-                </div>`;
-            }
+// CONFIG ZEGO
+const appID = 249373029;
+const server = "wss://webliveroom249373029-api.zegocloud.com/ws";
+
+let oro=3800; let esCP=false; let miFoto=null; let sala="global"; let nombre="Melvin"; let zg;
+
+// INICIALIZAR
+function initSillas(){
+    const grid=document.getElementById("grid");
+    for(let i=1;i<=9;i++){
+        grid.innerHTML+=`
+        <div class="avatar-container" id="cont-${i}" onclick="sentarse(${i})">
+            <div class="cp-ring">💍</div>
+            <div class="avatar-frame" id="silla-${i}">👤</div>
+            <div style="font-size:10px; text-align:center; margin-top:5px;">Silla ${i}</div>
+        </div>`;
+    }
+}
+
+// SINCRONIZAR SILLAS
+db.collection("salas").doc(sala).onSnapshot(doc=>{
+    const data=doc.data()||{};
+    for(let i=1;i<=9;i++){
+        const s=data["silla"+i];
+        const frame=document.getElementById("silla-"+i);
+        const cont=document.getElementById("cont-"+i);
+        if(s){
+            frame.innerHTML=s.foto ? `<img src="${s.foto}" style="width:100%;height:100%;object-fit:cover;">` : "🎙️";
+            if(s.cp) cont.classList.add("cp-active");
+            else cont.classList.remove("cp-active");
+        } else {
+            frame.innerHTML="👤"; cont.classList.remove("cp-active");
         }
+    }
+});
 
-        function seleccionarSilla(id) {
-            const frame = document.getElementById(`silla-${id}`);
-            if(miFoto) {
-                frame.innerHTML = `<img src="${miFoto}" style="width:100%; height:100%; object-fit:cover;">`;
-            } else {
-                frame.innerHTML = "🎙️";
-            }
-            logMsg("Te has sentado en la silla " + id);
-        }
+async function sentarse(id){
+    await db.collection("salas").doc(sala).set({
+        ["silla"+id]:{ nombre:nombre, foto:miFoto||"", cp:esCP }
+    },{merge:true});
+    log("Ocupaste la silla "+id);
+}
 
-        function activarCP() {
-            if(oro >= 10000) {
-                oro -= 10000;
-                actualizarOro();
-                esCP = true;
-                document.getElementById('cont-1').classList.add('cp-active');
-                logMsg("💖 ¡NUEVA PAREJA C.P. EN LA SALA!");
-                alert("💞 ¡VINCULACIÓN EXITOSA! El anillo de diamante ahora brilla sobre ti.");
-            } else {
-                alert("Socio, el Anillo de C.P. cuesta 10,000 de oro. ¡Falta saldo!");
-            }
-        }
+// LOGICA CP & REGALOS
+function activarCP(){
+    if(oro>=10000){ oro-=10000; esCP=true; updateOro(); log("💞 Vínculo C.P. Activado"); }
+    else alert("Falta oro");
+}
 
-        function enviarRegalo(icon, precio, nombre) {
-            if(oro >= precio) {
-                oro -= precio;
-                actualizarOro();
-                logMsg("🎁 Enviaste " + nombre);
-                document.getElementById('gift-panel').style.display = 'none';
-                alert("EFECTO ESPECIAL: " + icon + " volando por la sala");
-            } else {
-                alert("No tienes suficiente oro.");
-            }
-        }
+function enviarRegalo(icon,precio){
+    if(oro>=precio){ oro-=precio; updateOro(); log("🎁 ¡Regalo enviado!"); toggleGifts(); }
+    else alert("Sin saldo");
+}
 
-        function cargarFoto(event) {
-            const reader = new FileReader();
-            reader.onload = function() { miFoto = reader.result; alert("Foto lista para la silla."); }
-            reader.readAsDataURL(event.target.files[0]);
-        }
+// FOTO & UI
+function subirFoto(){ document.getElementById("foto-input").click(); }
+function cargarFoto(e){
+    const reader=new FileReader();
+    reader.onload=()=>{ miFoto=reader.result; log("Foto lista."); };
+    reader.readAsDataURL(e.target.files[0]);
+}
+function toggleGifts(){
+    const g=document.getElementById("gift-panel");
+    g.style.display=g.style.display==="grid"?"none":"grid";
+}
+function updateOro(){ document.getElementById("oro-val").innerText=oro; }
+function log(t){ document.getElementById("room-log").innerText=t; }
 
-        function subirFoto() { document.getElementById('foto-input').click(); }
-        function actualizarOro() { document.getElementById('oro-val').innerText = oro; }
-        function logMsg(t) { document.getElementById('room-log').innerText = t; }
-        function toggleMic() {
-            const btn = document.getElementById('mic-btn');
-            btn.style.background = btn.style.background === "rgb(0, 255, 0)" ? "#ff3333" : "#00ff00";
-        }
-
-        initSillas();
-    </script>
+initSillas();
+</script>
 </body>
 </html>
