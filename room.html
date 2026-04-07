@@ -3,120 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live Pro</title>
     <style>
         body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; }
         
-        /* BANNER SUPERIOR CON BRILLO */
-        #premium-banner {
+        /* ✨ ANIMACIONES DE MOVIMIENTO */
+        @keyframes pulse-glow {
+            0% { transform: scale(1); box-shadow: 0 0 5px rgba(255,215,0,0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,215,0,0.8); }
+            100% { transform: scale(1); box-shadow: 0 0 5px rgba(255,215,0,0.4); }
+        }
+
+        .btn-move { transition: transform 0.1s; cursor:pointer; }
+        .btn-move:active { transform: scale(0.85); } /* Movimiento al presionar */
+
+        #premium-banner { 
             width:94%; margin:10px auto; background:rgba(20,20,30,0.95); 
             border-radius:20px; border:2px solid #ffd700; display:flex; 
             justify-content:space-around; align-items:center; padding:12px 5px;
-            box-shadow: 0 0 15px rgba(255,215,0,0.5);
+            animation: pulse-glow 3s infinite; /* El banner brilla y se mueve suave */
         }
 
-        /* ANIMACIÓN DE PULSO PARA BOTONES ACTIVOS */
-        @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(0, 255, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
-        }
-        
-        .btn-active { animation: pulse-green 2s infinite; }
-
-        /* BARRA DE ACCIÓN INFERIOR */
-        .action-bar { 
-            position:fixed; bottom:40px; width:100%; 
-            display:flex; justify-content:space-evenly; align-items:center; 
+        /* 🚀 AVISO DE ENTRADA/SALIDA */
+        #presence-toast {
+            position: fixed; top: 160px; right: -300px; 
+            background: linear-gradient(90deg, #ffd700, #ff8c00);
+            color: black; padding: 10px 20px; border-radius: 20px 0 0 20px;
+            font-weight: bold; transition: 0.5s ease-in-out; z-index: 5000;
         }
 
-        .btn-round { 
-            width:65px; height:65px; border-radius:50%; border:none; 
-            display:flex; align-items:center; justify-content:center; 
-            font-size:28px; cursor:pointer; transition: transform 0.2s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        .btn-round:active { transform: scale(0.9); } /* Movimiento al tocar */
-
-        /* BOTÓN DE REELS (ESTILO INSTAGRAM) */
-        .btn-reels {
-            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-            width: 75px; height: 75px; font-size: 35px;
-        }
-
-        #silla-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px; }
+        .action-bar { position:fixed; bottom:40px; width:100%; display:flex; justify-content:space-evenly; align-items:center; }
+        .btn-circle { width:65px; height:65px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:28px; }
     </style>
 </head>
 <body>
+
+<div id="presence-toast"></div>
 
 <div id="main-ui">
     <div id="premium-banner">
         <div style="text-align:center; font-size:10px;">🛡️<br>CLANES</div>
         <div style="text-align:center;">
-            <span style="color:#ffd700; font-weight:bold;">👑 ARISTOCRACIA SVIP</span><br>
-            <span style="font-size:12px;">💰 ORO: 1000</span>
+            <span style="color:#ffd700; font-weight:bold; font-size:14px;">👑 ARISTOCRACIA SVIP</span><br>
+            <span style="font-size:12px;">💰 ORO: <span id="my-gold">1000</span></span>
         </div>
         <div style="text-align:center; font-size:10px;">💵<br>RECARGA</div>
     </div>
 
-    <div id="silla-grid">
-        <script>
-            for(let i=1; i<=9; i++){
-                document.write(`<div style="text-align:center;"><div style="width:60px; height:60px; border-radius:50%; background:#1a1a1a; border:2px solid #333; margin:0 auto; display:flex; align-items:center; justify-content:center;">👤</div><div style="font-size:10px; color:#00ffcc; margin-top:5px;">Libre</div></div>`);
-            }
-        </script>
-    </div>
+    <div id="silla-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px;">
+        </div>
 
     <div class="action-bar">
-        <button class="btn-round" style="background:#8a2be2;" onclick="abrirSeccion('fotos')">📸</button>
-        <button id="mic-btn" class="btn-round btn-active" style="background:#00ff00;" onclick="toggleMic()">🎙️</button>
-        
-        <button class="btn-round btn-reels" onclick="abrirReels()">🎬</button>
-        
-        <button id="spk-btn" class="btn-round" style="background:#00ff00;" onclick="toggleAudio()">🔊</button>
-        <button class="btn-round" style="background:orange;" onclick="abrirRegalos()">🎁</button>
+        <button class="btn-circle btn-move" style="background:#8a2be2;">📸</button>
+        <button id="mic-btn" class="btn-circle btn-move" style="background:#00ff00;" onclick="toggleMic()">🎙️</button>
+        <button class="btn-circle btn-move" style="background:linear-gradient(45deg, #f09433, #dc2743);" onclick="alert('🎬 Reels Cargando...')">🎬</button>
+        <button id="spk-btn" class="btn-circle btn-move" style="background:#00ff00;" onclick="toggleAudio()">🔊</button>
+        <button class="btn-circle btn-move" style="background:orange;" onclick="enviarRegalo()">🎁</button>
     </div>
 </div>
 
-<audio id="remote-audio" autoplay></audio>
+<audio id="remote-audio" autoplay playsinline></audio>
 
 <script>
-    let micStatus = true;
-    let audioStatus = true;
-
-    function toggleMic() {
-        micStatus = !micStatus;
-        const btn = document.getElementById('mic-btn');
-        btn.style.background = micStatus ? "#00ff00" : "#ff3333";
-        if(micStatus) btn.classList.add('btn-active');
-        else btn.classList.remove('btn-active');
-        // Aquí va tu código de PeerJS para apagar el stream
+    // 🛠️ MONITOR DE GENTE EN SALA
+    function notifyPresence(msg) {
+        const toast = document.getElementById('presence-toast');
+        toast.innerText = msg;
+        toast.style.right = "0";
+        setTimeout(() => { toast.style.right = "-300px"; }, 3000);
     }
+
+    // Escuchar entradas y salidas en tiempo real
+    db.collection("salas").doc("1234").collection("presencia")
+        .onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                const user = change.doc.data().nombre;
+                if (change.type === "added") {
+                    notifyPresence(`👋 ${user} entró`);
+                }
+                if (change.type === "removed") {
+                    notifyPresence(`🚪 ${user} salió`);
+                }
+            });
+        });
+
+    // 🎙️ REPARACIÓN DE AUDIO
+    let audioContext;
+    function unlockAudio() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const audio = document.getElementById('remote-audio');
+            audio.play(); // Desbloquea el sonido para el navegador
+            console.log("🔊 Audio desbloqueado");
+        }
+    }
+
+    // Cualquier toque en la pantalla activa el audio
+    document.body.addEventListener('click', unlockAudio, { once: true });
 
     function toggleAudio() {
-        audioStatus = !audioStatus;
-        const btn = document.getElementById('spk-btn');
         const audio = document.getElementById('remote-audio');
-        btn.style.background = audioStatus ? "#00ff00" : "#ff3333";
-        audio.muted = !audioStatus;
+        audio.muted = !audio.muted;
+        document.getElementById('spk-btn').style.background = audio.muted ? "#ff3333" : "#00ff00";
     }
 
-    function abrirReels() {
-        alert("🎬 Abriendo Reels de Lluvia Live...");
-        // Aquí puedes poner el código para mostrar el reproductor de video
-    }
+    // 🎁 REGALOS CON MOVIMIENTO
+    async function enviarRegalo() {
+        const userRef = db.collection("usuarios").doc("Melvin");
+        const doc = await userRef.get();
+        let oro = doc.data().oro || 0;
 
-    function abrirRegalos() {
-        alert("🎁 Selecciona tu regalo para Melvin");
+        if (oro >= 50) {
+            await userRef.update({ oro: oro - 50 });
+            alert("🎁 ¡Regalo enviado con éxito!");
+        } else {
+            alert("❌ ¡No tienes oro suficiente!");
+        }
     }
-
-    // Activar audio al primer toque (Requerido por navegadores)
-    document.body.addEventListener('click', () => {
-        const audio = document.getElementById('remote-audio');
-        if (audio.paused) audio.play();
-    }, { once: true });
 </script>
-
 </body>
 </html>
