@@ -3,71 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live</title>
     <style>
         body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; touch-action: manipulation; }
-        
-        /* 🚪 PANTALLA DE INGRESO */
-        #login-screen { 
-            position:fixed; top:0; left:0; width:100%; height:100%; 
-            background:#0b001a; z-index:9999; display:flex; 
-            flex-direction:column; align-items:center; justify-content:center;
-        }
-        .input-box { 
-            padding:15px; width:75%; border-radius:12px; border:1px solid #333; 
-            background:#1a1a1a; color:white; margin-bottom:15px; font-size:16px;
-        }
-        .btn-entrar { 
-            background:linear-gradient(90deg, #00ff00, #00cc00); color:black; 
-            padding:16px 50px; border-radius:30px; font-weight:bold; 
-            border:none; font-size:18px; cursor:pointer;
-        }
-
-        /* ✨ EFECTOS Y DISEÑO */
         .click-effect:active { transform: scale(0.9); transition: 0.1s; }
         
-        #premium-banner { 
-            width:92%; margin:10px auto; background:rgba(20,20,30,0.95); 
-            border-radius:20px; border:2px solid #ffd700; display:flex; 
-            justify-content:space-around; align-items:center; padding:12px 5px;
-            box-shadow: 0 0 15px rgba(255,215,0,0.5);
-        }
+        /* 🚪 PANTALLA DE INGRESO */
+        #login-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#0b001a; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .input-box { padding:15px; width:75%; border-radius:12px; border:1px solid #333; background:#1a1a1a; color:white; margin-bottom:15px; font-size:16px; }
+        
+        /* 💎 ESTILOS DE ARISTOCRACIA */
+        .badge-svip { color: #ffd700; text-shadow: 0 0 5px gold; font-weight: bold; }
+        .badge-vip { color: #00ffff; font-weight: bold; }
+        .clan-tag { background: #ff3366; color: white; padding: 2px 5px; border-radius: 4px; font-size: 8px; margin-left: 3px; }
 
-        #toast { 
-            position:fixed; top:160px; right:-100%; 
-            background: linear-gradient(90deg, #ffd700, #ff8c00); 
-            color:black; padding:10px 20px; border-radius:20px 0 0 20px; 
-            transition:0.5s; font-weight:bold; z-index:5000; 
-        }
+        /* 🎁 TIENDA DE REGALOS (MODAL) */
+        #gift-shop { position:fixed; bottom:-100%; left:0; width:100%; background:rgba(15,15,25,0.98); border-top:3px solid #ffd700; transition:0.4s; z-index:8000; padding:20px 0; display:grid; grid-template-columns:repeat(3,1fr); gap:10px; justify-items:center; }
 
+        #premium-banner { width:92%; margin:10px auto; background:rgba(20,20,30,0.95); border-radius:20px; border:2px solid #ffd700; display:flex; justify-content:space-around; align-items:center; padding:12px 5px; box-shadow: 0 0 15px rgba(255,215,0,0.5); }
         #sillas-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px; }
-        .silla-circle { 
-            width:65px; height:65px; border-radius:50%; background:#1a1a1a; 
-            border:2px solid #333; margin:0 auto; display:flex; 
-            align-items:center; justify-content:center; overflow:hidden; position: relative;
-        }
-
+        .silla-circle { width:65px; height:65px; border-radius:50%; background:#1a1a1a; border:2px solid #333; margin:0 auto; display:flex; align-items:center; justify-content:center; overflow:hidden; position: relative; }
+        #toast { position:fixed; top:160px; right:-100%; background: linear-gradient(90deg, #ffd700, #ff8c00); color:black; padding:10px 20px; border-radius:20px 0 0 20px; transition:0.5s; font-weight:bold; z-index:5000; }
         .action-bar { position:fixed; bottom:40px; width:100%; display:flex; justify-content:space-evenly; align-items:center; }
-        .btn-round { width:65px; height:65px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:28px; cursor:pointer; }
+        .btn-round { width:60px; height:60px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <h1 style="color:#ffd700; letter-spacing:2px;">☔ LLUVIA LIVE</h1>
-    <p style="color:#aaa;">Ingresa a una sala para conectar</p>
-    <input type="text" id="user-name" class="input-box" placeholder="Tu nombre o apodo">
-    <input type="number" id="room-id" class="input-box" placeholder="Número de Sala (ej: 777)">
-    <button class="btn-entrar click-effect" onclick="unirseASala()">ENTRAR AHORA</button>
+    <h1 style="color:#ffd700;">☔ LLUVIA LIVE</h1>
+    <input type="text" id="user-name" class="input-box" placeholder="Tu Apodo">
+    <input type="number" id="room-id" class="input-box" placeholder="ID Sala (Crear o Entrar)">
+    <select id="user-level" class="input-box">
+        <option value="Normal">Usuario Normal</option>
+        <option value="VIP">💎 Aristocracia VIP</option>
+        <option value="SVIP">👑 Aristocracia SVIP</option>
+    </select>
+    <button class="click-effect" onclick="unirseASala()" style="background:#00ff00; padding:15px 50px; border-radius:30px; border:none; font-weight:bold;">INGRESAR A SALA</button>
 </div>
 
 <div id="toast"></div>
 
+<div id="gift-shop">
+    <div onclick="procesarRegalo(10, '🌹')" class="click-effect">🌹<br><small>10</small></div>
+    <div onclick="procesarRegalo(50, '🍦')" class="click-effect">🍦<br><small>50</small></div>
+    <div onclick="procesarRegalo(200, '💎')" class="click-effect">💎<br><small>200</small></div>
+    <div onclick="procesarRegalo(500, '🚗')" class="click-effect">🚗<br><small>500</small></div>
+    <div onclick="procesarRegalo(1000, '🚀')" class="click-effect">🚀<br><small>1000</small></div>
+    <div onclick="cerrarTienda()" style="color:red; font-weight:bold;">X</div>
+</div>
+
 <div id="main-app" style="display:none;">
-    <div id="premium-banner" class="click-effect" onclick="mostrarToast('👑 Tienda SVIP abierta')">
+    <div id="premium-banner" class="click-effect" onclick="abrirRecarga()">
         <div style="text-align:center; font-size:10px;">🛡️<br>CLANES</div>
         <div style="text-align:center;">
-            <span style="color:#ffd700; font-weight:bold; font-size:14px;">👑 ARISTOCRACIA SVIP</span><br>
+            <span id="label-nivel" style="font-weight:bold; font-size:14px;">USUARIO</span><br>
             <span style="font-size:12px;">💰 ORO: <span id="oro-cont">1000</span></span>
         </div>
         <div style="text-align:center; font-size:10px;">💵<br>RECARGA</div>
@@ -78,9 +67,9 @@
     <div class="action-bar">
         <button class="btn-round click-effect" style="background:#8a2be2;" onclick="mostrarToast('📸 Galería')">📸</button>
         <button id="mic-btn" class="btn-round click-effect" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
-        <button class="btn-round click-effect" style="background:linear-gradient(45deg, #f09433, #dc2743);" onclick="mostrarToast('🎬 Reels próximamente')">🎬</button>
+        <button class="btn-round click-effect" style="background:#444;" onclick="abrirTienda()">🎁</button>
         <button id="spk-btn" class="btn-round click-effect" style="background:#00ff00;" onclick="toggleSpk()">🔊</button>
-        <button class="btn-round click-effect" style="background:orange;" onclick="enviarRegalo()">🎁</button>
+        <button class="btn-round click-effect" style="background:orange;" onclick="mostrarToast('🎬 Reels próximamente')">🎬</button>
     </div>
 </div>
 
@@ -90,36 +79,28 @@
     let miOro = 1000;
     let micActivo = false;
     let spkActivo = true;
+    let datosUser = { nombre: "", sala: "", nivel: "", verificado: true, clan: "NAVAS" };
 
-    // --- LÓGICA DE SALAS ---
     function unirseASala() {
-        const nombre = document.getElementById('user-name').value;
-        const sala = document.getElementById('room-id').value;
+        datosUser.nombre = document.getElementById('user-name').value;
+        datosUser.sala = document.getElementById('room-id').value;
+        datosUser.nivel = document.getElementById('user-level').value;
 
-        if(!nombre || !sala) {
-            alert("⚠️ Escribe tu nombre y el número de sala");
-            return;
-        }
+        if(!datosUser.nombre || !datosUser.sala) return alert("Completa los datos");
 
-        // Ocultar login y mostrar app
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
-
-        // Iniciar audio
-        activarAudio();
         
-        // Generar sillas
+        // Configurar Banner según nivel
+        const lbl = document.getElementById('label-nivel');
+        lbl.innerText = datosUser.nivel === "SVIP" ? "👑 ARISTOCRACIA SVIP" : (datosUser.nivel === "VIP" ? "💎 ARISTOCRACIA VIP" : "USUARIO");
+        lbl.className = datosUser.nivel === "SVIP" ? "badge-svip" : (datosUser.nivel === "VIP" ? "badge-vip" : "");
+
         generarSillas();
-        
-        mostrarToast(`🚀 Sala ${sala}: ¡Bienvenido ${nombre}!`);
+        document.getElementById('audio-receptor').play().catch(()=>{});
+        mostrarToast(`✅ Sala ${datosUser.sala} creada/unida`);
     }
 
-    function activarAudio() {
-        const audio = document.getElementById('audio-receptor');
-        audio.play().catch(() => console.log("Audio esperando interacción"));
-    }
-
-    // --- SILLAS Y AVATARES ---
     function generarSillas() {
         const grid = document.getElementById('sillas-grid');
         grid.innerHTML = "";
@@ -134,47 +115,46 @@
 
     function sentarse(num) {
         const silla = document.getElementById(`silla-${num}`);
-        const nombreLabel = document.getElementById(`name-${num}`);
-        const miNombre = document.getElementById('user-name').value;
+        const nLabel = document.getElementById(`name-${num}`);
         
-        silla.innerHTML = `
-            <img src="https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif" width="65" height="65" style="object-fit:cover;">
-            <div style="position:absolute; top:2px; right:2px;">👑</div>
-        `;
-        nombreLabel.innerText = miNombre;
-        nombreLabel.style.color = "#ffd700";
-        mostrarToast(`✅ Te sentaste en silla ${num}`);
+        let icon = datosUser.nivel === "SVIP" ? "👑" : (datosUser.nivel === "VIP" ? "💎" : "👤");
+        let vTag = datosUser.verificado ? "✅" : "";
+        let cTag = `<span class="clan-tag">${datosUser.clan}</span>`;
+
+        silla.innerHTML = `<img src="https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif" width="65" height="65" style="object-fit:cover;"><div style="position:absolute; top:2px; right:2px;">${icon}</div>`;
+        nLabel.innerHTML = `${vTag} ${datosUser.nombre} ${cTag}`;
+        if(datosUser.nivel === "SVIP") nLabel.style.color = "#ffd700";
+        mostrarToast("Te has sentado");
     }
 
-    // --- BOTONES Y REGALOS ---
-    function enviarRegalo() {
-        if (miOro >= 50) {
-            miOro -= 50;
+    // --- RECARGA Y REGALOS ---
+    function abrirTienda() { document.getElementById('gift-shop').style.bottom = "0"; }
+    function cerrarTienda() { document.getElementById('gift-shop').style.bottom = "-100%"; }
+
+    function procesarRegalo(costo, emoji) {
+        if(miOro >= costo) {
+            miOro -= costo;
             document.getElementById('oro-cont').innerText = miOro;
-            mostrarToast("🎁 Regalo enviado (-50 Oro)");
+            mostrarToast(`🎁 Enviaste ${emoji} (-${costo} Oro)`);
+            cerrarTienda();
         } else {
-            alert("❌ Oro insuficiente");
+            alert("Oro insuficiente. ¡Recarga ahora!");
+            abrirRecarga();
         }
     }
 
-    function toggleMic() {
-        micActivo = !micActivo;
-        document.getElementById('mic-btn').style.background = micActivo ? "#00ff00" : "#ff3333";
-        mostrarToast(micActivo ? "🎙️ Micrófono Abierto" : "🎙️ Micrófono Mutado");
+    function abrirRecarga() {
+        let monto = prompt("Socio, ¿cuánto Oro quieres recargar?", "1000");
+        if(monto) {
+            miOro += parseInt(monto);
+            document.getElementById('oro-cont').innerText = miOro;
+            mostrarToast("💰 Recarga exitosa");
+        }
     }
 
-    function toggleSpk() {
-        spkActivo = !spkActivo;
-        document.getElementById('audio-receptor').muted = !spkActivo;
-        document.getElementById('spk-btn').style.background = spkActivo ? "#00ff00" : "#ff3333";
-    }
-
-    function mostrarToast(msg) {
-        const t = document.getElementById('toast');
-        t.innerText = msg;
-        t.style.right = "0";
-        setTimeout(() => { t.style.right = "-100%"; }, 3000);
-    }
+    function toggleMic() { micActivo = !micActivo; document.getElementById('mic-btn').style.background = micActivo ? "#00ff00" : "#ff3333"; }
+    function toggleSpk() { spkActivo = !spkActivo; document.getElementById('audio-receptor').muted = !spkActivo; document.getElementById('spk-btn').style.background = spkActivo ? "#00ff00" : "#ff3333"; }
+    function mostrarToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.right = "0"; setTimeout(()=>t.style.right="-100%", 3000); }
 </script>
 </body>
 </html>
