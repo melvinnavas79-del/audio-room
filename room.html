@@ -3,131 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live - Audio Test</title>
+    <title>Lluvia Live Fix</title>
     <script src="https://resource.zegocloud.com/prebuilt/ZegoExpressWebRTC.js"></script>
     <style>
         body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; display:flex; flex-direction:column; height:100vh; }
         
-        /* Pantalla de Inicio / Crear - Entrar */
-        #login { position:fixed; inset:0; background:linear-gradient(#1a0033, #0b001a); z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
-        .input-box { padding:15px; width:85%; border-radius:15px; border:1px solid #444; background:#1a1a1a; color:white; margin-bottom:15px; font-size:16px; text-align:center; }
-        .btn-main { width:85%; padding:18px; border-radius:30px; border:none; font-weight:bold; cursor:pointer; margin-bottom:10px; font-size:16px; }
-        
-        /* Banner SVIP */
-        #premium-banner { width:92%; margin:15px auto; background:rgba(30,0,60,0.8); border-radius:25px; border:2px solid #ffd700; display:flex; justify-content:space-around; align-items:center; padding:12px 5px; box-shadow: 0 0 20px rgba(255,215,0,0.4); }
+        /* Ajuste para que nada se corte en Android */
+        #main-container { flex: 1; display: flex; flex-direction: column; padding-bottom: 100px; overflow-y: auto; }
 
-        /* Sillas */
-        #sillas-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px; flex-grow:1; align-content:start; }
+        #premium-banner { width:90%; margin:10px auto; background:rgba(30,0,60,0.8); border-radius:20px; border:2px solid #ffd700; display:flex; justify-content:space-around; align-items:center; padding:10px; }
+
+        #sillas-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:15px; }
         .silla-wrapper { text-align:center; }
-        .silla { width:70px; height:70px; border-radius:50%; background:#1e1e2e; border:2px solid #444; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:28px; }
-        .silla.ocupada { border-color:#00ff00; box-shadow: 0 0 15px #00ff00; background:#0a2a0a; }
-        .user-label { font-size:10px; margin-top:5px; color:#aaa; font-weight:bold; }
+        .silla { width:65px; height:65px; border-radius:50%; background:#1e1e2e; border:2px solid #444; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:24px; }
+        .silla.activa { border-color:#00ff00; box-shadow: 0 0 15px #00ff00; }
 
-        /* Efecto Regalo */
-        @keyframes volar { 0% { transform:scale(0.5) translateY(0); opacity:1; } 100% { transform:scale(2) translateY(-300px); opacity:0; } }
-        .gift-effect { position:absolute; font-size:60px; left:40%; top:40%; animation: volar 2s forwards; z-index:100; pointer-events:none; }
+        /* BARRA SUBIDA PARA ANDROID */
+        .action-bar { position: fixed; bottom: 20px; width: 100%; display: flex; justify-content: space-around; padding-bottom: 10px; z-index: 100; }
+        .btn-round { width:55px; height:55px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
 
-        /* Barra de Acciones */
-        .action-bar { background:rgba(0,0,0,0.95); padding:20px; display:flex; justify-content:space-around; border-top:1px solid #333; }
-        .btn-round { width:55px; height:55px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; }
+        #login { position:fixed; inset:0; background:#0b001a; z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .input-box { padding:15px; width:80%; border-radius:15px; border:1px solid #444; background:#1a1a1a; color:white; margin-bottom:10px; text-align:center; }
     </style>
 </head>
 <body>
 
 <div id="login">
-    <h1 style="color:gold; font-size:35px; margin-bottom:30px;">☔ LLUVIA LIVE</h1>
-    <input type="text" id="user-id" class="input-box" placeholder="Tu Apodo">
-    <input type="text" id="room-id" class="input-box" placeholder="ID de la Sala (ej: 100)">
-    
-    <button onclick="iniciarApp('host')" class="btn-main" style="background:#00ff00; color:black;">➕ CREAR SALA</button>
-    <button onclick="iniciarApp('audience')" class="btn-main" style="background:#00aaff; color:white;">🚪 ENTRAR A SALA</button>
-    
-    <p style="font-size:12px; color:#666; margin-top:20px;">Prueba de Audio v1.0</p>
+    <h1 style="color:gold;">☔ LLUVIA LIVE</h1>
+    <input type="text" id="user-name" class="input-box" placeholder="Tu Apodo">
+    <input type="text" id="room-id" class="input-box" placeholder="ID Sala (ej: 100)">
+    <button onclick="conectarZego()" style="background:#00ff00; padding:15px 50px; border-radius:30px; border:none; font-weight:bold;">ENTRAR Y ACTIVAR AUDIO</button>
 </div>
 
-<div id="premium-banner">
-    <div>👑 <span style="color:gold;">SVIP</span></div>
-    <div>💰 ORO: <span id="oro-val" style="color:gold;">3800</span></div>
-    <div onclick="recargar()" style="background:#ffd700; color:black; padding:6px 12px; border-radius:12px; font-size:12px; font-weight:bold; cursor:pointer;">RECARGA</div>
+<div id="main-container">
+    <div id="premium-banner">
+        <div>👑 <span style="color:gold;">SVIP</span></div>
+        <div>💰 ORO: <span id="oro-val" style="color:gold;">3800</span></div>
+    </div>
+    <div id="sillas-grid"></div>
 </div>
-
-<div id="sillas-grid"></div>
 
 <div class="action-bar">
     <button class="btn-round" style="background:#8a2be2;">🎬</button>
     <button class="btn-round" style="background:#00aaff;">📸</button>
     <button id="mic-btn" class="btn-round" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
-    <button class="btn-round" style="background:orange;" onclick="lanzarRegalo()">🎁</button>
-    <button id="vol-btn" class="btn-round" style="background:#00ff00;" onclick="toggleVolumen()">🔊</button>
+    <button class="btn-round" style="background:orange;">🎁</button>
+    <button id="vol-btn" class="btn-round" style="background:#00ff00;" onclick="toggleVol()">🔊</button>
 </div>
 
 <script>
-    let oro = 3800;
+    // TUS DATOS REALES DE ZEGO
+    const appID = 249373029;
+    const server = "wss://webliveroom" + appID + "-api.zegocloud.com/ws";
+    let zg, localStream;
     let micOn = false;
-    let volOn = true;
-    let miNombre = "";
-    let roomID = "";
 
-    function iniciarApp(rol) {
-        miNombre = document.getElementById('user-id').value || "Melvin";
-        roomID = document.getElementById('room-id').value || "1";
-        
-        if(!document.getElementById('room-id').value) return alert("Socio, pon un ID de sala");
-
+    async function conectarZego() {
+        const user = document.getElementById('user-name').value || "User_" + Math.floor(Math.random()*100);
+        const room = document.getElementById('room-id').value || "100";
         document.getElementById('login').style.display = 'none';
-        alert(rol === 'host' ? "Sala creada como Administrador" : "Entraste como Invitado");
 
+        // Inicializar motor de audio
+        zg = new ZegoExpressEngine(appID, server);
+        
+        // Generar las sillas visuales
         const grid = document.getElementById('sillas-grid');
         for(let i=1; i<=9; i++) {
-            grid.innerHTML += `
-                <div class="silla-wrapper">
-                    <div class="silla" id="s-${i}" onclick="tomarSilla(${i})">👤</div>
-                    <div class="user-label" id="u-${i}">Vacío</div>
-                </div>`;
+            grid.innerHTML += `<div class="silla-wrapper"><div class="silla" id="s-${i}" onclick="sentarse(${i})">👤</div><div style="font-size:10px;margin-top:5px;">Vacío</div></div>`;
         }
+        
+        alert("Audio listo. Siéntate en una silla y abre el micro.");
     }
 
-    function tomarSilla(id) {
-        const s = document.getElementById(`s-${id}`);
-        const u = document.getElementById(`u-${id}`);
-        if(s.classList.contains('ocupada')) {
-            s.classList.remove('ocupada');
-            s.innerText = "👤";
-            u.innerText = "Vacío";
-        } else {
-            s.classList.add('ocupada');
-            s.innerText = "🎤";
-            u.innerText = miNombre;
-            u.style.color = "#00ff00";
-        }
-    }
-
-    function toggleMic() {
+    async function toggleMic() {
+        if (!zg) return;
         micOn = !micOn;
-        document.getElementById('mic-btn').style.background = micOn ? "#00ff00" : "#ff3333";
-        if(micOn) console.log("Iniciando transmisión de audio en sala: " + roomID);
-    }
-
-    function toggleVolumen() {
-        volOn = !volOn;
-        const btn = document.getElementById('vol-btn');
-        btn.style.background = volOn ? "#00ff00" : "#666";
-        btn.innerText = volOn ? "🔊" : "🔇";
-    }
-
-    function lanzarRegalo() {
-        if(oro >= 500) {
-            oro -= 500;
-            document.getElementById('oro-val').innerText = oro;
-            const effect = document.createElement('div');
-            effect.className = 'gift-effect';
-            effect.innerText = "🦁";
-            document.body.appendChild(effect);
-            setTimeout(() => effect.remove(), 2000);
+        const btn = document.getElementById('mic-btn');
+        
+        if(micOn) {
+            btn.style.background = "#00ff00";
+            // Aquí se activa el micro real del celular
+            localStream = await zg.createStream({camera: {audio: true, video: false}});
+            zg.startPublishingStream("stream_" + Date.now(), localStream);
+        } else {
+            btn.style.background = "#ff3333";
+            zg.stopPublishingStream("stream_" + Date.now());
+            zg.destroyStream(localStream);
         }
     }
 
-    function recargar() { oro += 1000; document.getElementById('oro-val').innerText = oro; }
+    function sentarse(id) {
+        document.querySelectorAll('.silla').forEach(s => s.classList.remove('activa'));
+        document.getElementById(`s-${id}`).classList.add('activa');
+        document.getElementById(`s-${id}`).innerText = "🎤";
+    }
+
+    function toggleVol() {
+        const v = document.getElementById('vol-btn');
+        v.innerText = v.innerText === "🔊" ? "🔇" : "🔊";
+        v.style.background = v.innerText === "🔊" ? "#00ff00" : "#666";
+    }
 </script>
 </body>
 </html>
