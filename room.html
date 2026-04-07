@@ -1,54 +1,152 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lluvia Live</title>
     <script src="https://resource.zegocloud.com/prebuilt/ZegoExpressWebRTC.js"></script>
     <style>
         body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; }
-        #premium-banner { width:92%; margin:10px auto; background:rgba(20,20,30,0.95); border-radius:20px; border:2px solid #ffd700; display:flex; justify-content:space-around; align-items:center; padding:12px 5px; box-shadow: 0 0 15px rgba(255,215,0,0.5); }
-        #sillas-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px; }
-        .silla-circle { width:65px; height:65px; border-radius:50%; background:#1a1a1a; border:2px solid #333; margin:0 auto; display:flex; align-items:center; justify-content:center; }
-        .action-bar { position:fixed; bottom:40px; width:100%; display:flex; justify-content:space-evenly; }
-        .btn-round { width:60px; height:60px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; }
+        
+        /* Banner de Aristocracia / Oro */
+        #premium-banner { 
+            width:92%; margin:10px auto; background:rgba(20,20,30,0.95); 
+            border-radius:20px; border:2px solid #ffd700; 
+            display:flex; justify-content:space-around; align-items:center; 
+            padding:12px 5px; box-shadow: 0 0 15px rgba(255,215,0,0.5); 
+        }
+        .gold-text { color:#ffd700; font-weight:bold; }
+
+        /* Cuadrícula de Sillas */
+        #sillas-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px; margin-top:10px; }
+        .silla-circle { 
+            width:70px; height:70px; border-radius:50%; background:#1a1a1a; 
+            border:2px solid #333; margin:0 auto; display:flex; 
+            align-items:center; justify-content:center; font-size:24px; cursor:pointer;
+        }
+        .silla-circle.ocupada { border-color:#00ff00; background:#0a2f0a; }
+
+        /* Barra de Acciones */
+        .action-bar { position:fixed; bottom:40px; width:100%; display:flex; justify-content:space-evenly; align-items:center; }
+        .btn-round { 
+            width:60px; height:60px; border-radius:50%; border:none; 
+            display:flex; align-items:center; justify-content:center; 
+            font-size:24px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+        }
+
+        /* Pantalla de Inicio */
+        #login-screen { padding:60px 20px; text-align:center; height:100vh; background:linear-gradient(#1a0033, #0b001a); }
+        .input-style { 
+            padding:15px; width:80%; border-radius:12px; margin-bottom:15px; 
+            background:#222; color:white; border:1px solid #444; font-size:16px;
+        }
+
+        /* Tienda de Regalos */
+        #gift-shop { 
+            position:fixed; bottom:-100%; left:0; width:100%; 
+            background:rgba(0,0,0,0.9); transition:0.4s; 
+            display:grid; grid-template-columns:repeat(3,1fr); 
+            padding:20px 0; border-top:2px solid #ffd700; border-radius:20px 20px 0 0;
+        }
+        .gift-item { text-align:center; padding:15px; cursor:pointer; }
     </style>
 </head>
 <body>
-<div id="login-screen" style="padding:50px 20px; text-align:center;">
-    <h1 style="color:gold;">☔ LLUVIA LIVE</h1>
-    <input type="text" id="user-name" placeholder="Tu Apodo" style="padding:15px; width:80%; border-radius:10px; margin-bottom:10px; background:#1a1a1a; color:white; border:1px solid #333;">
-    <input type="number" id="room-id" placeholder="ID Sala" style="padding:15px; width:80%; border-radius:10px; margin-bottom:20px; background:#1a1a1a; color:white; border:1px solid #333;">
-    <button onclick="unirseASala()" style="background:#00ff00; padding:15px 50px; border-radius:30px; font-weight:bold; border:none;">ENTRAR</button>
+
+<div id="login-screen">
+    <h1 style="color:#ffd700; font-size:40px; margin-bottom:40px;">☔ LLUVIA LIVE</h1>
+    <input type="text" id="user-name" class="input-style" placeholder="Tu Apodo">
+    <input type="number" id="room-id" class="input-style" placeholder="ID de la Sala">
+    <button onclick="entrarApp()" style="background:#00ff00; padding:18px 60px; border-radius:35px; font-weight:bold; border:none; margin-top:20px;">ENTRAR</button>
 </div>
+
 <div id="main-app" style="display:none;">
     <div id="premium-banner">
-        <div>💰 ORO: <span id="oro-cont">1000</span></div>
-        <div onclick="recargar()" style="cursor:pointer; color:gold;">💵 RECARGA</div>
+        <div class="gold-text">👑 SVIP</div>
+        <div>💰 ORO: <span id="oro-cont" class="gold-text">1000</span></div>
+        <div onclick="recargar()" style="cursor:pointer; background:#ffd700; color:black; padding:5px 12px; border-radius:15px; font-size:12px; font-weight:bold;">RECARGA</div>
     </div>
-    <div id="sillas-grid"></div>
+
+    <div id="sillas-grid" id="grid-container">
+        </div>
+
     <div class="action-bar">
         <button class="btn-round" style="background:#8a2be2;">📸</button>
         <button id="mic-btn" class="btn-round" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
-        <button class="btn-round" style="background:orange;" onclick="enviarRegalo(50, '🌹')">🎁</button>
+        <button class="btn-round" style="background:orange;" onclick="abrirGifts()">🎁</button>
         <button class="btn-round" style="background:#00ff00;">🔊</button>
     </div>
 </div>
+
+<div id="gift-shop">
+    <div class="gift-item" onclick="enviarRegalo(10, '🌹')">🌹<br>10</div>
+    <div class="gift-item" onclick="enviarRegalo(100, '🍦')">🍦<br>100</div>
+    <div class="gift-item" onclick="enviarRegalo(500, '🚗')">🚗<br>500</div>
+    <div class="gift-item" onclick="enviarRegalo(1000, '🦁')">🦁<br>1000</div>
+    <div class="gift-item" onclick="enviarRegalo(5000, '🏰')">🏰<br>5000</div>
+    <div class="gift-item" onclick="cerrarGifts()" style="color:red;">❌<br>CERRAR</div>
+</div>
+
 <script>
-    const appID = 249373029; 
+    const appID = 249373029; // Tu ID de ZegoCloud
     let miOro = 1000;
     let micOn = false;
-    function unirseASala() {
+    let nombreUsuario = "";
+
+    function entrarApp() {
+        nombreUsuario = document.getElementById('user-name').value;
+        const room = document.getElementById('room-id').value;
+        
+        if(!nombreUsuario || !room) return alert("Socio, pon tu nombre y sala");
+
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
+
+        // Generar 9 sillas
         const grid = document.getElementById('sillas-grid');
-        for(let i=1; i<=9; i++) grid.innerHTML += `<div class="silla-circle">👤</div>`;
+        grid.innerHTML = "";
+        for(let i=1; i<=9; i++) {
+            grid.innerHTML += `<div class="silla-circle" id="silla-${i}" onclick="sentarse(${i})">👤</div>`;
+        }
     }
+
+    function sentarse(num) {
+        const silla = document.getElementById(`silla-${num}`);
+        silla.classList.toggle('ocupada');
+        if(silla.classList.contains('ocupada')) {
+            silla.innerText = "🎤";
+            alert(`Te sentaste en la silla ${num}`);
+        } else {
+            silla.innerText = "👤";
+        }
+    }
+
+    function toggleMic() {
+        micOn = !micOn;
+        const btn = document.getElementById('mic-btn');
+        btn.style.background = micOn ? "#00ff00" : "#ff3333";
+        if(micOn) alert("🎙️ Micrófono Abierto");
+    }
+
+    function abrirGifts() { document.getElementById('gift-shop').style.bottom = "0"; }
+    function cerrarGifts() { document.getElementById('gift-shop').style.bottom = "-100%"; }
+
     function enviarRegalo(costo, emoji) {
-        if(miOro >= costo) { miOro -= costo; document.getElementById('oro-cont').innerText = miOro; alert("¡Regalo " + emoji + " enviado!"); }
-        else { alert("Socio, te falta Oro"); }
+        if(miOro >= costo) {
+            miOro -= costo;
+            document.getElementById('oro-cont').innerText = miOro;
+            alert(`🔥 ¡Enviaste ${emoji}! Descontado: ${costo} de Oro`);
+            cerrarGifts();
+        } else {
+            alert("❌ Socio, no tienes oro suficiente. ¡Recarga!");
+        }
     }
-    function recargar() { miOro += 1000; document.getElementById('oro-cont').innerText = miOro; }
-    function toggleMic() { micOn = !micOn; document.getElementById('mic-btn').style.background = micOn ? "#00ff00" : "#ff3333"; }
+
+    function recargar() {
+        miOro += 1000;
+        document.getElementById('oro-cont').innerText = miOro;
+        alert("💰 +1000 Oro acreditado");
+    }
 </script>
 </body>
 </html>
