@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; }
+        body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; touch-action: manipulation; }
         
-        /* ✨ MOVIMIENTO Y BRILLO */
-        .btn-active:active { transform: scale(0.9); transition: 0.1s; }
+        /* ✨ MOVIMIENTO Y FEEDBACK */
+        .click-effect:active { transform: scale(0.9); transition: 0.1s; }
         
         #premium-banner { 
             width:94%; margin:10px auto; background:rgba(20,20,30,0.95); 
@@ -16,115 +16,116 @@
             box-shadow: 0 0 15px rgba(255,215,0,0.5);
         }
 
-        /* 🚀 AVISO DE QUIÉN ENTRA */
-        #toast { position:fixed; top:160px; right:-100%; background:linear-gradient(90deg, #ffd700, #ff8c00); color:black; padding:10px 20px; border-radius:20px 0 0 20px; transition:0.5s; font-weight:bold; z-index:5000; }
+        /* 🚀 AVISO DE ENTRADA (QUIÉN ENTRA) */
+        #toast { 
+            position:fixed; top:160px; right:-100%; 
+            background: linear-gradient(90deg, #ffd700, #ff8c00); 
+            color:black; padding:10px 20px; border-radius:20px 0 0 20px; 
+            transition:0.5s; font-weight:bold; z-index:5000; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
 
+        /* SILLAS */
+        #sillas-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px; }
+        .silla-box { text-align:center; }
+        .silla-circle { 
+            width:65px; height:65px; border-radius:50%; background:#1a1a1a; 
+            border:2px solid #333; margin:0 auto; display:flex; 
+            align-items:center; justify-content:center; overflow:hidden;
+            position: relative;
+        }
+
+        /* BARRA DE BOTONES */
         .action-bar { position:fixed; bottom:40px; width:100%; display:flex; justify-content:space-evenly; align-items:center; }
-        .btn-circle { width:65px; height:65px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:28px; cursor:pointer; }
-        
-        .silla-box { text-align:center; transition: 0.3s; }
-        .silla-box:active { transform: scale(0.95); }
+        .btn-round { width:65px; height:65px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:28px; cursor:pointer; }
     </style>
 </head>
-<body onclick="iniciarAudio()">
+<body onclick="activarAudio()">
 
-<div id="toast"></div>
+<div id="toast">🚀 ¡Lluvia Live conectada!</div>
 
-<div id="premium-banner" class="btn-active" onclick="comprarNivel('SVIP')">
-    <div style="text-align:center; font-size:10px;">🛡️<br>CLANES</div>
-    <div style="text-align:center;">
-        <span style="color:#ffd700; font-weight:bold; font-size:14px;">👑 ARISTOCRACIA SVIP</span><br>
-        <span style="font-size:12px;">💰 ORO: <span id="oro-val">1000</span></span>
-    </div>
-    <div style="text-align:center; font-size:10px;">💵<br>RECARGA</div>
-</div>
-
-<div id="sillas" style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px;">
+<div id="main-ui">
+    <div id="premium-banner" class="click-effect" onclick="mostrarToast('👑 Abriendo Tienda SVIP...')">
+        <div style="text-align:center; font-size:10px;">🛡️<br>CLANES</div>
+        <div style="text-align:center;">
+            <span style="color:#ffd700; font-weight:bold; font-size:14px;">👑 ARISTOCRACIA SVIP</span><br>
+            <span style="font-size:12px;">💰 ORO: <span id="oro-cont">1000</span></span>
+        </div>
+        <div style="text-align:center; font-size:10px;">💵<br>RECARGA</div>
     </div>
 
-<div class="action-bar">
-    <button class="btn-circle btn-active" style="background:#8a2be2;" onclick="mostrarToast('📸 Abriendo Galería...')">📸</button>
-    <button id="mic" class="btn-circle btn-active" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
-    <button class="btn-circle btn-active" style="background:linear-gradient(45deg, #f09433, #dc2743);" onclick="abrirReels()">🎬</button>
-    <button id="spk" class="btn-circle btn-active" style="background:#00ff00;" onclick="toggleSpk()">🔊</button>
-    <button class="btn-circle btn-active" style="background:orange;" onclick="mostrarToast('🎁 Elige un regalo')">🎁</button>
+    <div id="sillas-grid"></div>
+
+    <div class="action-bar">
+        <button class="btn-round click-effect" style="background:#8a2be2;" onclick="mostrarToast('📸 Galería de Fotos')">📸</button>
+        <button id="mic-btn" class="btn-round click-effect" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
+        <button class="btn-round click-effect" style="background:linear-gradient(45deg, #f09433, #dc2743);" onclick="mostrarToast('🎬 Reels próximamente')">🎬</button>
+        <button id="spk-btn" class="btn-round click-effect" style="background:#00ff00;" onclick="toggleSpk()">🔊</button>
+        <button class="btn-round click-effect" style="background:orange;" onclick="mostrarToast('🎁 Envía un regalo')">🎁</button>
+    </div>
 </div>
 
-<audio id="remote-stream" autoplay playsinline></audio>
+<audio id="audio-receptor" autoplay playsinline></audio>
 
 <script>
-// =============================
-// 🛠️ VARIABLES Y AUDIO
-// =============================
-let micOn = false;
-let spkOn = true;
+    // 1. CONFIGURACIÓN INICIAL
+    let micActivo = false;
+    let spkActivo = true;
 
-function iniciarAudio() {
-    const audio = document.getElementById('remote-stream');
-    audio.play().catch(() => console.log("Esperando interacción..."));
-}
+    // 2. GENERAR SILLAS (TU LÓGICA)
+    const grid = document.getElementById('sillas-grid');
+    for(let i=1; i<=9; i++) {
+        grid.innerHTML += `
+            <div class="silla-box" onclick="sentarse(${i})">
+                <div id="silla-${i}" class="silla-circle">👤</div>
+                <div id="name-${i}" style="font-size:10px; color:#00ffcc; margin-top:5px;">Libre</div>
+            </div>`;
+    }
 
-function mostrarToast(msg) {
-    const t = document.getElementById('toast');
-    t.innerText = msg;
-    t.style.right = "0";
-    setTimeout(() => t.style.right = "-100%", 3000);
-}
+    // 3. FUNCIÓN PARA SENTARSE CON TU GIF
+    function sentarse(num) {
+        mostrarToast("✅ Te sentaste en la silla " + num);
+        const silla = document.getElementById(`silla-${num}`);
+        const nombre = document.getElementById(`name-${num}`);
+        
+        // Ponemos tu avatar SVIP
+        silla.innerHTML = `
+            <img src="https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif" width="65" height="65" style="object-fit:cover;">
+            <div style="position:absolute; top:2px; right:2px;">👑</div>
+        `;
+        nombre.innerText = "Melvin";
+        nombre.style.color = "#ffd700";
+    }
 
-// =============================
-// 🔥 REELS Y ARISTOCRACIA
-// =============================
-function abrirReels(){ mostrarToast("🎬 Cargando Reels próximamente..."); }
-async function comprarNivel(nivel){ alert("👑 ¡Felicidades! Ahora eres " + nivel); }
+    // 4. CONTROL DE AUDIO Y MIC
+    function activarAudio() {
+        document.getElementById('audio-receptor').play().catch(() => {});
+    }
 
-// =============================
-// 🪑 SISTEMA DE SILLAS (TU LÓGICA)
-// =============================
-const sillasDiv = document.getElementById('sillas');
-for(let i=1; i<=9; i++) {
-    sillasDiv.innerHTML += `
-    <div class="silla-box" onclick="sentarse(${i})">
-        <div id="silla-${i}" style="width:60px;height:60px;border-radius:50%;background:#1a1a1a;border:2px solid #333;margin:0 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;">
-            👤
-        </div>
-        <div id="name-${i}" style="font-size:10px;color:#00ffcc;margin-top:5px;">Libre</div>
-    </div>`;
-}
+    function toggleMic() {
+        micActivo = !micActivo;
+        const btn = document.getElementById('mic-btn');
+        btn.style.background = micActivo ? "#00ff00" : "#ff3333";
+        mostrarToast(micActivo ? "🎙️ Micrófono Encendido" : "🎙️ Micrófono Apagado");
+    }
 
-function ponerGifEnSilla(num, gif, nombre, nivel){
-    let icono = (nivel==="SVIP") ? "👑" : "💎";
-    document.getElementById("silla-"+num).innerHTML = `
-        <div style="position:relative; width:100%; height:100%;">
-            <img src="${gif}" width="60" height="60" style="object-fit:cover;">
-            <div style="position:absolute;top:2px;right:2px;font-size:12px;">${icono}</div>
-        </div>`;
-    document.getElementById("name-"+num).innerText = nombre;
-    document.getElementById("name-"+num).style.color = "#ffd700";
-}
+    function toggleSpk() {
+        spkActivo = !spkActivo;
+        document.getElementById('audio-receptor').muted = !spkActivo;
+        document.getElementById('spk-btn').style.background = spkActivo ? "#00ff00" : "#ff3333";
+    }
 
-function sentarse(num){
-    mostrarToast("✅ Te sentaste en la silla " + num);
-    ponerGifEnSilla(num, "https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif", "Melvin", "SVIP");
-}
+    // 5. SISTEMA DE AVISO (QUIÉN ENTRA)
+    function mostrarToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.style.right = "0";
+        setTimeout(() => { toast.style.right = "-100%"; }, 3000);
+    }
 
-// =============================
-// 🎙️ CONTROLES DE AUDIO
-// =============================
-function toggleMic() {
-    micOn = !micOn;
-    document.getElementById('mic').style.background = micOn ? "#00ff00" : "#ff3333";
-    mostrarToast(micOn ? "🎙️ Micrófono Abierto" : "🎙️ Micrófono Mutado");
-}
+    // Simular que alguien entra para probar el aviso
+    setTimeout(() => { mostrarToast("👋 Socio Melvin entró a sala"); }, 2000);
 
-function toggleSpk() {
-    spkOn = !spkOn;
-    const audio = document.getElementById('remote-stream');
-    audio.muted = !spkOn;
-    document.getElementById('spk').style.background = spkOn ? "#00ff00" : "#ff3333";
-}
-
-// Simulación de entrada para que veas quién llega
-setTimeout(() => mostrarToast("👋 Socio Melvin entró a sala"), 2000);
 </script>
 </body>
 </html>
