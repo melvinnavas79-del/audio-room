@@ -1,225 +1,130 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lluvia Live PRO</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; }
+        
+        /* ✨ MOVIMIENTO Y BRILLO */
+        .btn-active:active { transform: scale(0.9); transition: 0.1s; }
+        
+        #premium-banner { 
+            width:94%; margin:10px auto; background:rgba(20,20,30,0.95); 
+            border-radius:20px; border:2px solid #ffd700; display:flex; 
+            justify-content:space-around; align-items:center; padding:12px 5px;
+            box-shadow: 0 0 15px rgba(255,215,0,0.5);
+        }
 
-<!-- 🔥 PEERJS -->
-<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+        /* 🚀 AVISO DE QUIÉN ENTRA */
+        #toast { position:fixed; top:160px; right:-100%; background:linear-gradient(90deg, #ffd700, #ff8c00); color:black; padding:10px 20px; border-radius:20px 0 0 20px; transition:0.5s; font-weight:bold; z-index:5000; }
 
-<!-- 🔥 FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-<style>
-body { margin:0; background:#0b001a; color:white; font-family:sans-serif; }
-
-/* LOGIN */
-#login { 
-    position:fixed; inset:0; background:#000; 
-    display:flex; flex-direction:column; 
-    justify-content:center; align-items:center;
-}
-
-input { padding:15px; margin:10px; border-radius:10px; border:none; width:80%; }
-
-button { padding:15px; margin:5px; border:none; border-radius:10px; width:80%; }
-
-/* APP */
-#app { display:none; text-align:center; }
-
-.sillas { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px; }
-
-.circle { width:60px; height:60px; border-radius:50%; background:#1a1a1a; display:flex; align-items:center; justify-content:center; margin:auto; }
-
-.bar { position:fixed; bottom:40px; width:100%; display:flex; justify-content:space-evenly; }
-</style>
+        .action-bar { position:fixed; bottom:40px; width:100%; display:flex; justify-content:space-evenly; align-items:center; }
+        .btn-circle { width:65px; height:65px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:28px; cursor:pointer; }
+        
+        .silla-box { text-align:center; transition: 0.3s; }
+        .silla-box:active { transform: scale(0.95); }
+    </style>
 </head>
+<body onclick="iniciarAudio()">
 
-<body>
+<div id="toast"></div>
 
-<!-- LOGIN -->
-<div id="login">
-    <h2>Entrar a Sala</h2>
-    <input id="nombre" placeholder="Tu nombre">
-    <input id="room" placeholder="ID sala">
-    <button onclick="entrar('A')">Crear Sala</button>
-    <button onclick="entrar('B')">Entrar</button>
-</div>
-
-<!-- APP -->
-<div id="app">
-    <h3>Sala: <span id="roomTxt"></span></h3>
-    <div class="sillas" id="sillas"></div>
-
-    <div class="bar">
-        <button onclick="toggleMic()">🎤</button>
-        <button onclick="toggleSpk()">🔊</button>
+<div id="premium-banner" class="btn-active" onclick="comprarNivel('SVIP')">
+    <div style="text-align:center; font-size:10px;">🛡️<br>CLANES</div>
+    <div style="text-align:center;">
+        <span style="color:#ffd700; font-weight:bold; font-size:14px;">👑 ARISTOCRACIA SVIP</span><br>
+        <span style="font-size:12px;">💰 ORO: <span id="oro-val">1000</span></span>
     </div>
+    <div style="text-align:center; font-size:10px;">💵<br>RECARGA</div>
 </div>
 
-<audio id="audio" autoplay playsinline></audio>
+<div id="sillas" style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px;">
+    </div>
+
+<div class="action-bar">
+    <button class="btn-circle btn-active" style="background:#8a2be2;" onclick="mostrarToast('📸 Abriendo Galería...')">📸</button>
+    <button id="mic" class="btn-circle btn-active" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
+    <button class="btn-circle btn-active" style="background:linear-gradient(45deg, #f09433, #dc2743);" onclick="abrirReels()">🎬</button>
+    <button id="spk" class="btn-circle btn-active" style="background:#00ff00;" onclick="toggleSpk()">🔊</button>
+    <button class="btn-circle btn-active" style="background:orange;" onclick="mostrarToast('🎁 Elige un regalo')">🎁</button>
+</div>
+
+<audio id="remote-stream" autoplay playsinline></audio>
 
 <script>
+// =============================
+// 🛠️ VARIABLES Y AUDIO
+// =============================
+let micOn = false;
+let spkOn = true;
 
-// =======================
-// 🔥 FIREBASE CONFIG
-// =======================
-const firebaseConfig = {
-    apiKey: "AIzaSyXXXX",
-    authDomain: "lluvia-live.firebaseapp.com",
-    projectId: "lluvia-live-69a05"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// =======================
-// VARIABLES
-// =======================
-let peer, stream;
-let role, room, nombre;
-
-// =======================
-// ENTRAR SALA
-// =======================
-async function entrar(tipo){
-
-    nombre = document.getElementById("nombre").value;
-    room = document.getElementById("room").value;
-    role = tipo;
-
-    if(!nombre || !room){
-        alert("Faltan datos");
-        return;
-    }
-
-    // 🎤 activar mic
-    try{
-        stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    }catch{
-        alert("Permite micrófono");
-        return;
-    }
-
-    document.getElementById("login").style.display = "none";
-    document.getElementById("app").style.display = "block";
-    document.getElementById("roomTxt").innerText = room;
-
-    // 🔥 PEERJS
-    peer = new Peer("room-"+room+"-"+role, {
-        host: "0.peerjs.com",
-        port: 443,
-        secure: true
-    });
-
-    // recibir audio
-    peer.on("call", call=>{
-        call.answer(stream);
-
-        call.on("stream", s=>{
-            document.getElementById("audio").srcObject = s;
-        });
-    });
-
-    // llamar al otro
-    peer.on("open", ()=>{
-        setTimeout(()=>{
-            let destino = role === "A" ? "B" : "A";
-
-            let call = peer.call("room-"+room+"-"+destino, stream);
-
-            if(call){
-                call.on("stream", s=>{
-                    document.getElementById("audio").srcObject = s;
-                });
-            }
-        },2000);
-    });
-
-    crearSillas();
-    escucharSillas();
+function iniciarAudio() {
+    const audio = document.getElementById('remote-stream');
+    audio.play().catch(() => console.log("Esperando interacción..."));
 }
 
-// =======================
-// 🎤 MICRO
-// =======================
-function toggleMic(){
-
-    if(!stream) return;
-
-    let estado = !stream.getAudioTracks()[0].enabled;
-    stream.getAudioTracks()[0].enabled = estado;
-
-    alert(estado ? "🎤 Mic ON" : "🎤 Mic OFF");
+function mostrarToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.style.right = "0";
+    setTimeout(() => t.style.right = "-100%", 3000);
 }
 
-// =======================
-// 🔊 BOCINA
-// =======================
-function toggleSpk(){
-    let audio = document.getElementById("audio");
-    audio.muted = !audio.muted;
+// =============================
+// 🔥 REELS Y ARISTOCRACIA
+// =============================
+function abrirReels(){ mostrarToast("🎬 Cargando Reels próximamente..."); }
+async function comprarNivel(nivel){ alert("👑 ¡Felicidades! Ahora eres " + nivel); }
+
+// =============================
+// 🪑 SISTEMA DE SILLAS (TU LÓGICA)
+// =============================
+const sillasDiv = document.getElementById('sillas');
+for(let i=1; i<=9; i++) {
+    sillasDiv.innerHTML += `
+    <div class="silla-box" onclick="sentarse(${i})">
+        <div id="silla-${i}" style="width:60px;height:60px;border-radius:50%;background:#1a1a1a;border:2px solid #333;margin:0 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            👤
+        </div>
+        <div id="name-${i}" style="font-size:10px;color:#00ffcc;margin-top:5px;">Libre</div>
+    </div>`;
 }
 
-// =======================
-// 🪑 CREAR SILLAS
-// =======================
-function crearSillas(){
-
-    let div = document.getElementById("sillas");
-    div.innerHTML = "";
-
-    for(let i=1;i<=9;i++){
-        div.innerHTML += `
-        <div onclick="sentarse(${i})">
-            <div class="circle" id="silla-${i}">👤</div>
-            <small>Silla ${i}</small>
+function ponerGifEnSilla(num, gif, nombre, nivel){
+    let icono = (nivel==="SVIP") ? "👑" : "💎";
+    document.getElementById("silla-"+num).innerHTML = `
+        <div style="position:relative; width:100%; height:100%;">
+            <img src="${gif}" width="60" height="60" style="object-fit:cover;">
+            <div style="position:absolute;top:2px;right:2px;font-size:12px;">${icono}</div>
         </div>`;
-    }
+    document.getElementById("name-"+num).innerText = nombre;
+    document.getElementById("name-"+num).style.color = "#ffd700";
 }
 
-// =======================
-// 🪑 SENTARSE (FIREBASE)
-// =======================
-async function sentarse(num){
-
-    await db.collection("salas").doc(room).set({
-        ["silla"+num]: {
-            nombre: nombre
-        }
-    }, { merge:true });
-
+function sentarse(num){
+    mostrarToast("✅ Te sentaste en la silla " + num);
+    ponerGifEnSilla(num, "https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif", "Melvin", "SVIP");
 }
 
-// =======================
-// 👥 ESCUCHAR TIEMPO REAL
-// =======================
-function escucharSillas(){
-
-    db.collection("salas").doc(room).onSnapshot(doc=>{
-
-        const data = doc.data() || {};
-
-        for(let i=1;i<=9;i++){
-
-            const silla = data["silla"+i];
-
-            if(silla){
-                document.getElementById("silla-"+i).innerHTML = `
-                    👤<br><small>${silla.nombre}</small>
-                `;
-            }else{
-                document.getElementById("silla-"+i).innerHTML = "👤";
-            }
-        }
-
-    });
-
+// =============================
+// 🎙️ CONTROLES DE AUDIO
+// =============================
+function toggleMic() {
+    micOn = !micOn;
+    document.getElementById('mic').style.background = micOn ? "#00ff00" : "#ff3333";
+    mostrarToast(micOn ? "🎙️ Micrófono Abierto" : "🎙️ Micrófono Mutado");
 }
 
+function toggleSpk() {
+    spkOn = !spkOn;
+    const audio = document.getElementById('remote-stream');
+    audio.muted = !spkOn;
+    document.getElementById('spk').style.background = spkOn ? "#00ff00" : "#ff3333";
+}
+
+// Simulación de entrada para que veas quién llega
+setTimeout(() => mostrarToast("👋 Socio Melvin entró a sala"), 2000);
 </script>
-
 </body>
 </html>
