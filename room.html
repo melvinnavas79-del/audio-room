@@ -1,3 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lluvia Live PRO</title>
+
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+<style>
+body { margin:0; background:#0b001a; color:white; font-family:sans-serif; }
+
+/* LOGIN */
+#login { 
+    position:fixed; inset:0; background:#000; 
+    display:flex; flex-direction:column; 
+    justify-content:center; align-items:center;
+}
+
+input { padding:15px; margin:10px; border-radius:10px; border:none; width:80%; }
+
+button { padding:15px; margin:5px; border:none; border-radius:10px; width:80%; }
+
+/* APP */
+#app { display:none; text-align:center; }
+
+.sillas { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px; }
+
+.circle { width:60px; height:60px; border-radius:50%; background:#1a1a1a; display:flex; align-items:center; justify-content:center; margin:auto; }
+
+.bar { position:fixed; bottom:40px; width:100%; display:flex; justify-content:space-evenly; }
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+    <h2>Entrar a Sala</h2>
+    <input id="nombre" placeholder="Tu nombre">
+    <input id="room" placeholder="ID sala">
+    <button onclick="entrar('A')">Crear Sala</button>
+    <button onclick="entrar('B')">Entrar</button>
+</div>
+
+<!-- APP -->
+<div id="app">
+    <h3>Sala: <span id="roomTxt"></span></h3>
+    <div class="sillas" id="sillas"></div>
+
+    <div class="bar">
+        <button onclick="toggleMic()">🎤</button>
+        <button onclick="toggleSpk()">🔊</button>
+    </div>
+</div>
+
+<audio id="audio" autoplay playsinline></audio>
+
 <script>
 
 // =======================
@@ -5,10 +63,9 @@
 // =======================
 let peer, stream;
 let role, room, nombre;
-let conectado = false;
 
 // =======================
-// ENTRAR SALA
+// ENTRAR SALA (FIX REAL)
 // =======================
 async function entrar(tipo){
 
@@ -21,19 +78,24 @@ async function entrar(tipo){
         return;
     }
 
-    document.getElementById("login").style.display = "none";
-    document.getElementById("app").style.display = "block";
-    document.getElementById("roomTxt").innerText = room;
-
-    // crear peer
-    peer = new Peer("room-"+room+"-"+role);
-
-    // pedir mic DESDE EL INICIO 🔥
+    // 🔥 activar micrófono (IMPORTANTE iPhone)
     try{
         stream = await navigator.mediaDevices.getUserMedia({audio:true});
     }catch{
         alert("Permite micrófono");
+        return;
     }
+
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    document.getElementById("roomTxt").innerText = room;
+
+    // 🔥 PEER FUNCIONAL
+    peer = new Peer("room-"+room+"-"+role, {
+        host: "0.peerjs.com",
+        port: 443,
+        secure: true
+    });
 
     // recibir llamada
     peer.on("call", call=>{
@@ -41,41 +103,26 @@ async function entrar(tipo){
 
         call.on("stream", s=>{
             document.getElementById("audio").srcObject = s;
-            console.log("Recibiendo audio 🔊");
+            console.log("🔊 audio recibido");
         });
     });
 
-    // cuando conecta → llamar automáticamente
-    peer.on("open", id=>{
-        console.log("Conectado como:", id);
-
+    // cuando conecta → llamar al otro
+    peer.on("open", ()=>{
         setTimeout(()=>{
-            conectarConOtro();
-        }, 2000);
+            let destino = role === "A" ? "B" : "A";
+
+            let call = peer.call("room-"+room+"-"+destino, stream);
+
+            if(call){
+                call.on("stream", s=>{
+                    document.getElementById("audio").srcObject = s;
+                });
+            }
+        },2000);
     });
 
     crearSillas();
-}
-
-// =======================
-// CONECTAR ENTRE TELÉFONOS
-// =======================
-function conectarConOtro(){
-
-    if(conectado) return;
-
-    let destino = role === "A" ? "B" : "A";
-
-    let call = peer.call("room-"+room+"-"+destino, stream);
-
-    if(call){
-        conectado = true;
-
-        call.on("stream", s=>{
-            document.getElementById("audio").srcObject = s;
-            console.log("Audio activo 🔥");
-        });
-    }
 }
 
 // =======================
@@ -85,10 +132,10 @@ function toggleMic(){
 
     if(!stream) return;
 
-    let enabled = !stream.getAudioTracks()[0].enabled;
-    stream.getAudioTracks()[0].enabled = enabled;
+    let estado = !stream.getAudioTracks()[0].enabled;
+    stream.getAudioTracks()[0].enabled = estado;
 
-    alert(enabled ? "🎤 Mic ON" : "🎤 Mic OFF");
+    alert(estado ? "🎤 Mic ON" : "🎤 Mic OFF");
 }
 
 // =======================
@@ -121,3 +168,6 @@ function sentarse(num){
 }
 
 </script>
+
+</body>
+</html>
