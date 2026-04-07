@@ -3,49 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lluvia Live</title>
     <style>
         body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; touch-action: manipulation; }
         
-        /* ✨ MOVIMIENTO Y FEEDBACK */
+        /* 🚪 PANTALLA DE INGRESO */
+        #login-screen { 
+            position:fixed; top:0; left:0; width:100%; height:100%; 
+            background:#0b001a; z-index:9999; display:flex; 
+            flex-direction:column; align-items:center; justify-content:center;
+        }
+        .input-box { 
+            padding:15px; width:75%; border-radius:12px; border:1px solid #333; 
+            background:#1a1a1a; color:white; margin-bottom:15px; font-size:16px;
+        }
+        .btn-entrar { 
+            background:linear-gradient(90deg, #00ff00, #00cc00); color:black; 
+            padding:16px 50px; border-radius:30px; font-weight:bold; 
+            border:none; font-size:18px; cursor:pointer;
+        }
+
+        /* ✨ EFECTOS Y DISEÑO */
         .click-effect:active { transform: scale(0.9); transition: 0.1s; }
         
         #premium-banner { 
-            width:94%; margin:10px auto; background:rgba(20,20,30,0.95); 
+            width:92%; margin:10px auto; background:rgba(20,20,30,0.95); 
             border-radius:20px; border:2px solid #ffd700; display:flex; 
             justify-content:space-around; align-items:center; padding:12px 5px;
             box-shadow: 0 0 15px rgba(255,215,0,0.5);
         }
 
-        /* 🚀 AVISO DE ENTRADA (QUIÉN ENTRA) */
         #toast { 
             position:fixed; top:160px; right:-100%; 
             background: linear-gradient(90deg, #ffd700, #ff8c00); 
             color:black; padding:10px 20px; border-radius:20px 0 0 20px; 
             transition:0.5s; font-weight:bold; z-index:5000; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        /* SILLAS */
         #sillas-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px; }
-        .silla-box { text-align:center; }
         .silla-circle { 
             width:65px; height:65px; border-radius:50%; background:#1a1a1a; 
             border:2px solid #333; margin:0 auto; display:flex; 
-            align-items:center; justify-content:center; overflow:hidden;
-            position: relative;
+            align-items:center; justify-content:center; overflow:hidden; position: relative;
         }
 
-        /* BARRA DE BOTONES */
         .action-bar { position:fixed; bottom:40px; width:100%; display:flex; justify-content:space-evenly; align-items:center; }
         .btn-round { width:65px; height:65px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:28px; cursor:pointer; }
     </style>
 </head>
-<body onclick="activarAudio()">
+<body>
 
-<div id="toast">🚀 ¡Lluvia Live conectada!</div>
+<div id="login-screen">
+    <h1 style="color:#ffd700; letter-spacing:2px;">☔ LLUVIA LIVE</h1>
+    <p style="color:#aaa;">Ingresa a una sala para conectar</p>
+    <input type="text" id="user-name" class="input-box" placeholder="Tu nombre o apodo">
+    <input type="number" id="room-id" class="input-box" placeholder="Número de Sala (ej: 777)">
+    <button class="btn-entrar click-effect" onclick="unirseASala()">ENTRAR AHORA</button>
+</div>
 
-<div id="main-ui">
-    <div id="premium-banner" class="click-effect" onclick="mostrarToast('👑 Abriendo Tienda SVIP...')">
+<div id="toast"></div>
+
+<div id="main-app" style="display:none;">
+    <div id="premium-banner" class="click-effect" onclick="mostrarToast('👑 Tienda SVIP abierta')">
         <div style="text-align:center; font-size:10px;">🛡️<br>CLANES</div>
         <div style="text-align:center;">
             <span style="color:#ffd700; font-weight:bold; font-size:14px;">👑 ARISTOCRACIA SVIP</span><br>
@@ -57,56 +76,91 @@
     <div id="sillas-grid"></div>
 
     <div class="action-bar">
-        <button class="btn-round click-effect" style="background:#8a2be2;" onclick="mostrarToast('📸 Galería de Fotos')">📸</button>
+        <button class="btn-round click-effect" style="background:#8a2be2;" onclick="mostrarToast('📸 Galería')">📸</button>
         <button id="mic-btn" class="btn-round click-effect" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
         <button class="btn-round click-effect" style="background:linear-gradient(45deg, #f09433, #dc2743);" onclick="mostrarToast('🎬 Reels próximamente')">🎬</button>
         <button id="spk-btn" class="btn-round click-effect" style="background:#00ff00;" onclick="toggleSpk()">🔊</button>
-        <button class="btn-round click-effect" style="background:orange;" onclick="mostrarToast('🎁 Envía un regalo')">🎁</button>
+        <button class="btn-round click-effect" style="background:orange;" onclick="enviarRegalo()">🎁</button>
     </div>
 </div>
 
 <audio id="audio-receptor" autoplay playsinline></audio>
 
 <script>
-    // 1. CONFIGURACIÓN INICIAL
+    let miOro = 1000;
     let micActivo = false;
     let spkActivo = true;
 
-    // 2. GENERAR SILLAS (TU LÓGICA)
-    const grid = document.getElementById('sillas-grid');
-    for(let i=1; i<=9; i++) {
-        grid.innerHTML += `
-            <div class="silla-box" onclick="sentarse(${i})">
-                <div id="silla-${i}" class="silla-circle">👤</div>
-                <div id="name-${i}" style="font-size:10px; color:#00ffcc; margin-top:5px;">Libre</div>
-            </div>`;
+    // --- LÓGICA DE SALAS ---
+    function unirseASala() {
+        const nombre = document.getElementById('user-name').value;
+        const sala = document.getElementById('room-id').value;
+
+        if(!nombre || !sala) {
+            alert("⚠️ Escribe tu nombre y el número de sala");
+            return;
+        }
+
+        // Ocultar login y mostrar app
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+
+        // Iniciar audio
+        activarAudio();
+        
+        // Generar sillas
+        generarSillas();
+        
+        mostrarToast(`🚀 Sala ${sala}: ¡Bienvenido ${nombre}!`);
     }
 
-    // 3. FUNCIÓN PARA SENTARSE CON TU GIF
+    function activarAudio() {
+        const audio = document.getElementById('audio-receptor');
+        audio.play().catch(() => console.log("Audio esperando interacción"));
+    }
+
+    // --- SILLAS Y AVATARES ---
+    function generarSillas() {
+        const grid = document.getElementById('sillas-grid');
+        grid.innerHTML = "";
+        for(let i=1; i<=9; i++) {
+            grid.innerHTML += `
+                <div class="silla-box" onclick="sentarse(${i})">
+                    <div id="silla-${i}" class="silla-circle">👤</div>
+                    <div id="name-${i}" style="font-size:10px; color:#00ffcc; margin-top:5px;">Libre</div>
+                </div>`;
+        }
+    }
+
     function sentarse(num) {
-        mostrarToast("✅ Te sentaste en la silla " + num);
         const silla = document.getElementById(`silla-${num}`);
-        const nombre = document.getElementById(`name-${num}`);
+        const nombreLabel = document.getElementById(`name-${num}`);
+        const miNombre = document.getElementById('user-name').value;
         
-        // Ponemos tu avatar SVIP
         silla.innerHTML = `
             <img src="https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif" width="65" height="65" style="object-fit:cover;">
             <div style="position:absolute; top:2px; right:2px;">👑</div>
         `;
-        nombre.innerText = "Melvin";
-        nombre.style.color = "#ffd700";
+        nombreLabel.innerText = miNombre;
+        nombreLabel.style.color = "#ffd700";
+        mostrarToast(`✅ Te sentaste en silla ${num}`);
     }
 
-    // 4. CONTROL DE AUDIO Y MIC
-    function activarAudio() {
-        document.getElementById('audio-receptor').play().catch(() => {});
+    // --- BOTONES Y REGALOS ---
+    function enviarRegalo() {
+        if (miOro >= 50) {
+            miOro -= 50;
+            document.getElementById('oro-cont').innerText = miOro;
+            mostrarToast("🎁 Regalo enviado (-50 Oro)");
+        } else {
+            alert("❌ Oro insuficiente");
+        }
     }
 
     function toggleMic() {
         micActivo = !micActivo;
-        const btn = document.getElementById('mic-btn');
-        btn.style.background = micActivo ? "#00ff00" : "#ff3333";
-        mostrarToast(micActivo ? "🎙️ Micrófono Encendido" : "🎙️ Micrófono Apagado");
+        document.getElementById('mic-btn').style.background = micActivo ? "#00ff00" : "#ff3333";
+        mostrarToast(micActivo ? "🎙️ Micrófono Abierto" : "🎙️ Micrófono Mutado");
     }
 
     function toggleSpk() {
@@ -115,17 +169,12 @@
         document.getElementById('spk-btn').style.background = spkActivo ? "#00ff00" : "#ff3333";
     }
 
-    // 5. SISTEMA DE AVISO (QUIÉN ENTRA)
     function mostrarToast(msg) {
-        const toast = document.getElementById('toast');
-        toast.innerText = msg;
-        toast.style.right = "0";
-        setTimeout(() => { toast.style.right = "-100%"; }, 3000);
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.style.right = "0";
+        setTimeout(() => { t.style.right = "-100%"; }, 3000);
     }
-
-    // Simular que alguien entra para probar el aviso
-    setTimeout(() => { mostrarToast("👋 Socio Melvin entró a sala"); }, 2000);
-
 </script>
 </body>
 </html>
