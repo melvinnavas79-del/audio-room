@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lluvia Live PRO</title>
 
+<!-- 🔥 PEERJS -->
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+<!-- 🔥 FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
 body { margin:0; background:#0b001a; color:white; font-family:sans-serif; }
@@ -59,13 +64,25 @@ button { padding:15px; margin:5px; border:none; border-radius:10px; width:80%; }
 <script>
 
 // =======================
+// 🔥 FIREBASE CONFIG
+// =======================
+const firebaseConfig = {
+    apiKey: "AIzaSyXXXX",
+    authDomain: "lluvia-live.firebaseapp.com",
+    projectId: "lluvia-live-69a05"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// =======================
 // VARIABLES
 // =======================
 let peer, stream;
 let role, room, nombre;
 
 // =======================
-// ENTRAR SALA (FIX REAL)
+// ENTRAR SALA
 // =======================
 async function entrar(tipo){
 
@@ -78,7 +95,7 @@ async function entrar(tipo){
         return;
     }
 
-    // 🔥 activar micrófono (IMPORTANTE iPhone)
+    // 🎤 activar mic
     try{
         stream = await navigator.mediaDevices.getUserMedia({audio:true});
     }catch{
@@ -90,24 +107,23 @@ async function entrar(tipo){
     document.getElementById("app").style.display = "block";
     document.getElementById("roomTxt").innerText = room;
 
-    // 🔥 PEER FUNCIONAL
+    // 🔥 PEERJS
     peer = new Peer("room-"+room+"-"+role, {
         host: "0.peerjs.com",
         port: 443,
         secure: true
     });
 
-    // recibir llamada
+    // recibir audio
     peer.on("call", call=>{
         call.answer(stream);
 
         call.on("stream", s=>{
             document.getElementById("audio").srcObject = s;
-            console.log("🔊 audio recibido");
         });
     });
 
-    // cuando conecta → llamar al otro
+    // llamar al otro
     peer.on("open", ()=>{
         setTimeout(()=>{
             let destino = role === "A" ? "B" : "A";
@@ -123,10 +139,11 @@ async function entrar(tipo){
     });
 
     crearSillas();
+    escucharSillas();
 }
 
 // =======================
-// MICRO
+// 🎤 MICRO
 // =======================
 function toggleMic(){
 
@@ -139,7 +156,7 @@ function toggleMic(){
 }
 
 // =======================
-// BOCINA
+// 🔊 BOCINA
 // =======================
 function toggleSpk(){
     let audio = document.getElementById("audio");
@@ -147,7 +164,7 @@ function toggleSpk(){
 }
 
 // =======================
-// SILLAS
+// 🪑 CREAR SILLAS
 // =======================
 function crearSillas(){
 
@@ -163,8 +180,43 @@ function crearSillas(){
     }
 }
 
-function sentarse(num){
-    document.getElementById("silla-"+num).innerHTML = "👤🎤";
+// =======================
+// 🪑 SENTARSE (FIREBASE)
+// =======================
+async function sentarse(num){
+
+    await db.collection("salas").doc(room).set({
+        ["silla"+num]: {
+            nombre: nombre
+        }
+    }, { merge:true });
+
+}
+
+// =======================
+// 👥 ESCUCHAR TIEMPO REAL
+// =======================
+function escucharSillas(){
+
+    db.collection("salas").doc(room).onSnapshot(doc=>{
+
+        const data = doc.data() || {};
+
+        for(let i=1;i<=9;i++){
+
+            const silla = data["silla"+i];
+
+            if(silla){
+                document.getElementById("silla-"+i).innerHTML = `
+                    👤<br><small>${silla.nombre}</small>
+                `;
+            }else{
+                document.getElementById("silla-"+i).innerHTML = "👤";
+            }
+        }
+
+    });
+
 }
 
 </script>
