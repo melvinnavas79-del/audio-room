@@ -3,128 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live Elite</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <title>Lluvia Live Pro</title>
     <style>
         body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; }
-        /* BANNER ARISTOCRACIA SVIP */
+        
+        /* BANNER SUPERIOR CON BRILLO */
         #premium-banner {
             width:94%; margin:10px auto; background:rgba(20,20,30,0.95); 
             border-radius:20px; border:2px solid #ffd700; display:flex; 
             justify-content:space-around; align-items:center; padding:12px 5px;
-            box-shadow: 0 0 15px rgba(255,215,0,0.4);
+            box-shadow: 0 0 15px rgba(255,215,0,0.5);
         }
-        .stat-box { text-align:center; font-size:11px; }
-        .svip-title { color:#ffd700; font-weight:bold; text-shadow:0 0 8px #ffd700; font-size:14px; }
-        
-        /* SILLAS CON BRILLO */
-        .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:15px; }
-        .silla-unit { text-align:center; position:relative; }
-        .silla-circle { 
-            width:65px; height:65px; border-radius:50%; background:#1a1a1a; 
-            margin:0 auto; border:2px solid #333; display:flex; align-items:center; justify-content:center;
-            overflow:hidden;
+
+        /* ANIMACIÓN DE PULSO PARA BOTONES ACTIVOS */
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(0, 255, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
         }
-        .svip-aura { border:2px solid #ff00ff !important; box-shadow:0 0 15px #ff00ff; }
-        .vip-aura { border:2px solid #ffd700 !important; box-shadow:0 0 15px #ffd700; }
         
-        /* BOTONES PRINCIPALES */
-        .action-bar { position:fixed; bottom:30px; width:100%; display:flex; justify-content:space-evenly; align-items:center; }
-        .btn-round { width:65px; height:65px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:28px; cursor:pointer; }
-        
-        /* SECCIÓN FOTOS */
-        #photo-gallery { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:1000; overflow-y:auto; }
+        .btn-active { animation: pulse-green 2s infinite; }
+
+        /* BARRA DE ACCIÓN INFERIOR */
+        .action-bar { 
+            position:fixed; bottom:40px; width:100%; 
+            display:flex; justify-content:space-evenly; align-items:center; 
+        }
+
+        .btn-round { 
+            width:65px; height:65px; border-radius:50%; border:none; 
+            display:flex; align-items:center; justify-content:center; 
+            font-size:28px; cursor:pointer; transition: transform 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .btn-round:active { transform: scale(0.9); } /* Movimiento al tocar */
+
+        /* BOTÓN DE REELS (ESTILO INSTAGRAM) */
+        .btn-reels {
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            width: 75px; height: 75px; font-size: 35px;
+        }
+
+        #silla-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px; }
     </style>
 </head>
 <body>
 
 <div id="main-ui">
     <div id="premium-banner">
-        <div class="stat-box" onclick="abrirClanes()">🛡️<br>CLANES</div>
-        <div class="stat-box" onclick="abrirTienda()">
-            <span class="svip-title">👑 ARISTOCRACIA SVIP</span><br>
-            💰 ORO: <span id="oro-val">1000</span>
+        <div style="text-align:center; font-size:10px;">🛡️<br>CLANES</div>
+        <div style="text-align:center;">
+            <span style="color:#ffd700; font-weight:bold;">👑 ARISTOCRACIA SVIP</span><br>
+            <span style="font-size:12px;">💰 ORO: 1000</span>
         </div>
-        <div class="stat-box" onclick="abrirWallet()">💵<br>RECARGA</div>
+        <div style="text-align:center; font-size:10px;">💵<br>RECARGA</div>
     </div>
 
-    <div class="grid" id="silla-grid">
-        </div>
+    <div id="silla-grid">
+        <script>
+            for(let i=1; i<=9; i++){
+                document.write(`<div style="text-align:center;"><div style="width:60px; height:60px; border-radius:50%; background:#1a1a1a; border:2px solid #333; margin:0 auto; display:flex; align-items:center; justify-content:center;">👤</div><div style="font-size:10px; color:#00ffcc; margin-top:5px;">Libre</div></div>`);
+            }
+        </script>
+    </div>
 
     <div class="action-bar">
-        <button class="btn-round" style="background:#8a2be2;" onclick="abrirFotos()">📸</button>
-        <button id="mic-btn" class="btn-round" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
+        <button class="btn-round" style="background:#8a2be2;" onclick="abrirSeccion('fotos')">📸</button>
+        <button id="mic-btn" class="btn-round btn-active" style="background:#00ff00;" onclick="toggleMic()">🎙️</button>
+        
+        <button class="btn-round btn-reels" onclick="abrirReels()">🎬</button>
+        
         <button id="spk-btn" class="btn-round" style="background:#00ff00;" onclick="toggleAudio()">🔊</button>
         <button class="btn-round" style="background:orange;" onclick="abrirRegalos()">🎁</button>
     </div>
 </div>
 
-<div id="photo-gallery">
-    <div style="padding:20px; display:flex; justify-content:space-between;">
-        <h3>📸 Galería VIP</h3>
-        <button onclick="cerrarFotos()" style="background:none; color:white; border:none; font-size:24px;">✕</button>
-    </div>
-    <div id="feed-fotos" style="padding:10px;"></div>
-    <button onclick="subirFoto()" style="position:fixed; bottom:20px; right:20px; width:60px; height:60px; border-radius:50%; background:#ffd700; border:none; font-size:30px;">+</button>
-</div>
-
 <audio id="remote-audio" autoplay></audio>
 
 <script>
-    // CONFIGURA TU FIREBASE AQUÍ
-    const firebaseConfig = { apiKey: "TU_API_KEY", projectId: "live-room-qwd14x" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    let micStatus = true;
+    let audioStatus = true;
 
-    let myName = "Melvin"; // Cambiar por variable de FlutterFlow
-    let room = "1234";
-    let isMicOn = false;
-
-    // Crear Sillas
-    const grid = document.getElementById('silla-grid');
-    for(let i=1; i<=9; i++) {
-        grid.innerHTML += `
-            <div class="silla-unit">
-                <div class="silla-circle" id="s-circle-${i}">👤</div>
-                <div style="font-size:10px; margin-top:5px;" id="s-name-${i}">Libre</div>
-            </div>`;
+    function toggleMic() {
+        micStatus = !micStatus;
+        const btn = document.getElementById('mic-btn');
+        btn.style.background = micStatus ? "#00ff00" : "#ff3333";
+        if(micStatus) btn.classList.add('btn-active');
+        else btn.classList.remove('btn-active');
+        // Aquí va tu código de PeerJS para apagar el stream
     }
 
-    // FUNCIÓN DE REGALOS (WALLET ACTIVA)
-    async function enviarRegalo(costo, nombreRegalo) {
-        const userRef = db.collection("usuarios").doc(myName);
-        try {
-            await db.runTransaction(async (t) => {
-                const doc = await t.get(userRef);
-                const oro = doc.data().oro || 0;
-                if (oro < costo) throw "Oro insuficiente";
-                t.update(userRef, { oro: oro - costo });
-                // Registrar regalo en la sala
-                db.collection("salas").doc(room).collection("regalos").add({
-                    de: myName, tipo: nombreRegalo, time: Date.now()
-                });
-            });
-            alert("🎁 ¡Regalo enviado!");
-        } catch(e) { alert(e); }
+    function toggleAudio() {
+        audioStatus = !audioStatus;
+        const btn = document.getElementById('spk-btn');
+        const audio = document.getElementById('remote-audio');
+        btn.style.background = audioStatus ? "#00ff00" : "#ff3333";
+        audio.muted = !audioStatus;
     }
 
-    // AUDIO REPARADO
-    async function toggleMic() {
-        isMicOn = !isMicOn;
-        document.getElementById('mic-btn').style.background = isMicOn ? "#00ff00" : "#ff3333";
-        // Aquí conectas tu PeerJS como antes
-        alert(isMicOn ? "Micro encendido" : "Micro apagado");
+    function abrirReels() {
+        alert("🎬 Abriendo Reels de Lluvia Live...");
+        // Aquí puedes poner el código para mostrar el reproductor de video
     }
 
-    function abrirFotos() { document.getElementById('photo-gallery').style.display = 'block'; }
-    function cerrarFotos() { document.getElementById('photo-gallery').style.display = 'none'; }
+    function abrirRegalos() {
+        alert("🎁 Selecciona tu regalo para Melvin");
+    }
 
-    // Actualizar Oro en tiempo real
-    db.collection("usuarios").doc(myName).onSnapshot(doc => {
-        if(doc.exists) document.getElementById('oro-val').innerText = doc.data().oro || 0;
-    });
+    // Activar audio al primer toque (Requerido por navegadores)
+    document.body.addEventListener('click', () => {
+        const audio = document.getElementById('remote-audio');
+        if (audio.paused) audio.play();
+    }, { once: true });
 </script>
+
 </body>
 </html>
