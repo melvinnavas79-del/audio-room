@@ -2,145 +2,243 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Lluvia Live - CP & Audio PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lluvia Live FINAL PRO</title>
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+
+<!-- ZEGO -->
 <script src="https://resource.zegocloud.com/prebuilt/ZegoExpressWebRTC.js"></script>
 
 <style>
-:root { --gold:#ffd700; --cp-pink:#ff69b4; --neon-blue:#00f2ff; }
-body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; }
+body { margin:0; background:#0b001a; color:white; font-family:sans-serif; }
 
-/* HEADER MEJORADO */
-.header-pro { display:flex; justify-content:space-between; align-items:center; padding:15px; background:rgba(0,0,0,0.9); border-bottom:1px solid #333; }
-.btn-vinculo { background:var(--cp-pink); border:none; color:white; padding:8px 12px; border-radius:15px; font-weight:bold; font-size:12px; box-shadow: 0 0 10px var(--cp-pink); }
+.header { display:flex; justify-content:space-between; padding:15px; background:#000; }
 
-/* SILLAS CON EFECTO */
-.sillas-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; }
-.avatar-container { position:relative; width:85px; height:85px; margin:auto; }
-.avatar-frame { width:100%; height:100%; border-radius:50%; background:#1a1a2e; border:2px solid #444; display:flex; align-items:center; justify-content:center; overflow:hidden; transition: 0.3s; }
+.sillas { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; }
 
-/* ANILLO QUE FLOTA */
-.cp-ring { position:absolute; top:-12px; left:50%; transform:translateX(-50%); font-size:24px; display:none; filter: drop-shadow(0 0 5px var(--cp-pink)); z-index:10; animation: flotar 2s infinite ease-in-out; }
-.cp-active .cp-ring { display:block; }
-.cp-active .avatar-frame { border:3px solid var(--cp-pink); box-shadow: 0 0 15px var(--cp-pink); }
+.avatar { width:80px; height:80px; border-radius:50%; background:#222; display:flex; align-items:center; justify-content:center; margin:auto; overflow:hidden; }
 
-@keyframes flotar { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }
+.cp { border:3px solid #ff69b4; box-shadow:0 0 10px #ff69b4; }
 
-/* BARRA DE ACCIÓN SUBIDA PARA ANDROID */
-.action-bar { position:fixed; bottom:30px; width:100%; display:flex; justify-content:space-around; align-items:center; }
-.btn-round { width:60px; height:60px; border-radius:50%; border:none; font-size:26px; color:white; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 15px rgba(0,0,0,0.6); background: linear-gradient(145deg, #2a0055, #0b001a); border: 1px solid #444; }
+.bar { position:fixed; bottom:30px; width:100%; display:flex; justify-content:space-around; }
 
-#gift-panel { position:fixed; bottom:110px; width:100%; display:none; grid-template-columns:repeat(4,1fr); background:rgba(0,0,0,0.95); padding:20px; border-radius:20px 20px 0 0; border-top: 1px solid var(--gold); }
-#room-log { text-align:center; color:var(--cp-pink); font-size:12px; font-weight:bold; margin-top:5px; }
+button { border:none; border-radius:50%; width:60px; height:60px; font-size:24px; }
+
+#log { text-align:center; margin-top:5px; color:#00ffcc; font-size:12px; }
 </style>
 </head>
 
 <body>
 
-<div class="header-pro">
-    <div>💰 <span id="oro-val">3800</span></div>
-    <div style="font-size:12px; color:var(--gold);">SALA: GLOBAL</div>
-    <button class="btn-vinculo" onclick="activarCP()">VINCULAR 💍</button>
+<div class="header">
+<div>💰 <span id="oro">3800</span></div>
+<div>SALA GLOBAL</div>
+<button onclick="activarCP()">💍</button>
 </div>
 
-<div id="room-log">Sincronizando con Lluvia Live...</div>
+<div id="log">Iniciando...</div>
 
-<div class="sillas-grid" id="grid"></div>
+<div class="sillas" id="grid"></div>
 
-<div id="gift-panel">
-    <div onclick="enviarRegalo('💍',10000)">💍</div>
-    <div onclick="enviarRegalo('🌹',10)">🌹</div>
-    <div onclick="enviarRegalo('🏰',5000)">🏰</div>
-    <div onclick="enviarRegalo('🦁',1000)">🦁</div>
+<div class="bar">
+<button id="btn-mic" onclick="toggleMic()">🎤</button>
+<button onclick="subirFoto()">📸</button>
+<button onclick="sentarse(1)">🪑</button>
+<button onclick="toggleGifts()">🎁</button>
 </div>
 
-<div class="action-bar">
-    <button class="btn-round" onclick="toggleGifts()">🎁</button>
-    <button class="btn-round" onclick="subirFoto()">📸</button>
-    <button class="btn-round" id="btn-mic" onclick="toggleMic()" style="background:linear-gradient(#ff3333, #aa0000);">🎙️</button>
-    <button class="btn-round" onclick="sentarse(1)">🪑</button>
-</div>
-
-<input type="file" id="foto-input" hidden onchange="cargarFoto(event)">
+<input type="file" id="file" hidden onchange="cargarFoto(event)">
 
 <script>
-// 🔥 CONFIGURACIÓN FIREBASE (Usa tu ID de proyecto)
-const firebaseConfig = { projectId: "lluvia-live-69a05" };
+
+// =======================
+// 🔥 CONFIG
+// =======================
+const firebaseConfig = { projectId:"lluvia-live-69a05" };
 firebase.initializeApp(firebaseConfig);
+
 const db = firebase.firestore();
 
-// CONFIG ZEGO
 const appID = 249373029;
 const server = "wss://webliveroom249373029-api.zegocloud.com/ws";
 
-let oro=3800; let esCP=false; let miFoto=null; let sala="global"; let nombre="Melvin"; let zg;
+// =======================
+// VARIABLES
+// =======================
+let zg, streamLocal;
+let micActivo = false;
 
-// INICIALIZAR
-function initSillas(){
-    const grid=document.getElementById("grid");
+let oro = 3800;
+let esCP = false;
+let foto = null;
+
+let sala = "global";
+let nombre = "Melvin";
+
+// =======================
+// 🔐 TOKEN FIREBASE
+// =======================
+async function obtenerPermisoAudio(usuario, salaID) {
+    try {
+        const funcionToken = firebase.functions().httpsCallable('obtenerTokenAudio');
+        const resultado = await funcionToken({ 
+            userId: usuario, 
+            roomName: salaID 
+        });
+        return resultado.data.token;
+    } catch (error) {
+        console.error(error);
+        alert("Error token");
+    }
+}
+
+// =======================
+// 🎤 MICRO REAL
+// =======================
+async function toggleMic(){
+
+    if(!micActivo){
+
+        const token = await obtenerPermisoAudio(nombre, sala);
+
+        if(!token) return;
+
+        zg = new ZegoExpressEngine(appID, server);
+
+        await zg.loginRoom(sala, token, {
+            userID: nombre,
+            userName: nombre
+        });
+
+        streamLocal = await zg.createStream({
+            camera: { audio: true, video: false }
+        });
+
+        zg.startPublishingStream("stream_"+nombre, streamLocal);
+
+        zg.on('roomStreamUpdate', async (roomID, type, streams)=>{
+            if(type === "ADD"){
+                for(let s of streams){
+                    let remote = await zg.startPlayingStream(s.streamID);
+                    let audio = document.createElement("audio");
+                    audio.srcObject = remote;
+                    audio.autoplay = true;
+                    document.body.appendChild(audio);
+                }
+            }
+        });
+
+        micActivo = true;
+
+        document.getElementById("btn-mic").style.background = "#00ff00";
+
+        log("🎤 Audio en vivo");
+
+    } else {
+
+        zg.stopPublishingStream("stream_"+nombre);
+        streamLocal = null;
+        micActivo = false;
+
+        document.getElementById("btn-mic").style.background = "#ff3333";
+
+        log("🔇 Mic apagado");
+    }
+}
+
+// =======================
+// 🪑 SILLAS
+// =======================
+function crearSillas(){
+    let g=document.getElementById("grid");
     for(let i=1;i<=9;i++){
-        grid.innerHTML+=`
-        <div class="avatar-container" id="cont-${i}" onclick="sentarse(${i})">
-            <div class="cp-ring">💍</div>
-            <div class="avatar-frame" id="silla-${i}">👤</div>
-            <div style="font-size:10px; text-align:center; margin-top:5px;">Silla ${i}</div>
+        g.innerHTML+=`
+        <div onclick="sentarse(${i})">
+            <div class="avatar" id="silla-${i}">👤</div>
         </div>`;
     }
 }
 
-// SINCRONIZAR SILLAS
+async function sentarse(id){
+    await db.collection("salas").doc(sala).set({
+        ["silla"+id]:{
+            nombre:nombre,
+            foto:foto||"",
+            cp:esCP
+        }
+    },{merge:true});
+}
+
+// =======================
+// 🔄 TIEMPO REAL
+// =======================
 db.collection("salas").doc(sala).onSnapshot(doc=>{
-    const data=doc.data()||{};
+    let data=doc.data()||{};
     for(let i=1;i<=9;i++){
-        const s=data["silla"+i];
-        const frame=document.getElementById("silla-"+i);
-        const cont=document.getElementById("cont-"+i);
+        let s=data["silla"+i];
+        let el=document.getElementById("silla-"+i);
+
         if(s){
-            frame.innerHTML=s.foto ? `<img src="${s.foto}" style="width:100%;height:100%;object-fit:cover;">` : "🎙️";
-            if(s.cp) cont.classList.add("cp-active");
-            else cont.classList.remove("cp-active");
+            el.innerHTML = s.foto
+                ? `<img src="${s.foto}" style="width:100%;height:100%">`
+                : "🎤";
+
+            if(s.cp) el.classList.add("cp");
+            else el.classList.remove("cp");
+
         } else {
-            frame.innerHTML="👤"; cont.classList.remove("cp-active");
+            el.innerHTML="👤";
+            el.classList.remove("cp");
         }
     }
 });
 
-async function sentarse(id){
-    await db.collection("salas").doc(sala).set({
-        ["silla"+id]:{ nombre:nombre, foto:miFoto||"", cp:esCP }
-    },{merge:true});
-    log("Ocupaste la silla "+id);
-}
-
-// LOGICA CP & REGALOS
+// =======================
+// 💞 CP
+// =======================
 function activarCP(){
-    if(oro>=10000){ oro-=10000; esCP=true; updateOro(); log("💞 Vínculo C.P. Activado"); }
-    else alert("Falta oro");
+    if(oro>=10000){
+        oro-=10000;
+        esCP=true;
+        update();
+        log("💞 CP activado");
+    } else alert("Falta oro");
 }
 
-function enviarRegalo(icon,precio){
-    if(oro>=precio){ oro-=precio; updateOro(); log("🎁 ¡Regalo enviado!"); toggleGifts(); }
-    else alert("Sin saldo");
-}
-
-// FOTO & UI
-function subirFoto(){ document.getElementById("foto-input").click(); }
-function cargarFoto(e){
-    const reader=new FileReader();
-    reader.onload=()=>{ miFoto=reader.result; log("Foto lista."); };
-    reader.readAsDataURL(e.target.files[0]);
-}
+// =======================
+// 🎁 REGALOS
+// =======================
 function toggleGifts(){
-    const g=document.getElementById("gift-panel");
-    g.style.display=g.style.display==="grid"?"none":"grid";
+    alert("🎁 regalos próximamente");
 }
-function updateOro(){ document.getElementById("oro-val").innerText=oro; }
-function log(t){ document.getElementById("room-log").innerText=t; }
 
-initSillas();
+// =======================
+// 📸 FOTO
+// =======================
+function subirFoto(){ document.getElementById("file").click(); }
+
+function cargarFoto(e){
+    let r=new FileReader();
+    r.onload=()=>{ foto=r.result; log("📸 Foto lista"); };
+    r.readAsDataURL(e.target.files[0]);
+}
+
+// =======================
+// UI
+// =======================
+function update(){ document.getElementById("oro").innerText=oro; }
+function log(t){ document.getElementById("log").innerText=t; }
+
+// =======================
+// START
+// =======================
+crearSillas();
+
 </script>
+
 </body>
 </html>
