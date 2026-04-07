@@ -3,121 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lluvia Live</title>
+    <title>Lluvia Live - Premium</title>
     <script src="https://resource.zegocloud.com/prebuilt/ZegoExpressWebRTC.js"></script>
     <style>
         body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; display:flex; flex-direction:column; height:100vh; }
         
-        /* Banner Superior Aristocracia */
+        /* Banner Superior */
         #premium-banner { 
-            width:92%; margin:15px auto; background:rgba(20,20,30,0.95); 
+            width:92%; margin:15px auto; background:rgba(30,0,60,0.8); 
             border-radius:25px; border:2px solid #ffd700; 
             display:flex; justify-content:space-around; align-items:center; 
-            padding:12px 5px; box-shadow: 0 0 20px rgba(255,215,0,0.4); 
+            padding:12px 5px; box-shadow: 0 0 20px rgba(255,215,0,0.4); z-index:10;
         }
-        .btn-recarga { background:#ffd700; color:black; padding:8px 18px; border-radius:20px; font-weight:bold; cursor:pointer; font-size:14px; }
 
-        /* Cuadrícula de Sillas (3x3) */
+        /* Contenedor de Sillas */
         #sillas-grid { 
-            display:grid; grid-template-columns:repeat(3,1fr); gap:25px; 
-            padding:30px 20px; flex-grow:1; align-content:start;
+            display:grid; grid-template-columns:repeat(3,1fr); gap:20px; 
+            padding:20px; flex-grow:1; align-content:start;
         }
+        .silla-wrapper { text-align:center; }
         .silla { 
-            width:75px; height:75px; border-radius:50%; background:#1e1e2e; 
-            border:2px solid #333; margin:0 auto; display:flex; 
-            align-items:center; justify-content:center; font-size:28px; position:relative;
+            width:70px; height:70px; border-radius:50%; background:#1e1e2e; 
+            border:2px solid #444; margin:0 auto; display:flex; 
+            align-items:center; justify-content:center; font-size:28px; transition: 0.3s;
         }
-        .silla.activa { border-color:#00ff00; box-shadow: 0 0 15px #00ff00; }
+        .silla.ocupada { border-color:#00ff00; box-shadow: 0 0 15px #00ff00; background:#0a2a0a; }
+        .user-label { font-size:10px; margin-top:5px; color:#aaa; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:70px; margin: 5px auto; }
 
-        /* Panel de Regalos Inferior */
-        #gift-panel { 
-            background:black; border-radius:30px 30px 0 0; padding:20px;
-            display:grid; grid-template-columns:repeat(3,1fr); gap:15px; border-top:1px solid #444;
-        }
-        .gift { text-align:center; font-size:14px; cursor:pointer; }
-        .gift-icon { font-size:24px; display:block; margin-bottom:5px; }
-        .cerrar-btn { color:#ff3333; font-weight:bold; cursor:pointer; text-align:center; margin-top:10px; }
+        /* Efecto de Regalo Flotante */
+        @keyframes subir { 0% { transform:translateY(0); opacity:1; } 100% { transform:translateY(-200px); opacity:0; } }
+        .gift-anim { position:absolute; font-size:50px; left:50%; top:50%; animation: subir 1.5s ease-out forwards; z-index:100; pointer-events:none; }
+
+        /* Barra Inferior */
+        .action-bar { background:rgba(0,0,0,0.9); padding:15px; display:flex; justify-content:space-around; border-top:1px solid #333; }
+        .btn-action { width:55px; height:55px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; }
+
+        /* Reels / Videos (Simulado) */
+        #reels-layer { position:fixed; inset:0; background:black; display:none; z-index:200; }
+        .video-fake { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:white; }
 
         /* Login */
-        #login { position:fixed; inset:0; background:#0b001a; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        #login { position:fixed; inset:0; background:#0b001a; z-index:300; display:flex; flex-direction:column; align-items:center; justify-content:center; }
         .input-box { padding:15px; width:80%; border-radius:15px; border:1px solid #444; background:#1a1a1a; color:white; margin-bottom:15px; }
     </style>
 </head>
 <body>
 
 <div id="login">
-    <h1 style="color:gold; font-size:35px;">☔ LLUVIA LIVE</h1>
-    <input type="text" id="user-id" class="input-box" placeholder="Nombre de Usuario">
-    <input type="text" id="room-id" class="input-box" placeholder="ID de la Sala">
-    <button onclick="iniciarApp()" style="background:#00ff00; padding:15px 50px; border-radius:30px; border:none; font-weight:bold;">ENTRAR AHORA</button>
+    <h1 style="color:gold;">☔ LLUVIA LIVE</h1>
+    <input type="text" id="user-id" class="input-box" placeholder="Tu Apodo">
+    <button onclick="iniciarApp()" style="background:#00ff00; padding:15px 60px; border-radius:30px; border:none; font-weight:bold;">ENTRAR</button>
 </div>
 
 <div id="premium-banner">
-    <div style="font-weight:bold; color:gold;">👑 SVIP</div>
-    <div style="font-weight:bold;">💰 ORO: <span id="oro-val">2000</span></div>
-    <div class="btn-recarga" onclick="recargar()">RECARGA</div>
+    <div>👑 <span style="color:gold;">SVIP</span></div>
+    <div>💰 ORO: <span id="oro-val" style="color:gold;">2000</span></div>
+    <div onclick="recargar()" style="background:gold; color:black; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold;">RECARGA</div>
 </div>
 
-<div id="sillas-grid">
-    </div>
+<div id="sillas-grid"></div>
 
-<div id="gift-panel">
-    <div class="gift" onclick="enviar(10, '🌹')"><span class="gift-icon">🌹</span>10</div>
-    <div class="gift" onclick="enviar(100, '🍦')"><span class="gift-icon">🍦</span>100</div>
-    <div class="gift" onclick="enviar(500, '🚗')"><span class="gift-icon">🚗</span>500</div>
-    <div class="gift" onclick="enviar(1000, '🦁')"><span class="gift-icon">🦁</span>1000</div>
-    <div class="gift" onclick="enviar(5000, '🏰')"><span class="gift-icon">🏰</span>5000</div>
-    <div class="cerrar-btn" onclick="alert('Cerrando panel')">✖️<br>CERRAR</div>
+<div id="reels-layer">
+    <div class="video-fake">🎥 Aquí se verán los Reels... <br> (Desliza para cerrar)</div>
+    <button onclick="cerrarReels()" style="position:absolute; top:20px; right:20px; color:white; background:red; border:none; padding:10px;">X</button>
+</div>
+
+<div class="action-bar">
+    <button class="btn-action" style="background:#8a2be2;" onclick="abrirReels()">🎬</button>
+    <button id="mic-btn" class="btn-action" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
+    <button class="btn-action" style="background:orange;" onclick="mostrarGifts()">🎁</button>
+    <button id="vol-btn" class="btn-action" style="background:#00ff00;" onclick="toggleVolumen()">🔊</button>
 </div>
 
 <script>
-    const CONFIG = {
-        appID: 249373029,
-        appSign: 'c0a19c13759e162000663b285d620ad478210fd7648f572d421295988e072213'
-    };
-
     let oro = 2000;
-    let micActivo = false;
+    let micOn = false;
+    let volOn = true;
+    let miNombre = "";
 
     function iniciarApp() {
-        const user = document.getElementById('user-id').value;
-        if(!user) return alert("Pon un nombre");
+        miNombre = document.getElementById('user-id').value || "Usuario";
         document.getElementById('login').style.display = 'none';
-        
         const grid = document.getElementById('sillas-grid');
         for(let i=1; i<=9; i++) {
-            grid.innerHTML += `<div class="silla" id="s-${i}" onclick="tomarSilla(${i})">👤</div>`;
+            grid.innerHTML += `
+                <div class="silla-wrapper">
+                    <div class="silla" id="s-${i}" onclick="tomarSilla(${i})">👤</div>
+                    <div class="user-label" id="u-${i}">Vacío</div>
+                </div>`;
         }
     }
 
     function tomarSilla(id) {
         const s = document.getElementById(`s-${id}`);
-        micActivo = !micActivo;
-        if(micActivo) {
-            s.classList.add('activa');
-            s.innerText = "🎤";
-            alert("Socio, estás en vivo en la silla " + id);
-        } else {
-            s.classList.remove('activa');
+        const u = document.getElementById(`u-${id}`);
+        if(s.classList.contains('ocupada')) {
+            s.classList.remove('ocupada');
             s.innerText = "👤";
+            u.innerText = "Vacío";
+        } else {
+            s.classList.add('ocupada');
+            s.innerText = "🎤";
+            u.innerText = miNombre;
+            u.style.color = "#00ff00";
         }
     }
 
-    function enviar(costo, emoji) {
+    function toggleMic() {
+        micOn = !micOn;
+        document.getElementById('mic-btn').style.background = micOn ? "#00ff00" : "#ff3333";
+    }
+
+    function toggleVolumen() {
+        volOn = !volOn;
+        document.getElementById('vol-btn').style.background = volOn ? "#00ff00" : "#666";
+        document.getElementById('vol-btn').innerText = volOn ? "🔊" : "🔇";
+    }
+
+    function mostrarGifts() {
+        const gift = prompt("Escribe el emoji del regalo (🌹, 🚗, 🦁, 🏰):");
+        if(gift) enviarRegalo(100, gift);
+    }
+
+    function enviarRegalo(costo, emoji) {
         if(oro >= costo) {
             oro -= costo;
             document.getElementById('oro-val').innerText = oro;
-            alert("¡Enviaste " + emoji + "! Descontado de tu balance.");
+            
+            // Animación del regalo
+            const anim = document.createElement('div');
+            anim.className = 'gift-anim';
+            anim.innerText = emoji;
+            document.body.appendChild(anim);
+            setTimeout(() => anim.remove(), 1500);
         } else {
-            alert("❌ No tienes suficiente Oro para este regalo.");
+            alert("Socio, te falta oro.");
         }
     }
 
-    function recargar() {
-        oro += 1000;
-        document.getElementById('oro-val').innerText = oro;
-        alert("💰 +1000 Oro acreditado a tu cuenta.");
-    }
+    function abrirReels() { document.getElementById('reels-layer').style.display = 'block'; }
+    function cerrarReels() { document.getElementById('reels-layer').style.display = 'none'; }
+    function recargar() { oro += 1000; document.getElementById('oro-val').innerText = oro; }
 </script>
 </body>
 </html>
