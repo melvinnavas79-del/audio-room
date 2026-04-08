@@ -1,177 +1,211 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lluvia Live - PROPIETARIO</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Lluvia Live PRO v2.2</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        :root { --gold: #ffd700; --king: #ff4500; }
+        body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow:hidden; height:100vh; }
+        
+        /* PANTALLA DE INICIO MEJORADA */
+        #login-screen { position:fixed; inset:0; background:linear-gradient(135deg, #1a0033 0%, #000 100%); z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+        .input-group { width:85%; margin-bottom:12px; }
+        input { width:100%; padding:15px; border-radius:12px; border:1px solid #444; background:#1a1a1a; color:white; font-size:16px; box-sizing:border-box; }
+        
+        .menu-btns { width:85%; display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+        .btn-main { padding:20px; border-radius:15px; border:none; font-weight:bold; font-size:16px; cursor:pointer; transition:0.3s; width:100%; }
+        .btn-crear { background: var(--king); color:white; border: 2px solid gold; }
+        .btn-entrar { background: white; color:black; }
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+        /* APP INTERNA */
+        .header-pro { display:flex; justify-content:space-between; align-items:center; padding:15px; background:rgba(0,0,0,0.8); }
+        .sillas-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; }
+        .avatar { width:70px; height:70px; border-radius:50%; background:#1e1e2e; border:3px solid #444; display:flex; align-items:center; justify-content:center; margin:auto; position:relative; overflow:hidden; }
+        .avatar.talking { border-color:#00ff00; box-shadow: 0 0 15px #00ff00; }
+        .clan-tag { position:absolute; top:0; width:100%; background:rgba(255,0,0,0.8); font-size:9px; text-align:center; }
 
-<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
-
-<style>
-body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow-x: hidden; }
-.header { display:flex; justify-content:space-between; padding:15px; background:#000; align-items: center; }
-.sillas { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; }
-.avatar { width:80px; height:80px; border-radius:50%; background:#222; display:flex; align-items:center; justify-content:center; margin:auto; overflow:hidden; border: 2px solid #444; }
-.cp { border:3px solid #ff69b4; box-shadow:0 0 10px #ff69b4; }
-.regalos-bar { display:flex; justify-content:space-around; padding:10px; background:rgba(0,0,0,0.6); font-size: 25px; }
-.regalos-bar div { cursor: pointer; transition: 0.2s; }
-.regalos-bar div:active { transform: scale(1.3); }
-.bar { position:fixed; bottom:30px; width:100%; display:flex; justify-content:space-around; }
-button { border:none; border-radius:50%; width:60px; height:60px; font-size:24px; cursor: pointer; }
-#log { text-align:center; margin-top:5px; color:#00ffcc; font-size:12px; font-weight: bold; }
-#status-dot { width: 10px; height: 10px; background: #ff3333; border-radius: 50%; display: inline-block; margin-right: 8px; }
-</style>
+        /* NOTIFICACIONES FLOTANTES */
+        #room-logs { height:60px; overflow-y:auto; font-size:12px; color:#00ffcc; margin:10px 20px; background:rgba(0,0,0,0.5); border-radius:10px; padding:10px; border-left: 3px solid #00ffcc; }
+        .action-bar { position:fixed; bottom:25px; width:100%; display:flex; justify-content:space-around; }
+        .btn-action { width:55px; height:55px; border-radius:50%; border:none; font-size:24px; display:flex; align-items:center; justify-content:center; }
+    </style>
 </head>
-
 <body>
 
-<div class="header">
-    <div>💰 <span id="oro">3800</span></div>
-    <div><span id="status-dot"></span>LLUVIA LIVE PRO</div>
-    <button onclick="activarCP()" style="width:40px; height:40px; font-size:15px; border-radius: 10px;">💍</button>
+<div id="login-screen">
+    <h1 style="color:var(--gold); font-size:38px; margin-bottom:5px;">☔ LLUVIA LIVE</h1>
+    <p style="color:#aaa; margin-bottom:30px;">Plataforma de Audio Elite</p>
+    
+    <div class="input-group"><input type="text" id="nombre" placeholder="Tu Apodo (Ej: Melvin)"></div>
+    <div class="input-group"><input type="text" id="clan-name" placeholder="Tu Clan (Opcional)"></div>
+    <div class="input-group"><input type="text" id="room" placeholder="ID de la Sala"></div>
+    
+    <div class="menu-btns">
+        <button onclick="iniciar(true)" class="btn-main btn-crear">✨ CREAR SALA (REY)</button>
+        <button onclick="iniciar(false)" class="btn-main btn-entrar">🚪 ENTRAR A SALA</button>
+    </div>
 </div>
 
-<div id="log">Conectando a servidor de Melvin...</div>
+<div id="app" style="display:none; flex-direction:column; height:100vh;">
+    <div class="header-pro">
+        <div id="user-aristocracia" style="font-weight:bold; color:var(--gold);">🛡️ CABALLERO</div>
+        <div style="font-weight:bold;">💰 ORO: <span id="saldo">0</span></div>
+    </div>
 
-<div class="sillas" id="grid"></div>
+    <div id="room-logs"></div>
 
-<div class="regalos-bar">
-    <div onclick="enviarRegalo('💍',10000)">💍</div>
-    <div onclick="enviarRegalo('🌹',10)">🌹</div>
-    <div onclick="enviarRegalo('🏰',5000)">🏰</div>
-    <div onclick="enviarRegalo('🦁',1000)">🦁</div>
+    <div style="flex:1; overflow-y:auto;">
+        <h2 id="roomTitle" style="font-size:18px; color:var(--gold); margin:20px;">SALA VIP</h2>
+        <div class="sillas-grid" id="sillas"></div>
+    </div>
+
+    <audio id="remoteAudio" autoplay playsinline></audio>
+
+    <div class="action-bar">
+        <button class="btn-action" style="background:#444;" onclick="location.reload()">🏠</button>
+        <button id="btn-mic" class="btn-action" style="background:#ff3333;" onclick="toggleMic()">🎙️</button>
+        <button class="btn-action" style="background:var(--gold);" onclick="regaloEspecial('🦁', 1000)">🦁</button>
+        <button id="btn-spk" class="btn-action" style="background:#00ff00;" onclick="toggleAudio()">🔊</button>
+    </div>
 </div>
-
-<div class="bar">
-    <button id="btn-mic" style="background:#ff3333;" onclick="toggleMic()">🎤</button>
-    <button onclick="subirFoto()" style="background:#444;">📸</button>
-    <button onclick="sentarse(1)" style="background:#444;">🪑</button>
-    <button onclick="toggleGifts()" style="background:#444;">🎁</button>
-</div>
-
-<input type="file" id="file" hidden onchange="cargarFoto(event)">
 
 <script>
-// ==========================================
-// 🚀 CONFIGURACIÓN PROPIA
-// ==========================================
-const URL_PROPIA = "ws://207.180.235.220:7880";
-let currentRoom = null;
+    const firebaseConfig = { projectId: "lluvia-live-69a05" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-// FIREBASE
-const firebaseConfig = { projectId:"lluvia-live-69a05" };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+    let peer, stream, roomID, miNombre, miClan, esAdmin;
+    let micActivo = false;
+    let oroActual = 0;
 
-let micActivo = false;
-let oro = 3800;
-let esCP = false;
-let foto = null;
-let sala = new URLSearchParams(window.location.search).get("room") || "global";
-let nombre = "User_" + Math.floor(Math.random()*9999);
+    async function iniciar(rey) {
+        miNombre = document.getElementById('nombre').value || "Invitado";
+        roomID = document.getElementById('room').value || "101";
+        miClan = document.getElementById('clan-name').value || "Global";
+        esAdmin = rey;
 
-// =======================
-// 🎤 AUDIO (LIVEKIT)
-// =======================
-async function toggleMic() {
-    if (!micActivo) {
-        log("🎙️ Conectando a tu VPS...");
+        if(!document.getElementById('room').value) return alert("Escribe un ID de Sala");
+
         try {
-            currentRoom = new LivekitClient.Room();
-            // Conexión directa a tu servidor de Contabo
-            await currentRoom.connect(URL_PROPIA, "token-" + nombre);
-            await currentRoom.localParticipant.enableAudio();
-            
-            micActivo = true;
-            document.getElementById("btn-mic").style.background = "#00ff00";
-            document.getElementById("status-dot").style.background = "#00ff00";
-            log("🎤 EN VIVO EN TU SERVER");
+            stream = await navigator.mediaDevices.getUserMedia({audio: true});
+            stream.getAudioTracks()[0].enabled = false;
+        } catch(e) { alert("Micro necesario para entrar."); return; }
 
-            currentRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
-                if (track.kind === "audio") {
-                    const audioEl = track.attach();
-                    document.body.appendChild(audioEl);
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        document.getElementById('roomTitle').innerText = "SALA VIP #" + roomID;
+        
+        if(esAdmin) document.getElementById('user-aristocracia').innerText = "👑 REY";
+
+        // ANUNCIAR ENTRADA A FIREBASE
+        anunciarEntrada();
+        cargarOro();
+        conectarPeer();
+        escucharSillas();
+        escucharMensajes(); // Esta función detecta quién entra
+    }
+
+    // FUNCIÓN QUE DICE: "MELVIN ENTRÓ A LA SALA"
+    async function anunciarEntrada() {
+        await db.collection("salas").doc(roomID).collection("logs").add({
+            texto: `🚀 ${miNombre.toUpperCase()} entró a la sala`,
+            tiempo: Date.now()
+        });
+    }
+
+    function escucharMensajes() {
+        db.collection("salas").doc(roomID).collection("logs")
+          .orderBy("tiempo", "desc").limit(5)
+          .onSnapshot(snap => {
+              const logsDiv = document.getElementById('room-logs');
+              logsDiv.innerHTML = "";
+              snap.forEach(doc => {
+                  logsDiv.innerHTML += `<div>${doc.data().texto}</div>`;
+              });
+          });
+    }
+
+    function conectarPeer() {
+        const pID = `lluvia-${roomID}-${esAdmin ? 'admin' : Math.random().toString(36).substr(2, 5)}`;
+        peer = new Peer(pID);
+        peer.on('open', id => {
+            if(!esAdmin) peer.call(`lluvia-${roomID}-admin`, stream);
+        });
+        peer.on('call', call => {
+            call.answer(stream);
+            call.on('stream', rem => document.getElementById('remoteAudio').srcObject = rem);
+        });
+    }
+
+    function escucharSillas() {
+        const grid = document.getElementById('sillas');
+        grid.innerHTML = "";
+        for(let i=1; i<=9; i++) {
+            grid.innerHTML += `
+                <div class="silla-box" onclick="sentarse(${i})">
+                    <div class="avatar" id="silla-${i}">👤</div>
+                    <div style="font-size:10px; margin-top:5px;" id="name-${i}">Vacío</div>
+                </div>`;
+        }
+
+        db.collection("salas").doc(roomID).onSnapshot(doc => {
+            const data = doc.data() || {};
+            for(let i=1; i<=9; i++) {
+                const s = data["silla"+i];
+                const av = document.getElementById(`silla-${i}`);
+                const nm = document.getElementById(`name-${i}`);
+                if(s) {
+                    av.innerHTML = `<div class="clan-tag">${s.clan}</div>🎤`;
+                    av.classList.add('talking');
+                    nm.innerText = s.nombre;
+                    nm.style.color = "var(--gold)";
+                } else {
+                    av.innerHTML = "👤"; av.classList.remove('talking');
+                    nm.innerText = "Vacío"; nm.style.color = "white";
                 }
+            }
+        });
+    }
+
+    async function sentarse(id) {
+        await db.collection("salas").doc(roomID).set({
+            ["silla"+id]: { nombre: miNombre, clan: miClan }
+        }, {merge: true});
+    }
+
+    function toggleMic() {
+        micActivo = !micActivo;
+        stream.getAudioTracks()[0].enabled = micActivo;
+        document.getElementById('btn-mic').style.background = micActivo ? "#00ff00" : "#ff3333";
+    }
+
+    function cargarOro() {
+        db.collection("usuarios").doc(miNombre).onSnapshot(doc => {
+            oroActual = doc.exists ? doc.data().oro : 3800;
+            document.getElementById('saldo').innerText = oroActual;
+            if(!doc.exists) db.collection("usuarios").doc(miNombre).set({oro:3800});
+        });
+    }
+
+    async function regaloEspecial(t, c) {
+        if(oroActual >= c) {
+            await db.collection("usuarios").doc(miNombre).update({ oro: oroActual - c });
+            await db.collection("salas").doc(roomID).collection("logs").add({
+                texto: `🎁 ¡${miNombre} envió un ${t}!`,
+                tiempo: Date.now()
             });
-        } catch (e) {
-            log("❌ Error de conexión");
-        }
-    } else {
-        if(currentRoom) currentRoom.disconnect();
-        micActivo = false;
-        document.getElementById("btn-mic").style.background = "#ff3333";
-        document.getElementById("status-dot").style.background = "#ff3333";
-        log("🔇 Mic apagado");
+        } else alert("Oro insuficiente");
     }
-}
 
-// =======================
-// 🪑 SILLAS (FIREBASE)
-// =======================
-function crearSillas(){
-    let g=document.getElementById("grid");
-    g.innerHTML = "";
-    for(let i=1;i<=9;i++){
-        g.innerHTML+=`<div onclick="sentarse(${i})"><div class="avatar" id="silla-${i}">👤</div></div>`;
+    function toggleAudio() {
+        const a = document.getElementById('remoteAudio');
+        a.muted = !a.muted;
+        document.getElementById('btn-spk').style.background = a.muted ? "#666" : "#00ff00";
     }
-}
-
-async function sentarse(id){
-    log("🪑 Sentándose...");
-    await db.collection("salas").doc(sala).set({
-        ["silla"+id]:{ nombre:nombre, foto:foto||"", cp:esCP }
-    },{merge:true});
-}
-
-db.collection("salas").doc(sala).onSnapshot(doc=>{
-    let data=doc.data()||{};
-    for(let i=1;i<=9;i++){
-        let s=data["silla"+i];
-        let el=document.getElementById("silla-"+i);
-        if(!el) continue;
-        if(s){
-            el.innerHTML = s.foto ? `<img src="${s.foto}" style="width:100%;height:100%;object-fit:cover;">` : "🎤";
-            if(s.cp) el.classList.add("cp"); else el.classList.remove("cp");
-        } else {
-            el.innerHTML="👤"; el.classList.remove("cp");
-        }
-    }
-});
-
-// =======================
-// 💰 ECONOMÍA
-// =======================
-function enviarRegalo(emoji, costo) {
-    if(oro >= costo) {
-        oro -= costo;
-        update();
-        log("Has enviado un " + emoji);
-        // Aquí puedes añadir una animación o sonido
-    } else {
-        alert("¡Necesitas más oro!");
-    }
-}
-
-function activarCP(){
-    if(oro>=10000){
-        oro-=10000; esCP=true; update(); log("💞 CP activado");
-    } else log("❌ Falta oro");
-}
-
-function toggleGifts(){ log("🎁 Menú de regalos abierto"); }
-function subirFoto(){ document.getElementById("file").click(); }
-function cargarFoto(e){
-    let r=new FileReader();
-    r.onload=()=>{ foto=r.result; log("📸 Foto lista"); };
-    r.readAsDataURL(e.target.files[0]);
-}
-function update(){ document.getElementById("oro").innerText=oro; }
-function log(t){ document.getElementById("log").innerText=t; }
-
-crearSillas();
 </script>
 </body>
 </html>
