@@ -3,242 +3,175 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lluvia Live FINAL PRO</title>
+<title>Lluvia Live - PROPIETARIO</title>
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
 
-<!-- ZEGO -->
-<script src="https://resource.zegocloud.com/prebuilt/ZegoExpressWebRTC.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
 <style>
-body { margin:0; background:#0b001a; color:white; font-family:sans-serif; }
-
-.header { display:flex; justify-content:space-between; padding:15px; background:#000; }
-
+body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow-x: hidden; }
+.header { display:flex; justify-content:space-between; padding:15px; background:#000; align-items: center; }
 .sillas { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; }
-
-.avatar { width:80px; height:80px; border-radius:50%; background:#222; display:flex; align-items:center; justify-content:center; margin:auto; overflow:hidden; }
-
+.avatar { width:80px; height:80px; border-radius:50%; background:#222; display:flex; align-items:center; justify-content:center; margin:auto; overflow:hidden; border: 2px solid #444; }
 .cp { border:3px solid #ff69b4; box-shadow:0 0 10px #ff69b4; }
-
+.regalos-bar { display:flex; justify-content:space-around; padding:10px; background:rgba(0,0,0,0.6); font-size: 25px; }
+.regalos-bar div { cursor: pointer; transition: 0.2s; }
+.regalos-bar div:active { transform: scale(1.3); }
 .bar { position:fixed; bottom:30px; width:100%; display:flex; justify-content:space-around; }
-
-button { border:none; border-radius:50%; width:60px; height:60px; font-size:24px; }
-
-#log { text-align:center; margin-top:5px; color:#00ffcc; font-size:12px; }
+button { border:none; border-radius:50%; width:60px; height:60px; font-size:24px; cursor: pointer; }
+#log { text-align:center; margin-top:5px; color:#00ffcc; font-size:12px; font-weight: bold; }
+#status-dot { width: 10px; height: 10px; background: #ff3333; border-radius: 50%; display: inline-block; margin-right: 8px; }
 </style>
 </head>
 
 <body>
 
 <div class="header">
-<div>💰 <span id="oro">3800</span></div>
-<div>SALA GLOBAL</div>
-<button onclick="activarCP()">💍</button>
+    <div>💰 <span id="oro">3800</span></div>
+    <div><span id="status-dot"></span>LLUVIA LIVE PRO</div>
+    <button onclick="activarCP()" style="width:40px; height:40px; font-size:15px; border-radius: 10px;">💍</button>
 </div>
 
-<div id="log">Iniciando...</div>
+<div id="log">Conectando a servidor de Melvin...</div>
 
 <div class="sillas" id="grid"></div>
 
+<div class="regalos-bar">
+    <div onclick="enviarRegalo('💍',10000)">💍</div>
+    <div onclick="enviarRegalo('🌹',10)">🌹</div>
+    <div onclick="enviarRegalo('🏰',5000)">🏰</div>
+    <div onclick="enviarRegalo('🦁',1000)">🦁</div>
+</div>
+
 <div class="bar">
-<button id="btn-mic" onclick="toggleMic()">🎤</button>
-<button onclick="subirFoto()">📸</button>
-<button onclick="sentarse(1)">🪑</button>
-<button onclick="toggleGifts()">🎁</button>
+    <button id="btn-mic" style="background:#ff3333;" onclick="toggleMic()">🎤</button>
+    <button onclick="subirFoto()" style="background:#444;">📸</button>
+    <button onclick="sentarse(1)" style="background:#444;">🪑</button>
+    <button onclick="toggleGifts()" style="background:#444;">🎁</button>
 </div>
 
 <input type="file" id="file" hidden onchange="cargarFoto(event)">
 
 <script>
+// ==========================================
+// 🚀 CONFIGURACIÓN PROPIA
+// ==========================================
+const URL_PROPIA = "ws://207.180.235.220:7880";
+let currentRoom = null;
 
-// =======================
-// 🔥 CONFIG
-// =======================
+// FIREBASE
 const firebaseConfig = { projectId:"lluvia-live-69a05" };
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.firestore();
 
-const appID = 249373029;
-const server = "wss://webliveroom249373029-api.zegocloud.com/ws";
-
-// =======================
-// VARIABLES
-// =======================
-let zg, streamLocal;
 let micActivo = false;
-
 let oro = 3800;
 let esCP = false;
 let foto = null;
-
-let sala = "global";
-let nombre = "Melvin";
-
-// =======================
-// 🔐 TOKEN FIREBASE
-// =======================
-async function obtenerPermisoAudio(usuario, salaID) {
-    try {
-        const funcionToken = firebase.functions().httpsCallable('obtenerTokenAudio');
-        const resultado = await funcionToken({ 
-            userId: usuario, 
-            roomName: salaID 
-        });
-        return resultado.data.token;
-    } catch (error) {
-        console.error(error);
-        alert("Error token");
-    }
-}
+let sala = new URLSearchParams(window.location.search).get("room") || "global";
+let nombre = "User_" + Math.floor(Math.random()*9999);
 
 // =======================
-// 🎤 MICRO REAL
+// 🎤 AUDIO (LIVEKIT)
 // =======================
-async function toggleMic(){
+async function toggleMic() {
+    if (!micActivo) {
+        log("🎙️ Conectando a tu VPS...");
+        try {
+            currentRoom = new LivekitClient.Room();
+            // Conexión directa a tu servidor de Contabo
+            await currentRoom.connect(URL_PROPIA, "token-" + nombre);
+            await currentRoom.localParticipant.enableAudio();
+            
+            micActivo = true;
+            document.getElementById("btn-mic").style.background = "#00ff00";
+            document.getElementById("status-dot").style.background = "#00ff00";
+            log("🎤 EN VIVO EN TU SERVER");
 
-    if(!micActivo){
-
-        const token = await obtenerPermisoAudio(nombre, sala);
-
-        if(!token) return;
-
-        zg = new ZegoExpressEngine(appID, server);
-
-        await zg.loginRoom(sala, token, {
-            userID: nombre,
-            userName: nombre
-        });
-
-        streamLocal = await zg.createStream({
-            camera: { audio: true, video: false }
-        });
-
-        zg.startPublishingStream("stream_"+nombre, streamLocal);
-
-        zg.on('roomStreamUpdate', async (roomID, type, streams)=>{
-            if(type === "ADD"){
-                for(let s of streams){
-                    let remote = await zg.startPlayingStream(s.streamID);
-                    let audio = document.createElement("audio");
-                    audio.srcObject = remote;
-                    audio.autoplay = true;
-                    document.body.appendChild(audio);
+            currentRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+                if (track.kind === "audio") {
+                    const audioEl = track.attach();
+                    document.body.appendChild(audioEl);
                 }
-            }
-        });
-
-        micActivo = true;
-
-        document.getElementById("btn-mic").style.background = "#00ff00";
-
-        log("🎤 Audio en vivo");
-
+            });
+        } catch (e) {
+            log("❌ Error de conexión");
+        }
     } else {
-
-        zg.stopPublishingStream("stream_"+nombre);
-        streamLocal = null;
+        if(currentRoom) currentRoom.disconnect();
         micActivo = false;
-
         document.getElementById("btn-mic").style.background = "#ff3333";
-
+        document.getElementById("status-dot").style.background = "#ff3333";
         log("🔇 Mic apagado");
     }
 }
 
 // =======================
-// 🪑 SILLAS
+// 🪑 SILLAS (FIREBASE)
 // =======================
 function crearSillas(){
     let g=document.getElementById("grid");
+    g.innerHTML = "";
     for(let i=1;i<=9;i++){
-        g.innerHTML+=`
-        <div onclick="sentarse(${i})">
-            <div class="avatar" id="silla-${i}">👤</div>
-        </div>`;
+        g.innerHTML+=`<div onclick="sentarse(${i})"><div class="avatar" id="silla-${i}">👤</div></div>`;
     }
 }
 
 async function sentarse(id){
+    log("🪑 Sentándose...");
     await db.collection("salas").doc(sala).set({
-        ["silla"+id]:{
-            nombre:nombre,
-            foto:foto||"",
-            cp:esCP
-        }
+        ["silla"+id]:{ nombre:nombre, foto:foto||"", cp:esCP }
     },{merge:true});
 }
 
-// =======================
-// 🔄 TIEMPO REAL
-// =======================
 db.collection("salas").doc(sala).onSnapshot(doc=>{
     let data=doc.data()||{};
     for(let i=1;i<=9;i++){
         let s=data["silla"+i];
         let el=document.getElementById("silla-"+i);
-
+        if(!el) continue;
         if(s){
-            el.innerHTML = s.foto
-                ? `<img src="${s.foto}" style="width:100%;height:100%">`
-                : "🎤";
-
-            if(s.cp) el.classList.add("cp");
-            else el.classList.remove("cp");
-
+            el.innerHTML = s.foto ? `<img src="${s.foto}" style="width:100%;height:100%;object-fit:cover;">` : "🎤";
+            if(s.cp) el.classList.add("cp"); else el.classList.remove("cp");
         } else {
-            el.innerHTML="👤";
-            el.classList.remove("cp");
+            el.innerHTML="👤"; el.classList.remove("cp");
         }
     }
 });
 
 // =======================
-// 💞 CP
+// 💰 ECONOMÍA
 // =======================
+function enviarRegalo(emoji, costo) {
+    if(oro >= costo) {
+        oro -= costo;
+        update();
+        log("Has enviado un " + emoji);
+        // Aquí puedes añadir una animación o sonido
+    } else {
+        alert("¡Necesitas más oro!");
+    }
+}
+
 function activarCP(){
     if(oro>=10000){
-        oro-=10000;
-        esCP=true;
-        update();
-        log("💞 CP activado");
-    } else alert("Falta oro");
+        oro-=10000; esCP=true; update(); log("💞 CP activado");
+    } else log("❌ Falta oro");
 }
 
-// =======================
-// 🎁 REGALOS
-// =======================
-function toggleGifts(){
-    alert("🎁 regalos próximamente");
-}
-
-// =======================
-// 📸 FOTO
-// =======================
+function toggleGifts(){ log("🎁 Menú de regalos abierto"); }
 function subirFoto(){ document.getElementById("file").click(); }
-
 function cargarFoto(e){
     let r=new FileReader();
     r.onload=()=>{ foto=r.result; log("📸 Foto lista"); };
     r.readAsDataURL(e.target.files[0]);
 }
-
-// =======================
-// UI
-// =======================
 function update(){ document.getElementById("oro").innerText=oro; }
 function log(t){ document.getElementById("log").innerText=t; }
 
-// =======================
-// START
-// =======================
 crearSillas();
-
 </script>
-
 </body>
 </html>
