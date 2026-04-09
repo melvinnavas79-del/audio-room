@@ -1,244 +1,231 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html><html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lluvia Live FINAL PRO</title>
-
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
-
-<!-- ZEGO -->
-<script src="https://resource.zegocloud.com/prebuilt/ZegoExpressWebRTC.js"></script>
-
-<style>
-body { margin:0; background:#0b001a; color:white; font-family:sans-serif; }
-
-.header { display:flex; justify-content:space-between; padding:15px; background:#000; }
-
-.sillas { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; }
-
-.avatar { width:80px; height:80px; border-radius:50%; background:#222; display:flex; align-items:center; justify-content:center; margin:auto; overflow:hidden; }
-
-.cp { border:3px solid #ff69b4; box-shadow:0 0 10px #ff69b4; }
-
-.bar { position:fixed; bottom:30px; width:100%; display:flex; justify-content:space-around; }
-
-button { border:none; border-radius:50%; width:60px; height:60px; font-size:24px; }
-
-#log { text-align:center; margin-top:5px; color:#00ffcc; font-size:12px; }
-</style>
-</head>
-
-<body>
-
-<div class="header">
-<div>💰 <span id="oro">3800</span></div>
-<div>SALA GLOBAL</div>
-<button onclick="activarCP()">💍</button>
-</div>
-
-<div id="log">Iniciando...</div>
-
-<div class="sillas" id="grid"></div>
-
-<div class="bar">
-<button id="btn-mic" onclick="toggleMic()">🎤</button>
-<button onclick="subirFoto()">📸</button>
-<button onclick="sentarse(1)">🪑</button>
-<button onclick="toggleGifts()">🎁</button>
-</div>
-
-<input type="file" id="file" hidden onchange="cargarFoto(event)">
-
-<script>
-
-// =======================
-// 🔥 CONFIG
-// =======================
-const firebaseConfig = { projectId:"lluvia-live-69a05" };
-firebase.initializeApp(firebaseConfig);
-
-const db = firebase.firestore();
-
-const appID = 249373029;
-const server = "wss://webliveroom249373029-api.zegocloud.com/ws";
-
-// =======================
-// VARIABLES
-// =======================
-let zg, streamLocal;
-let micActivo = false;
-
-let oro = 3800;
-let esCP = false;
-let foto = null;
-
-let sala = "global";
-let nombre = "Melvin";
-
-// =======================
-// 🔐 TOKEN FIREBASE
-// =======================
-async function obtenerPermisoAudio(usuario, salaID) {
-    try {
-        const funcionToken = firebase.functions().httpsCallable('obtenerTokenAudio');
-        const resultado = await funcionToken({ 
-            userId: usuario, 
-            roomName: salaID 
-        });
-        return resultado.data.token;
-    } catch (error) {
-        console.error(error);
-        alert("Error token");
-    }
+<title>Lluvia Live PRO FINAL</title><style>
+:root { 
+    --gold:#ffd700; 
+    --svip:#00ffff;
+    --king:#ff4500; 
+    --bg:#0b001a; 
 }
 
-// =======================
-// 🎤 MICRO REAL
-// =======================
-async function toggleMic(){
-
-    if(!micActivo){
-
-        const token = await obtenerPermisoAudio(nombre, sala);
-
-        if(!token) return;
-
-        zg = new ZegoExpressEngine(appID, server);
-
-        await zg.loginRoom(sala, token, {
-            userID: nombre,
-            userName: nombre
-        });
-
-        streamLocal = await zg.createStream({
-            camera: { audio: true, video: false }
-        });
-
-        zg.startPublishingStream("stream_"+nombre, streamLocal);
-
-        zg.on('roomStreamUpdate', async (roomID, type, streams)=>{
-            if(type === "ADD"){
-                for(let s of streams){
-                    let remote = await zg.startPlayingStream(s.streamID);
-                    let audio = document.createElement("audio");
-                    audio.srcObject = remote;
-                    audio.autoplay = true;
-                    document.body.appendChild(audio);
-                }
-            }
-        });
-
-        micActivo = true;
-
-        document.getElementById("btn-mic").style.background = "#00ff00";
-
-        log("🎤 Audio en vivo");
-
-    } else {
-
-        zg.stopPublishingStream("stream_"+nombre);
-        streamLocal = null;
-        micActivo = false;
-
-        document.getElementById("btn-mic").style.background = "#ff3333";
-
-        log("🔇 Mic apagado");
-    }
+body {
+    margin:0;
+    background:var(--bg);
+    color:white;
+    font-family:sans-serif;
 }
 
-// =======================
-// 🪑 SILLAS
-// =======================
+/* ===== SALA ===== */
+.sillas-grid {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+    padding:20px;
+}
+
+/* ===== AVATAR ===== */
+.avatar {
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    background:#1e1e2e;
+    border:3px solid #444;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    transition:0.3s;
+}
+
+/* VIP */
+.vip-border {
+    border-color:var(--gold);
+    box-shadow:0 0 15px var(--gold);
+}
+
+/* SVIP */
+.svip-border {
+    border-color:var(--svip);
+    box-shadow:0 0 20px var(--svip);
+}
+
+/* BRILLO */
+.avatar::before {
+    content:"";
+    position:absolute;
+    width:140%;
+    height:140%;
+    background:conic-gradient(transparent, rgba(255,255,255,0.6), transparent);
+    animation:rotate 4s linear infinite;
+}
+
+/* PARTICULAS */
+.avatar::after {
+    content:"";
+    position:absolute;
+    width:100%;
+    height:100%;
+    background:radial-gradient(circle, rgba(255,255,255,0.3) 2px, transparent 2px);
+    background-size:20px 20px;
+    animation:sparkle 3s infinite;
+}
+
+/* BADGE NIVEL */
+.nivel-badge {
+    position:absolute;
+    bottom:-8px;
+    background:black;
+    color:gold;
+    font-size:10px;
+    padding:2px 6px;
+    border-radius:10px;
+    border:1px solid gold;
+}
+
+/* CLAN */
+.clan-tag {
+    position:absolute;
+    top:-6px;
+    background:red;
+    font-size:9px;
+    padding:2px 6px;
+    border-radius:5px;
+}
+
+/* VERIFICADO */
+.verificado-check {
+    position:absolute;
+    bottom:5px;
+    right:5px;
+    background:#1da1f2;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/* CP */
+.cp-heart {
+    position:absolute;
+    bottom:5px;
+    left:5px;
+    background:#ff4d4d;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/* ANIMACIONES */
+@keyframes rotate {
+    0%{transform:rotate(0)}
+    100%{transform:rotate(360deg)}
+}
+
+@keyframes sparkle {
+    0%,100%{opacity:0.3}
+    50%{opacity:1}
+}
+
+</style></head><body><div class="sillas-grid" id="sillas"></div><script>
+
+let miNombre = "Melvin";
+let miClan = "Navas";
+let miGif = "";
+
+/* CREAR SILLAS */
 function crearSillas(){
-    let g=document.getElementById("grid");
+    const grid = document.getElementById("sillas");
     for(let i=1;i<=9;i++){
-        g.innerHTML+=`
+        grid.innerHTML += `
         <div onclick="sentarse(${i})">
             <div class="avatar" id="silla-${i}">👤</div>
+            <div id="label-${i}">VACÍO</div>
         </div>`;
     }
 }
 
-async function sentarse(id){
-    await db.collection("salas").doc(sala).set({
-        ["silla"+id]:{
-            nombre:nombre,
-            foto:foto||"",
-            cp:esCP
-        }
-    },{merge:true});
-}
-
-// =======================
-// 🔄 TIEMPO REAL
-// =======================
-db.collection("salas").doc(sala).onSnapshot(doc=>{
-    let data=doc.data()||{};
-    for(let i=1;i<=9;i++){
-        let s=data["silla"+i];
-        let el=document.getElementById("silla-"+i);
-
-        if(s){
-            el.innerHTML = s.foto
-                ? `<img src="${s.foto}" style="width:100%;height:100%">`
-                : "🎤";
-
-            if(s.cp) el.classList.add("cp");
-            else el.classList.remove("cp");
-
-        } else {
-            el.innerHTML="👤";
-            el.classList.remove("cp");
-        }
-    }
-});
-
-// =======================
-// 💞 CP
-// =======================
-function activarCP(){
-    if(oro>=10000){
-        oro-=10000;
-        esCP=true;
-        update();
-        log("💞 CP activado");
-    } else alert("Falta oro");
-}
-
-// =======================
-// 🎁 REGALOS
-// =======================
-function toggleGifts(){
-    alert("🎁 regalos próximamente");
-}
-
-// =======================
-// 📸 FOTO
-// =======================
-function subirFoto(){ document.getElementById("file").click(); }
-
-function cargarFoto(e){
-    let r=new FileReader();
-    r.onload=()=>{ foto=r.result; log("📸 Foto lista"); };
-    r.readAsDataURL(e.target.files[0]);
-}
-
-// =======================
-// UI
-// =======================
-function update(){ document.getElementById("oro").innerText=oro; }
-function log(t){ document.getElementById("log").innerText=t; }
-
-// =======================
-// START
-// =======================
 crearSillas();
 
-</script>
+/* SENTARSE */
+function sentarse(id){
+    const silla = document.getElementById(`silla-${id}`);
+    const label = document.getElementById(`label-${id}`);
 
-</body>
+    if(silla.classList.contains("talking")){
+        silla.className="avatar";
+        silla.innerHTML="👤";
+        label.innerText="VACÍO";
+    } else {
+
+        const tipo = ["vip","svip","aristo"][Math.random()*3|0];
+
+        let nivel=1, icono="⭐", color="var(--gold)", clase="vip-border";
+
+        if(tipo==="vip"){
+            nivel=Math.floor(Math.random()*10)+1;
+            icono="⭐";
+            clase="vip-border";
+        }
+
+        if(tipo==="svip"){
+            nivel=Math.floor(Math.random()*9)+1;
+            icono="💎";
+            color="var(--svip)";
+            clase="svip-border";
+        }
+
+        if(tipo==="aristo"){
+            nivel=Math.floor(Math.random()*9)+1;
+            icono="👑";
+            color="var(--king)";
+            clase="vip-border";
+        }
+
+        silla.className=`avatar talking ${clase}`;
+
+        silla.innerHTML=`
+        <div class="clan-tag">${miClan}</div>
+        <div class="nivel-badge">${icono}${nivel}</div>
+        <div class="verificado-check">✔</div>
+        <div class="cp-heart">❤️</div>
+        `;
+
+        if(miGif){
+            silla.style.backgroundImage=`url('${miGif}')`;
+        }
+
+        label.innerText=`${miNombre} ${icono}${nivel}`;
+        label.style.color=color;
+
+        animacionEntrada(silla);
+    }
+}
+
+/* ANIMACION ENTRADA */
+function animacionEntrada(el){
+    el.style.transform="scale(0)";
+    el.style.opacity="0";
+
+    setTimeout(()=>{
+        el.style.transition="all .4s";
+        el.style.transform="scale(1.2)";
+        el.style.opacity="1";
+
+        setTimeout(()=>{
+            el.style.transform="scale(1)";
+        },200);
+
+    },50);
+}
+
+</script></body>
 </html>
+Motores clavas de la app
