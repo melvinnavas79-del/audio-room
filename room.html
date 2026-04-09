@@ -2,230 +2,241 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lluvia Live PRO FINAL</title><style>
-:root { 
-    --gold:#ffd700; 
-    --svip:#00ffff;
-    --king:#ff4500; 
-    --bg:#0b001a; 
-}
+<title>Lluvia Live ULTRA EMPRESA + AUDIO</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://unpkg.com/@zegocloud/zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
+<style>
+body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow-x:hidden; padding-bottom:120px; }
+.header { display:flex; justify-content:space-between; padding:15px; background:#000; border-bottom:1px solid #333; position:sticky; top:0; z-index:1001; }
+.sillas { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; background:radial-gradient(circle, #1a0033 0%, #0b001a 100%); }
 
-body {
-    margin:0;
-    background:var(--bg);
-    color:white;
-    font-family:sans-serif;
-}
+/* AVATARES PROFESIONALES */
+.avatar-container { text-align:center; position:relative; }
+.avatar { width:85px; height:85px; border-radius:50%; background:#222; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; margin:auto; border:2px solid #444; transition: 0.3s; }
+.avatar img { width:100%; height:100%; object-fit:cover; }
 
-/* ===== SALA ===== */
-.sillas-grid {
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:20px;
-    padding:20px;
-}
-
-/* ===== AVATAR ===== */
-.avatar {
-    width:90px;
-    height:90px;
-    border-radius:50%;
-    background:#1e1e2e;
-    border:3px solid #444;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    position:relative;
-    overflow:hidden;
-    transition:0.3s;
-}
-
-/* VIP */
-.vip-border {
-    border-color:var(--gold);
-    box-shadow:0 0 15px var(--gold);
-}
-
-/* SVIP */
-.svip-border {
-    border-color:var(--svip);
-    box-shadow:0 0 20px var(--svip);
-}
-
-/* BRILLO */
-.avatar::before {
-    content:"";
-    position:absolute;
-    width:140%;
-    height:140%;
-    background:conic-gradient(transparent, rgba(255,255,255,0.6), transparent);
-    animation:rotate 4s linear infinite;
-}
-
-/* PARTICULAS */
-.avatar::after {
-    content:"";
-    position:absolute;
-    width:100%;
-    height:100%;
-    background:radial-gradient(circle, rgba(255,255,255,0.3) 2px, transparent 2px);
-    background-size:20px 20px;
-    animation:sparkle 3s infinite;
-}
-
-/* BADGE NIVEL */
-.nivel-badge {
-    position:absolute;
-    bottom:-8px;
-    background:black;
-    color:gold;
-    font-size:10px;
-    padding:2px 6px;
-    border-radius:10px;
-    border:1px solid gold;
-}
-
-/* CLAN */
-.clan-tag {
-    position:absolute;
-    top:-6px;
-    background:red;
-    font-size:9px;
-    padding:2px 6px;
-    border-radius:5px;
-}
-
-/* VERIFICADO */
-.verificado-check {
-    position:absolute;
-    bottom:5px;
-    right:5px;
-    background:#1da1f2;
-    width:18px;
-    height:18px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
-
-/* CP */
-.cp-heart {
-    position:absolute;
-    bottom:5px;
-    left:5px;
-    background:#ff4d4d;
-    width:18px;
-    height:18px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
+/* BADGES Y RANGOS */
+.clan { position:absolute; top:-5px; background:red; font-size:9px; padding:2px 6px; border-radius:5px; z-index:10; }
+.vip { position:absolute; top:-18px; background:gold; color:black; font-size:9px; padding:2px 6px; border-radius:5px; font-weight:bold; }
+.svip { position:absolute; top:-18px; background:#00ffff; color:black; font-size:9px; padding:2px 6px; border-radius:5px; font-weight:bold; }
+.aristo { position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); background:#ff4500; font-size:9px; padding:2px 8px; border-radius:10px; border:1px solid white; z-index:10; }
+.cp { position:absolute; bottom:5px; left:5px; background:#ff69b4; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:10px; border:1px solid white; }
+.verificado { position:absolute; bottom:5px; right:5px; background:#1da1f2; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:10px; border:1px solid white; }
 
 /* ANIMACIONES */
-@keyframes rotate {
-    0%{transform:rotate(0)}
-    100%{transform:rotate(360deg)}
+#gift { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; pointer-events:none; z-index:2000; }
+.gift-img { width:250px; animation:gift 2.5s forwards; }
+@keyframes gift { 0%{transform:scale(0) rotate(-20deg); opacity:0;} 20%{transform:scale(1.2) rotate(0deg); opacity:1;} 80%{transform:scale(1); opacity:1;} 100%{transform:scale(0); opacity:0;} }
+
+.entrada-anim { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; z-index:9999; pointer-events:none; }
+.entrada-anim img { width:300px; animation:entradaZoom 2.5s forwards; }
+@keyframes entradaZoom { 0%{transform:translateX(-100%); opacity:0;} 50%{transform:translateX(0); opacity:1;} 100%{transform:translateX(100%); opacity:0;} }
+
+/* UI Y BOTONES */
+.bar { position:fixed; bottom:0; width:100%; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; background:rgba(0,0,0,0.9); padding:15px 0; z-index:1001; }
+button { border:none; border-radius:20px; padding:10px 15px; font-size:12px; color:white; background:linear-gradient(45deg, #333, #555); font-weight:bold; }
+.btn-gold { background:linear-gradient(45deg, #ffd700, #ff8c00); color:black; }
+
+/* CONTENEDOR AUDIO */
+#audio-root { display: none; } /* El audio corre de fondo */
+
+/* FEED */
+.post { background:#111; margin:15px; padding:15px; border-radius:15px; border:1px solid #333; }
+.post img, .post video { width:100%; border-radius:10px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div>💰 <span id="oro">0</span> | <span id="nombre-label">Cargando...</span></div>
+    <button onclick="panelAgente()" class="btn-gold">🤝 AGENTE</button>
+</div>
+
+<div class="sillas" id="grid"></div>
+
+<div style="display:flex; gap:5px; overflow-x:auto; padding:10px; background:#111;">
+    <button onclick="verRanking()">🏆 TOP</button>
+    <button onclick="verClanes()">🏷️ CLANES</button>
+    <button onclick="verCP()">💞 CP</button>
+    <button onclick="verRecargas()">💰 RECARGAS</button>
+    <button onclick="toggleFantasma()">👻 FANTASMA</button>
+</div>
+
+<div id="gift"></div>
+<div id="feed"></div>
+<div id="audio-root"></div>
+
+<div class="bar">
+    <button onclick="sentarse(1)">🪑 1</button>
+    <button onclick="sentarse(2)">🪑 2</button>
+    <button onclick="enviarRegalo('rosa')">🌹 100</button>
+    <button onclick="enviarRegalo('leon')">🦁 1000</button>
+    <button onclick="document.getElementById('file').click()">📸 SUBIR</button>
+    <button onclick="verFeed()">🎞️ REELS</button>
+</div>
+
+<input type="file" id="file" hidden onchange="procesarArchivo(event)">
+
+<script>
+// CONFIGURACIÓN FIREBASE
+const firebaseConfig = { projectId:"lluvia-live-69a05" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// DATOS DE USUARIO
+let miNombre = prompt("Tu Nombre") || "User" + Math.floor(Math.random()*99);
+let miClan = prompt("Tu Clan") || "Libre";
+document.getElementById("nombre-label").innerText = miNombre;
+
+let oro=0, vip=5, svip=3, aristo=2, esCP=true, verificado=true, foto="";
+let modoFantasma = false;
+
+// CARGAR DATOS
+async function cargar(){
+    let userRef = db.collection("usuarios").doc(miNombre);
+    let d = await userRef.get();
+    if(d.exists){
+        oro = d.data().oro || 0;
+    } else {
+        oro = 5000;
+        await userRef.set({oro: 5000, clan: miClan});
+    }
+    updateUI();
+    entradaEspecial();
+    iniciarAudio(); // Activa el micrófono al entrar
 }
 
-@keyframes sparkle {
-    0%,100%{opacity:0.3}
-    50%{opacity:1}
+function updateUI(){ document.getElementById("oro").innerText = oro; }
+
+// MOTOR DE AUDIO (ZEGOCLOUD)
+function iniciarAudio(){
+    const roomID = "LluviaMainRoom";
+    const userID = miNombre + "_" + Math.floor(Math.random()*100);
+    const appID = 1426464525; // Tu ID
+    const serverSecret = "0c9b0e1a2b3c4d5e6f7g8h9i0j1k2l3m"; // Tu Secret
+
+    const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, roomID, userID, miNombre);
+    const zp = ZegoUIKitPrebuilt.create(kitToken);
+    zp.joinRoom({
+        container: document.querySelector("#audio-root"),
+        scenario: { mode: ZegoUIKitPrebuilt.GroupCall },
+        showPreJoinView: false,
+        turnOnMicrophoneWhenJoining: true,
+        showMyCameraToggleButton: false,
+        showAudioVideoSettingsButton: true
+    });
 }
 
-</style></head><body><div class="sillas-grid" id="sillas"></div><script>
+// ENTRADAS ANIMADAS
+function entradaEspecial(){
+    let imgUrl = "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif"; // Águila base
+    if(aristo >= 7) imgUrl = "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif"; // Dragón
+    if(svip >= 5) imgUrl = "https://media.giphy.com/media/3o7TKsQ8UQXJfR8VnG/giphy.gif"; // Fénix
+    
+    let c = document.createElement("div");
+    c.className = "entrada-anim";
+    c.innerHTML = `<img src="${imgUrl}">`;
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(), 3000);
+}
 
-let miNombre = "Melvin";
-let miClan = "Navas";
-let miGif = "";
-
-/* CREAR SILLAS */
+// SILLAS REAL-TIME
 function crearSillas(){
-    const grid = document.getElementById("sillas");
-    for(let i=1;i<=9;i++){
-        grid.innerHTML += `
-        <div onclick="sentarse(${i})">
-            <div class="avatar" id="silla-${i}">👤</div>
-            <div id="label-${i}">VACÍO</div>
+    let g = document.getElementById("grid");
+    for(let i=1; i<=9; i++){
+        g.innerHTML += `<div class="avatar-container" onclick="sentarse(${i})">
+            <div class="avatar" id="s${i}">👤</div>
+            <div id="n${i}" style="font-size:10px; margin-top:5px;">VACÍO</div>
         </div>`;
     }
 }
 
-crearSillas();
+async function sentarse(id){
+    if(modoFantasma) return alert("👻 Estás en modo Fantasma");
+    await db.collection("salas").doc("global").set({
+        ["s"+id]: {nombre:miNombre, clan:miClan, vip, svip, aristo, esCP, verificado, foto}
+    }, {merge:true});
+}
 
-/* SENTARSE */
-function sentarse(id){
-    const silla = document.getElementById(`silla-${id}`);
-    const label = document.getElementById(`label-${id}`);
-
-    if(silla.classList.contains("talking")){
-        silla.className="avatar";
-        silla.innerHTML="👤";
-        label.innerText="VACÍO";
-    } else {
-
-        const tipo = ["vip","svip","aristo"][Math.random()*3|0];
-
-        let nivel=1, icono="⭐", color="var(--gold)", clase="vip-border";
-
-        if(tipo==="vip"){
-            nivel=Math.floor(Math.random()*10)+1;
-            icono="⭐";
-            clase="vip-border";
+db.collection("salas").doc("global").onSnapshot(doc => {
+    let data = doc.data() || {};
+    for(let i=1; i<=9; i++){
+        let s = data["s"+i];
+        let el = document.getElementById("s"+i);
+        let name = document.getElementById("n"+i);
+        if(s){
+            el.innerHTML = `
+                <div class="clan">${s.clan}</div>
+                ${s.vip ? `<div class="vip">VIP ${s.vip}</div>`:''}
+                ${s.svip ? `<div class="svip">SVIP ${s.svip}</div>`:''}
+                <div class="aristo">👑 NIVEL ${s.aristo}</div>
+                <div class="cp">💞</div>
+                <div class="verificado">✔</div>
+                ${s.foto ? `<img src="${s.foto}">` : '🎤'}
+            `;
+            name.innerText = s.nombre;
+            el.parentElement.style.opacity = "1";
         }
-
-        if(tipo==="svip"){
-            nivel=Math.floor(Math.random()*9)+1;
-            icono="💎";
-            color="var(--svip)";
-            clase="svip-border";
-        }
-
-        if(tipo==="aristo"){
-            nivel=Math.floor(Math.random()*9)+1;
-            icono="👑";
-            color="var(--king)";
-            clase="vip-border";
-        }
-
-        silla.className=`avatar talking ${clase}`;
-
-        silla.innerHTML=`
-        <div class="clan-tag">${miClan}</div>
-        <div class="nivel-badge">${icono}${nivel}</div>
-        <div class="verificado-check">✔</div>
-        <div class="cp-heart">❤️</div>
-        `;
-
-        if(miGif){
-            silla.style.backgroundImage=`url('${miGif}')`;
-        }
-
-        label.innerText=`${miNombre} ${icono}${nivel}`;
-        label.style.color=color;
-
-        animacionEntrada(silla);
     }
+});
+
+// REGALOS Y PREMIO BEBÉ
+async function enviarRegalo(tipo){
+    let precio = tipo === 'leon' ? 1000 : 100;
+    if(oro < precio) return alert("Sin oro");
+    
+    oro -= precio;
+    updateUI();
+
+    // Registrar en rankings
+    await db.collection("eventos").doc("global").set({ [miNombre]: firebase.firestore.FieldValue.increment(precio) }, {merge:true});
+    
+    // Animación
+    let g = document.getElementById("gift");
+    let img = document.createElement("img");
+    img.src = tipo === 'leon' ? "https://media.giphy.com/media/3o7TKoWXlo3M1nKS6A/giphy.gif" : "https://media.giphy.com/media/l0ExncehJzexFpRHq/giphy.gif";
+    img.className = "gift-img";
+    g.appendChild(img);
+    setTimeout(()=>img.remove(), 2500);
 }
 
-/* ANIMACION ENTRADA */
-function animacionEntrada(el){
-    el.style.transform="scale(0)";
-    el.style.opacity="0";
-
-    setTimeout(()=>{
-        el.style.transition="all .4s";
-        el.style.transform="scale(1.2)";
-        el.style.opacity="1";
-
-        setTimeout(()=>{
-            el.style.transform="scale(1)";
-        },200);
-
-    },50);
+// PANEL AGENTE
+async function panelAgente(){
+    if(prompt("Clave de Agente") !== "1234") return;
+    let u = prompt("Usuario a recargar");
+    let m = parseInt(prompt("Cantidad de Oro"));
+    await db.collection("usuarios").doc(u).set({ oro: firebase.firestore.FieldValue.increment(m) }, {merge:true});
+    alert("Recarga Exitosa");
 }
 
-</script></body>
+// FEED DE REELS
+function procesarArchivo(e){
+    let f = e.target.files[0];
+    let r = new FileReader();
+    r.onload = async () => {
+        await db.collection("feed").add({ user: miNombre, media: r.result, tipo: f.type, fecha: new Date() });
+        alert("¡Publicado en el Feed!");
+    };
+    r.readAsDataURL(f);
+}
+
+function verFeed(){
+    let f = document.getElementById("feed");
+    f.innerHTML = "<h2>🎞️ Lluvia Reels</h2>";
+    db.collection("feed").orderBy("fecha","desc").limit(10).get().then(s => {
+        s.forEach(d => {
+            let p = d.data();
+            f.innerHTML += `<div class="post"><b>${p.user}</b><br>${p.tipo.includes("video") ? `<video src="${p.media}" controls></video>` : `<img src="${p.media}">`}</div>`;
+        });
+    });
+}
+
+function toggleFantasma(){ modoFantasma = !modoFantasma; alert(modoFantasma ? "👻 Modo Invisible ON" : "Visible ON"); }
+
+// INICIAR TODO
+crearSillas();
+cargar();
+</script>
+</body>
 </html>
-Motores clavas de la app
