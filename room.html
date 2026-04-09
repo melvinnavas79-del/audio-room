@@ -2,146 +2,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lluvia Live ULTRA EMPRESA + AUDIO</title>
+<title>Lluvia Live PRO AUDIO FIX</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://unpkg.com/@zegocloud/zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
 <style>
-body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow-x:hidden; padding-bottom:120px; }
+body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow-x:hidden; padding-bottom:140px; }
 .header { display:flex; justify-content:space-between; padding:15px; background:#000; border-bottom:1px solid #333; position:sticky; top:0; z-index:1001; }
 .sillas { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; background:radial-gradient(circle, #1a0033 0%, #0b001a 100%); }
 
-/* AVATARES PROFESIONALES */
+/* AVATARES */
 .avatar-container { text-align:center; position:relative; }
-.avatar { width:85px; height:85px; border-radius:50%; background:#222; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; margin:auto; border:2px solid #444; transition: 0.3s; }
-.avatar img { width:100%; height:100%; object-fit:cover; }
+.avatar { width:85px; height:85px; border-radius:50%; background:#222; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; margin:auto; border:2px solid #444; }
 
-/* BADGES Y RANGOS */
+/* BADGES */
 .clan { position:absolute; top:-5px; background:red; font-size:9px; padding:2px 6px; border-radius:5px; z-index:10; }
-.vip { position:absolute; top:-18px; background:gold; color:black; font-size:9px; padding:2px 6px; border-radius:5px; font-weight:bold; }
-.svip { position:absolute; top:-18px; background:#00ffff; color:black; font-size:9px; padding:2px 6px; border-radius:5px; font-weight:bold; }
 .aristo { position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); background:#ff4500; font-size:9px; padding:2px 8px; border-radius:10px; border:1px solid white; z-index:10; }
-.cp { position:absolute; bottom:5px; left:5px; background:#ff69b4; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:10px; border:1px solid white; }
-.verificado { position:absolute; bottom:5px; right:5px; background:#1da1f2; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:10px; border:1px solid white; }
 
-/* ANIMACIONES */
-#gift { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; pointer-events:none; z-index:2000; }
-.gift-img { width:250px; animation:gift 2.5s forwards; }
-@keyframes gift { 0%{transform:scale(0) rotate(-20deg); opacity:0;} 20%{transform:scale(1.2) rotate(0deg); opacity:1;} 80%{transform:scale(1); opacity:1;} 100%{transform:scale(0); opacity:0;} }
+/* ZONA DE AUDIO (VISIBLE) */
+#audio-controls { position: fixed; bottom: 85px; right: 20px; z-index: 2000; }
 
-.entrada-anim { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; z-index:9999; pointer-events:none; }
-.entrada-anim img { width:300px; animation:entradaZoom 2.5s forwards; }
-@keyframes entradaZoom { 0%{transform:translateX(-100%); opacity:0;} 50%{transform:translateX(0); opacity:1;} 100%{transform:translateX(100%); opacity:0;} }
+/* VENTANAS MODALES */
+#modal-view { display:none; position:fixed; inset:20px; background:rgba(0,0,0,0.95); border:1px solid #ff4500; border-radius:20px; z-index:3000; padding:20px; overflow-y:auto; }
 
-/* UI Y BOTONES */
 .bar { position:fixed; bottom:0; width:100%; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; background:rgba(0,0,0,0.9); padding:15px 0; z-index:1001; }
-button { border:none; border-radius:20px; padding:10px 15px; font-size:12px; color:white; background:linear-gradient(45deg, #333, #555); font-weight:bold; }
+button { border:none; border-radius:20px; padding:10px 15px; font-size:11px; color:white; background:#333; font-weight:bold; }
 .btn-gold { background:linear-gradient(45deg, #ffd700, #ff8c00); color:black; }
-
-/* CONTENEDOR AUDIO */
-#audio-root { display: none; } /* El audio corre de fondo */
-
-/* FEED */
-.post { background:#111; margin:15px; padding:15px; border-radius:15px; border:1px solid #333; }
-.post img, .post video { width:100%; border-radius:10px; }
 </style>
 </head>
 <body>
 
 <div class="header">
-    <div>💰 <span id="oro">0</span> | <span id="nombre-label">Cargando...</span></div>
+    <div>💰 <span id="oro">0</span> | <span id="nombre-label">...</span></div>
     <button onclick="panelAgente()" class="btn-gold">🤝 AGENTE</button>
 </div>
 
 <div class="sillas" id="grid"></div>
 
-<div style="display:flex; gap:5px; overflow-x:auto; padding:10px; background:#111;">
-    <button onclick="verRanking()">🏆 TOP</button>
-    <button onclick="verClanes()">🏷️ CLANES</button>
-    <button onclick="verCP()">💞 CP</button>
-    <button onclick="verRecargas()">💰 RECARGAS</button>
+<div id="audio-controls"></div>
+
+<div id="modal-view">
+    <div style="display:flex; justify-content:space-between;">
+        <h2 id="modal-title">Título</h2>
+        <button onclick="cerrarModal()">❌</button>
+    </div>
+    <hr>
+    <div id="modal-content"></div>
+</div>
+
+<div class="bar">
+    <button onclick="abrirRanking('🏆 TOP RICOS', 'eventos')">🏆 TOP</button>
+    <button onclick="abrirRanking('🏷️ CLANES', 'evento_clanes')">🏷️ CLANES</button>
+    <button onclick="enviarRegalo('rosa')">🌹 100</button>
+    <button onclick="enviarRegalo('leon')">🦁 1000</button>
+    <button onclick="sentarse(1)">🪑 SUBIR</button>
     <button onclick="toggleFantasma()">👻 FANTASMA</button>
 </div>
 
-<div id="gift"></div>
-<div id="feed"></div>
-<div id="audio-root"></div>
-
-<div class="bar">
-    <button onclick="sentarse(1)">🪑 1</button>
-    <button onclick="sentarse(2)">🪑 2</button>
-    <button onclick="enviarRegalo('rosa')">🌹 100</button>
-    <button onclick="enviarRegalo('leon')">🦁 1000</button>
-    <button onclick="document.getElementById('file').click()">📸 SUBIR</button>
-    <button onclick="verFeed()">🎞️ REELS</button>
-</div>
-
-<input type="file" id="file" hidden onchange="procesarArchivo(event)">
-
 <script>
-// CONFIGURACIÓN FIREBASE
 const firebaseConfig = { projectId:"lluvia-live-69a05" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// DATOS DE USUARIO
-let miNombre = prompt("Tu Nombre") || "User" + Math.floor(Math.random()*99);
-let miClan = prompt("Tu Clan") || "Libre";
+let miNombre = prompt("Nombre") || "User";
+let miClan = "Navas";
 document.getElementById("nombre-label").innerText = miNombre;
 
-let oro=0, vip=5, svip=3, aristo=2, esCP=true, verificado=true, foto="";
-let modoFantasma = false;
+let oro=0, aristo=5;
 
-// CARGAR DATOS
 async function cargar(){
-    let userRef = db.collection("usuarios").doc(miNombre);
-    let d = await userRef.get();
-    if(d.exists){
-        oro = d.data().oro || 0;
-    } else {
-        oro = 5000;
-        await userRef.set({oro: 5000, clan: miClan});
-    }
-    updateUI();
-    entradaEspecial();
-    iniciarAudio(); // Activa el micrófono al entrar
+    let d = await db.collection("usuarios").doc(miNombre).get();
+    oro = d.exists ? d.data().oro : 5000;
+    document.getElementById("oro").innerText = oro;
+    iniciarAudio();
 }
 
-function updateUI(){ document.getElementById("oro").innerText = oro; }
-
-// MOTOR DE AUDIO (ZEGOCLOUD)
+// AUDIO CON BOTONES VISIBLES
 function iniciarAudio(){
-    const roomID = "LluviaMainRoom";
-    const userID = miNombre + "_" + Math.floor(Math.random()*100);
-    const appID = 1426464525; // Tu ID
-    const serverSecret = "0c9b0e1a2b3c4d5e6f7g8h9i0j1k2l3m"; // Tu Secret
-
-    const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(appID, serverSecret, roomID, userID, miNombre);
+    const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(1426464525, "0c9b0e1a2b3c4d5e6f7g8h9i0j1k2l3m", "LluviaRoom", miNombre, miNombre);
     const zp = ZegoUIKitPrebuilt.create(kitToken);
     zp.joinRoom({
-        container: document.querySelector("#audio-root"),
+        container: document.querySelector("#audio-controls"),
         scenario: { mode: ZegoUIKitPrebuilt.GroupCall },
         showPreJoinView: false,
         turnOnMicrophoneWhenJoining: true,
         showMyCameraToggleButton: false,
-        showAudioVideoSettingsButton: true
+        showAudioVideoSettingsButton: true,
+        showScreenSharingButton: false,
+        layout: "Grid" // Esto activa los controles de usuario
     });
 }
 
-// ENTRADAS ANIMADAS
-function entradaEspecial(){
-    let imgUrl = "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif"; // Águila base
-    if(aristo >= 7) imgUrl = "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif"; // Dragón
-    if(svip >= 5) imgUrl = "https://media.giphy.com/media/3o7TKsQ8UQXJfR8VnG/giphy.gif"; // Fénix
-    
-    let c = document.createElement("div");
-    c.className = "entrada-anim";
-    c.innerHTML = `<img src="${imgUrl}">`;
-    document.body.appendChild(c);
-    setTimeout(()=>c.remove(), 3000);
-}
-
-// SILLAS REAL-TIME
 function crearSillas(){
     let g = document.getElementById("grid");
     for(let i=1; i<=9; i++){
@@ -153,9 +104,8 @@ function crearSillas(){
 }
 
 async function sentarse(id){
-    if(modoFantasma) return alert("👻 Estás en modo Fantasma");
     await db.collection("salas").doc("global").set({
-        ["s"+id]: {nombre:miNombre, clan:miClan, vip, svip, aristo, esCP, verificado, foto}
+        ["s"+id]: {nombre:miNombre, clan:miClan, aristo:aristo}
     }, {merge:true});
 }
 
@@ -163,78 +113,35 @@ db.collection("salas").doc("global").onSnapshot(doc => {
     let data = doc.data() || {};
     for(let i=1; i<=9; i++){
         let s = data["s"+i];
-        let el = document.getElementById("s"+i);
-        let name = document.getElementById("n"+i);
         if(s){
-            el.innerHTML = `
-                <div class="clan">${s.clan}</div>
-                ${s.vip ? `<div class="vip">VIP ${s.vip}</div>`:''}
-                ${s.svip ? `<div class="svip">SVIP ${s.svip}</div>`:''}
-                <div class="aristo">👑 NIVEL ${s.aristo}</div>
-                <div class="cp">💞</div>
-                <div class="verificado">✔</div>
-                ${s.foto ? `<img src="${s.foto}">` : '🎤'}
-            `;
-            name.innerText = s.nombre;
-            el.parentElement.style.opacity = "1";
+            document.getElementById("s"+i).innerHTML = `<div class="clan">${s.clan}</div><div class="aristo">NIVEL ${s.aristo}</div>🎤`;
+            document.getElementById("n"+i).innerText = s.nombre;
         }
     }
 });
 
-// REGALOS Y PREMIO BEBÉ
-async function enviarRegalo(tipo){
-    let precio = tipo === 'leon' ? 1000 : 100;
-    if(oro < precio) return alert("Sin oro");
+// FUNCIÓN PARA BOTONES DE LISTAS (TOP, CLANES, ETC)
+async function abrirRanking(titulo, coleccion){
+    const modal = document.getElementById("modal-view");
+    const content = document.getElementById("modal-content");
+    document.getElementById("modal-title").innerText = titulo;
+    modal.style.display = "block";
+    content.innerHTML = "Cargando...";
+
+    let d = await db.collection(coleccion).doc("global").get();
+    let data = d.data() || {};
+    let sortable = Object.entries(data).sort(([,a],[,b]) => b-a);
     
-    oro -= precio;
-    updateUI();
-
-    // Registrar en rankings
-    await db.collection("eventos").doc("global").set({ [miNombre]: firebase.firestore.FieldValue.increment(precio) }, {merge:true});
-    
-    // Animación
-    let g = document.getElementById("gift");
-    let img = document.createElement("img");
-    img.src = tipo === 'leon' ? "https://media.giphy.com/media/3o7TKoWXlo3M1nKS6A/giphy.gif" : "https://media.giphy.com/media/l0ExncehJzexFpRHq/giphy.gif";
-    img.className = "gift-img";
-    g.appendChild(img);
-    setTimeout(()=>img.remove(), 2500);
+    content.innerHTML = sortable.map(([name, pts], i) => 
+        `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
+            <span>${i+1}. ${name}</span>
+            <span style="color:gold;">💰 ${pts}</span>
+        </div>`
+    ).join('');
 }
 
-// PANEL AGENTE
-async function panelAgente(){
-    if(prompt("Clave de Agente") !== "1234") return;
-    let u = prompt("Usuario a recargar");
-    let m = parseInt(prompt("Cantidad de Oro"));
-    await db.collection("usuarios").doc(u).set({ oro: firebase.firestore.FieldValue.increment(m) }, {merge:true});
-    alert("Recarga Exitosa");
-}
+function cerrarModal(){ document.getElementById("modal-view").style.display = "none"; }
 
-// FEED DE REELS
-function procesarArchivo(e){
-    let f = e.target.files[0];
-    let r = new FileReader();
-    r.onload = async () => {
-        await db.collection("feed").add({ user: miNombre, media: r.result, tipo: f.type, fecha: new Date() });
-        alert("¡Publicado en el Feed!");
-    };
-    r.readAsDataURL(f);
-}
-
-function verFeed(){
-    let f = document.getElementById("feed");
-    f.innerHTML = "<h2>🎞️ Lluvia Reels</h2>";
-    db.collection("feed").orderBy("fecha","desc").limit(10).get().then(s => {
-        s.forEach(d => {
-            let p = d.data();
-            f.innerHTML += `<div class="post"><b>${p.user}</b><br>${p.tipo.includes("video") ? `<video src="${p.media}" controls></video>` : `<img src="${p.media}">`}</div>`;
-        });
-    });
-}
-
-function toggleFantasma(){ modoFantasma = !modoFantasma; alert(modoFantasma ? "👻 Modo Invisible ON" : "Visible ON"); }
-
-// INICIAR TODO
 crearSillas();
 cargar();
 </script>
