@@ -2,31 +2,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lluvia Live PRO AUDIO FIX</title>
+<title>Lluvia Live - Audio Fix</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://unpkg.com/@zegocloud/zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
 <style>
-body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow-x:hidden; padding-bottom:140px; }
+body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow-x:hidden; padding-bottom:160px; }
 .header { display:flex; justify-content:space-between; padding:15px; background:#000; border-bottom:1px solid #333; position:sticky; top:0; z-index:1001; }
 .sillas { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; background:radial-gradient(circle, #1a0033 0%, #0b001a 100%); }
 
 /* AVATARES */
 .avatar-container { text-align:center; position:relative; }
-.avatar { width:85px; height:85px; border-radius:50%; background:#222; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; margin:auto; border:2px solid #444; }
+.avatar { width:80px; height:80px; border-radius:50%; background:#222; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; margin:auto; border:2px solid #444; }
 
-/* BADGES */
-.clan { position:absolute; top:-5px; background:red; font-size:9px; padding:2px 6px; border-radius:5px; z-index:10; }
-.aristo { position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); background:#ff4500; font-size:9px; padding:2px 8px; border-radius:10px; border:1px solid white; z-index:10; }
+/* BARRA DE AUDIO Y CÁMARA (FORZADA) */
+#zegocloud-ui { 
+    position: fixed; 
+    bottom: 95px; 
+    left: 0; 
+    width: 100%; 
+    height: 60px; 
+    background: rgba(0,0,0,0.8);
+    z-index: 5000; 
+    display: flex; 
+    justify-content: center;
+    border-top: 1px solid #ff4500;
+}
 
-/* ZONA DE AUDIO (VISIBLE) */
-#audio-controls { position: fixed; bottom: 85px; right: 20px; z-index: 2000; }
-
-/* VENTANAS MODALES */
-#modal-view { display:none; position:fixed; inset:20px; background:rgba(0,0,0,0.95); border:1px solid #ff4500; border-radius:20px; z-index:3000; padding:20px; overflow-y:auto; }
-
-.bar { position:fixed; bottom:0; width:100%; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; background:rgba(0,0,0,0.9); padding:15px 0; z-index:1001; }
-button { border:none; border-radius:20px; padding:10px 15px; font-size:11px; color:white; background:#333; font-weight:bold; }
+/* MODAL Y BARRA INFERIOR */
+#modal-view { display:none; position:fixed; inset:20px; background:rgba(0,0,0,0.95); border:1px solid #ff4500; border-radius:20px; z-index:6000; padding:20px; overflow-y:auto; }
+.bar { position:fixed; bottom:0; width:100%; display:flex; flex-wrap:wrap; gap:5px; justify-content:center; background:#000; padding:15px 0; z-index:1001; }
+button { border:none; border-radius:20px; padding:8px 12px; font-size:11px; color:white; background:#333; font-weight:bold; }
 .btn-gold { background:linear-gradient(45deg, #ffd700, #ff8c00); color:black; }
 </style>
 </head>
@@ -39,20 +45,15 @@ button { border:none; border-radius:20px; padding:10px 15px; font-size:11px; col
 
 <div class="sillas" id="grid"></div>
 
-<div id="audio-controls"></div>
+<div id="zegocloud-ui"></div>
 
 <div id="modal-view">
-    <div style="display:flex; justify-content:space-between;">
-        <h2 id="modal-title">Título</h2>
-        <button onclick="cerrarModal()">❌</button>
-    </div>
-    <hr>
+    <div style="display:flex; justify-content:space-between;"><h2 id="modal-title"></h2><button onclick="cerrarModal()">❌</button></div>
     <div id="modal-content"></div>
 </div>
 
 <div class="bar">
-    <button onclick="abrirRanking('🏆 TOP RICOS', 'eventos')">🏆 TOP</button>
-    <button onclick="abrirRanking('🏷️ CLANES', 'evento_clanes')">🏷️ CLANES</button>
+    <button onclick="abrirRanking('🏆 TOP', 'eventos')">🏆 TOP</button>
     <button onclick="enviarRegalo('rosa')">🌹 100</button>
     <button onclick="enviarRegalo('leon')">🦁 1000</button>
     <button onclick="sentarse(1)">🪑 SUBIR</button>
@@ -64,49 +65,46 @@ const firebaseConfig = { projectId:"lluvia-live-69a05" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let miNombre = prompt("Nombre") || "User";
+let miNombre = prompt("Tu Nombre") || "User";
 let miClan = "Navas";
-document.getElementById("nombre-label").innerText = miNombre;
-
-let oro=0, aristo=5;
+let oro=0;
 
 async function cargar(){
     let d = await db.collection("usuarios").doc(miNombre).get();
     oro = d.exists ? d.data().oro : 5000;
     document.getElementById("oro").innerText = oro;
-    iniciarAudio();
+    document.getElementById("nombre-label").innerText = miNombre;
+    iniciarZego();
 }
 
-// AUDIO CON BOTONES VISIBLES
-function iniciarAudio(){
+function iniciarZego(){
     const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(1426464525, "0c9b0e1a2b3c4d5e6f7g8h9i0j1k2l3m", "LluviaRoom", miNombre, miNombre);
     const zp = ZegoUIKitPrebuilt.create(kitToken);
     zp.joinRoom({
-        container: document.querySelector("#audio-controls"),
+        container: document.querySelector("#zegocloud-ui"),
         scenario: { mode: ZegoUIKitPrebuilt.GroupCall },
         showPreJoinView: false,
-        turnOnMicrophoneWhenJoining: true,
-        showMyCameraToggleButton: false,
+        // BOTONES ACTIVADOS
+        showMyCameraToggleButton: true, 
+        showMyMicrophoneToggleButton: true,
         showAudioVideoSettingsButton: true,
         showScreenSharingButton: false,
-        layout: "Grid" // Esto activa los controles de usuario
+        showTextChat: false,
+        showUserList: false,
+        layout: "Grid",
+        maxUsers: 10
     });
 }
 
 function crearSillas(){
     let g = document.getElementById("grid");
     for(let i=1; i<=9; i++){
-        g.innerHTML += `<div class="avatar-container" onclick="sentarse(${i})">
-            <div class="avatar" id="s${i}">👤</div>
-            <div id="n${i}" style="font-size:10px; margin-top:5px;">VACÍO</div>
-        </div>`;
+        g.innerHTML += `<div class="avatar-container" onclick="sentarse(${i})"><div class="avatar" id="s${i}">👤</div><div id="n${i}" style="font-size:10px;margin-top:5px;">VACÍO</div></div>`;
     }
 }
 
 async function sentarse(id){
-    await db.collection("salas").doc("global").set({
-        ["s"+id]: {nombre:miNombre, clan:miClan, aristo:aristo}
-    }, {merge:true});
+    await db.collection("salas").doc("global").set({ ["s"+id]: {nombre:miNombre, clan:miClan} }, {merge:true});
 }
 
 db.collection("salas").doc("global").onSnapshot(doc => {
@@ -114,33 +112,24 @@ db.collection("salas").doc("global").onSnapshot(doc => {
     for(let i=1; i<=9; i++){
         let s = data["s"+i];
         if(s){
-            document.getElementById("s"+i).innerHTML = `<div class="clan">${s.clan}</div><div class="aristo">NIVEL ${s.aristo}</div>🎤`;
+            document.getElementById("s"+i).innerHTML = `<div style="position:absolute;top:0;background:red;font-size:8px;">${s.clan}</div>🎤`;
             document.getElementById("n"+i).innerText = s.nombre;
         }
     }
 });
 
-// FUNCIÓN PARA BOTONES DE LISTAS (TOP, CLANES, ETC)
 async function abrirRanking(titulo, coleccion){
     const modal = document.getElementById("modal-view");
-    const content = document.getElementById("modal-content");
-    document.getElementById("modal-title").innerText = titulo;
     modal.style.display = "block";
-    content.innerHTML = "Cargando...";
-
+    document.getElementById("modal-title").innerText = titulo;
     let d = await db.collection(coleccion).doc("global").get();
     let data = d.data() || {};
     let sortable = Object.entries(data).sort(([,a],[,b]) => b-a);
-    
-    content.innerHTML = sortable.map(([name, pts], i) => 
-        `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;">
-            <span>${i+1}. ${name}</span>
-            <span style="color:gold;">💰 ${pts}</span>
-        </div>`
-    ).join('');
+    document.getElementById("modal-content").innerHTML = sortable.map(([n, p]) => `<p>${n}: ${p}</p>`).join('');
 }
 
 function cerrarModal(){ document.getElementById("modal-view").style.display = "none"; }
+function toggleFantasma(){ alert("Modo Fantasma activado"); }
 
 crearSillas();
 cargar();
