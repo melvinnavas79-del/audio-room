@@ -1,164 +1,231 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html><html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Lluvia Live PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lluvia Live PRO FINAL</title><style>
+:root { 
+    --gold:#ffd700; 
+    --svip:#00ffff;
+    --king:#ff4500; 
+    --bg:#0b001a; 
+}
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+body {
+    margin:0;
+    background:var(--bg);
+    color:white;
+    font-family:sans-serif;
+}
 
-<style>
-body { margin:0; background:#0b001a; color:white; font-family:sans-serif; text-align:center; }
+/* ===== SALA ===== */
+.sillas-grid {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+    padding:20px;
+}
 
-button {
-    margin:10px;
-    padding:15px;
-    border:none;
+/* ===== AVATAR ===== */
+.avatar {
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    background:#1e1e2e;
+    border:3px solid #444;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    transition:0.3s;
+}
+
+/* VIP */
+.vip-border {
+    border-color:var(--gold);
+    box-shadow:0 0 15px var(--gold);
+}
+
+/* SVIP */
+.svip-border {
+    border-color:var(--svip);
+    box-shadow:0 0 20px var(--svip);
+}
+
+/* BRILLO */
+.avatar::before {
+    content:"";
+    position:absolute;
+    width:140%;
+    height:140%;
+    background:conic-gradient(transparent, rgba(255,255,255,0.6), transparent);
+    animation:rotate 4s linear infinite;
+}
+
+/* PARTICULAS */
+.avatar::after {
+    content:"";
+    position:absolute;
+    width:100%;
+    height:100%;
+    background:radial-gradient(circle, rgba(255,255,255,0.3) 2px, transparent 2px);
+    background-size:20px 20px;
+    animation:sparkle 3s infinite;
+}
+
+/* BADGE NIVEL */
+.nivel-badge {
+    position:absolute;
+    bottom:-8px;
+    background:black;
+    color:gold;
+    font-size:10px;
+    padding:2px 6px;
     border-radius:10px;
-    font-size:16px;
+    border:1px solid gold;
 }
 
-#log { margin-top:20px; color:#00ffcc; }
-</style>
-</head>
+/* CLAN */
+.clan-tag {
+    position:absolute;
+    top:-6px;
+    background:red;
+    font-size:9px;
+    padding:2px 6px;
+    border-radius:5px;
+}
 
-<body>
+/* VERIFICADO */
+.verificado-check {
+    position:absolute;
+    bottom:5px;
+    right:5px;
+    background:#1da1f2;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
 
-<h2>🎤 LLUVIA LIVE</h2>
+/* CP */
+.cp-heart {
+    position:absolute;
+    bottom:5px;
+    left:5px;
+    background:#ff4d4d;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
 
-<input id="room" placeholder="Sala (ej: 123)">
-<br><br>
+/* ANIMACIONES */
+@keyframes rotate {
+    0%{transform:rotate(0)}
+    100%{transform:rotate(360deg)}
+}
 
-<button onclick="entrar()">Entrar</button>
-<button onclick="toggleMic()">Mic ON/OFF</button>
-<button onclick="enviarRegalo('🎁')">🎁</button>
-<button onclick="enviarRegalo('💎')">💎</button>
+@keyframes sparkle {
+    0%,100%{opacity:0.3}
+    50%{opacity:1}
+}
 
-<div id="log">Esperando...</div>
+</style></head><body><div class="sillas-grid" id="sillas"></div><script>
 
-<script>
+let miNombre = "Melvin";
+let miClan = "Navas";
+let miGif = "";
 
-const socket = io("http://207.180.235.220:3001");
+/* CREAR SILLAS */
+function crearSillas(){
+    const grid = document.getElementById("sillas");
+    for(let i=1;i<=9;i++){
+        grid.innerHTML += `
+        <div onclick="sentarse(${i})">
+            <div class="avatar" id="silla-${i}">👤</div>
+            <div id="label-${i}">VACÍO</div>
+        </div>`;
+    }
+}
 
-let peer;
-let stream;
-let micActivo = false;
-let calls = {};
-let roomActual = "";
+crearSillas();
 
-async function entrar() {
+/* SENTARSE */
+function sentarse(id){
+    const silla = document.getElementById(`silla-${id}`);
+    const label = document.getElementById(`label-${id}`);
 
-    roomActual = document.getElementById("room").value || "global";
+    if(silla.classList.contains("talking")){
+        silla.className="avatar";
+        silla.innerHTML="👤";
+        label.innerText="VACÍO";
+    } else {
 
-    peer = new Peer();
+        const tipo = ["vip","svip","aristo"][Math.random()*3|0];
 
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getAudioTracks()[0].enabled = false;
+        let nivel=1, icono="⭐", color="var(--gold)", clase="vip-border";
 
-    peer.on("open", id => {
-
-        log("🟢 Conectado: " + id);
-
-        socket.emit("join-room", {
-            room: roomActual,
-            peerId: id
-        });
-    });
-
-    // recibir llamadas
-    peer.on("call", call => {
-        call.answer(stream);
-
-        call.on("stream", remoteStream => {
-            reproducir(remoteStream);
-        });
-    });
-
-    // usuarios en sala
-    socket.on("users-in-room", users => {
-        users.forEach(userId => {
-            if (userId === peer.id) return;
-
-            const call = peer.call(userId, stream);
-
-            call.on("stream", remoteStream => {
-                reproducir(remoteStream);
-            });
-
-            calls[userId] = call;
-        });
-    });
-
-    // nuevo usuario
-    socket.on("new-user", userId => {
-        const call = peer.call(userId, stream);
-
-        call.on("stream", remoteStream => {
-            reproducir(remoteStream);
-        });
-
-        calls[userId] = call;
-    });
-
-    // usuario sale
-    socket.on("user-left", userId => {
-        if (calls[userId]) {
-            calls[userId].close();
-            delete calls[userId];
+        if(tipo==="vip"){
+            nivel=Math.floor(Math.random()*10)+1;
+            icono="⭐";
+            clase="vip-border";
         }
-    });
 
-    // 🎁 recibir regalo
-    socket.on("receive-gift", data => {
-        mostrarRegalo(data.gift);
-    });
+        if(tipo==="svip"){
+            nivel=Math.floor(Math.random()*9)+1;
+            icono="💎";
+            color="var(--svip)";
+            clase="svip-border";
+        }
+
+        if(tipo==="aristo"){
+            nivel=Math.floor(Math.random()*9)+1;
+            icono="👑";
+            color="var(--king)";
+            clase="vip-border";
+        }
+
+        silla.className=`avatar talking ${clase}`;
+
+        silla.innerHTML=`
+        <div class="clan-tag">${miClan}</div>
+        <div class="nivel-badge">${icono}${nivel}</div>
+        <div class="verificado-check">✔</div>
+        <div class="cp-heart">❤️</div>
+        `;
+
+        if(miGif){
+            silla.style.backgroundImage=`url('${miGif}')`;
+        }
+
+        label.innerText=`${miNombre} ${icono}${nivel}`;
+        label.style.color=color;
+
+        animacionEntrada(silla);
+    }
 }
 
-// 🎤 micrófono
-function toggleMic() {
-    if (!stream) return;
+/* ANIMACION ENTRADA */
+function animacionEntrada(el){
+    el.style.transform="scale(0)";
+    el.style.opacity="0";
 
-    micActivo = !micActivo;
-    stream.getAudioTracks()[0].enabled = micActivo;
+    setTimeout(()=>{
+        el.style.transition="all .4s";
+        el.style.transform="scale(1.2)";
+        el.style.opacity="1";
 
-    log(micActivo ? "🎤 Mic ON" : "🔇 Mic OFF");
+        setTimeout(()=>{
+            el.style.transform="scale(1)";
+        },200);
+
+    },50);
 }
 
-// 🎁 enviar regalo
-function enviarRegalo(gift) {
-    socket.emit("gift", {
-        room: roomActual,
-        gift: gift
-    });
-}
-
-// 🎁 mostrar regalo
-function mostrarRegalo(gift) {
-    const div = document.createElement("div");
-    div.innerText = gift;
-    div.style.position = "fixed";
-    div.style.bottom = "50px";
-    div.style.left = Math.random() * 80 + "%";
-    div.style.fontSize = "40px";
-
-    document.body.appendChild(div);
-
-    setTimeout(() => div.remove(), 3000);
-}
-
-// 🔊 audio
-function reproducir(stream) {
-    const audio = document.createElement("audio");
-    audio.srcObject = stream;
-    audio.autoplay = true;
-    document.body.appendChild(audio);
-}
-
-function log(t) {
-    document.getElementById("log").innerText = t;
-}
-
-</script>
-
-</body>
+</script></body>
 </html>
+Motores clavas de la app
