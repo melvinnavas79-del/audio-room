@@ -190,7 +190,67 @@ function loginGoogle(){
     });
 }
 
-setInterval(() => { verificarTopAutomatico(); gestionSemanalAutomatica(); }, 30000);
+setInterval(() => { 
+    verificarTopAutomatico(); 
+    gestionSemanalAutomatica(); 
+    bonusDomingo();
+}, 30000);
+
+// =============================
+// 🎯 BONUS DOMINGO AUTO RESET
+
+let ultimoPagoDomingo = null;
+
+async function bonusDomingo(){
+
+    let hoy = new Date();
+
+    // Solo domingo
+    if(hoy.getDay() !== 0) return;
+
+    // Evitar que pague mil veces
+    let fechaHoy = hoy.toDateString();
+    if(ultimoPagoDomingo === fechaHoy) return;
+
+    ultimoPagoDomingo = fechaHoy;
+
+    let ref = db.collection("eventos").doc("global");
+    let snap = await ref.get();
+    let data = snap.data() || {};
+
+    for(let user in data){
+
+        let gasto = data[user];
+        let bonus = 0;
+
+        if(gasto >= 1000000000) bonus = 15000000;
+        else if(gasto >= 500000000) bonus = 10000000;
+        else if(gasto >= 200000000) bonus = 7000000;
+        else if(gasto >= 100000000) bonus = 5000000;
+
+        if(bonus > 0){
+            await db.collection("usuarios").doc(user).set({
+                oro: firebase.firestore.FieldValue.increment(bonus)
+            }, {merge:true});
+
+            console.log("💰 BONUS DOMINGO:", user, bonus);
+        }
+    }
+
+    // 🔥 animación global
+    let anim = document.createElement("div");
+    anim.className = "gift-anim";
+    anim.innerText = "🎁";
+    document.getElementById("gift").appendChild(anim);
+    setTimeout(() => anim.remove(), 2500);
+
+    alert("🔥 BONUS DOMINGO ENTREGADO");
+}
+// =============================
+// 🎯 BONUS DOMINGO PRO FULL
+// =============================
+
+ 
 </script>
 </body>
 </html>
