@@ -258,12 +258,19 @@ async function bonusDomingo(){
 // 🎯 BONUS DOMINGO PRO FULL
 // =============================
 
- <!-- BOTONES AUDIO -->
-<button onclick="iniciarAudio()">🎤</button><button onclick="toggleAudio()">🔊</button>
+ =============================
+
+
+</script>
+<!-- AUDIO BOTONES -->
+<div style="position:fixed;bottom:90px;right:10px;z-index:200;">
+<button onclick="iniciarAudio()">🎤</button>
+<button onclick="toggleAudio()">🔊</button>
+</div>
 
 <script>
 // =============================
-// 🎤 AUDIO EN VIVO + 🔊 CONTROL
+// 🎤 AUDIO SIMPLE (SIN ENREDO)
 // =============================
 
 let localStream;
@@ -273,32 +280,27 @@ let audiosRemotos = [];
 
 // 🎤 ACTIVAR MIC
 async function iniciarAudio(){
-
     try{
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-        alert("🎤 Micrófono activado");
-
+        alert("🎤 Mic activado");
         conectarAudio();
-
     }catch(e){
-        alert("Error micrófono");
+        alert("Error mic");
     }
 }
 
-// 🔊 TOGGLE AUDIO (escuchar / mutear)
+// 🔊 ACTIVAR / MUTEAR AUDIO
 function toggleAudio(){
-
     audioActivo = !audioActivo;
 
     audiosRemotos.forEach(a => {
         a.muted = !audioActivo;
     });
 
-    alert(audioActivo ? "🔊 Audio ON" : "🔇 Audio OFF");
+    alert(audioActivo ? "🔊 ON" : "🔇 OFF");
 }
 
-// 🔗 CONEXIÓN WEBRTC
+// 🔗 CONEXIÓN
 function conectarAudio(){
 
     const config = {
@@ -313,7 +315,6 @@ function conectarAudio(){
 
     // 🎧 RECIBIR AUDIO
     peer.ontrack = (event) => {
-
         let audio = document.createElement("audio");
         audio.srcObject = event.streams[0];
         audio.autoplay = true;
@@ -325,7 +326,7 @@ function conectarAudio(){
     crearOferta();
 }
 
-// 📤 CREAR OFERTA
+// 📤 ENVIAR AUDIO
 async function crearOferta(){
 
     let offer = await peer.createOffer();
@@ -338,7 +339,7 @@ async function crearOferta(){
     escucharRespuesta();
 }
 
-// 📥 ESCUCHAR RESPUESTA
+// 📥 RECIBIR RESPUESTA
 function escucharRespuesta(){
 
     db.collection("audio").doc("room").onSnapshot(async doc => {
@@ -346,13 +347,11 @@ function escucharRespuesta(){
         let data = doc.data();
 
         if(data?.answer && !peer.currentRemoteDescription){
-
             let answer = JSON.parse(data.answer);
             await peer.setRemoteDescription(answer);
         }
     });
 }
-</script>
 </script>
 </body>
 </html> 
