@@ -46,7 +46,13 @@ window.onload = () => {
     cargarUsuario();
     crearChatUI();
     agregarBotonesExtra();
-};
+socket.emit("join-room", {
+    roomId: "global",
+    name: nombre,
+    vipLevel: 0,
+    isGhost: false,
+    clan: clan
+});
 
 // --- CARGA Y NIVEL KING ---
 async function cargarUsuario(){
