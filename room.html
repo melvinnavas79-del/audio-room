@@ -258,7 +258,101 @@ async function bonusDomingo(){
 // 🎯 BONUS DOMINGO PRO FULL
 // =============================
 
- 
+ <!-- BOTONES AUDIO -->
+<button onclick="iniciarAudio()">🎤</button><button onclick="toggleAudio()">🔊</button>
+
+<script>
+// =============================
+// 🎤 AUDIO EN VIVO + 🔊 CONTROL
+// =============================
+
+let localStream;
+let peer;
+let audioActivo = true;
+let audiosRemotos = [];
+
+// 🎤 ACTIVAR MIC
+async function iniciarAudio(){
+
+    try{
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        alert("🎤 Micrófono activado");
+
+        conectarAudio();
+
+    }catch(e){
+        alert("Error micrófono");
+    }
+}
+
+// 🔊 TOGGLE AUDIO (escuchar / mutear)
+function toggleAudio(){
+
+    audioActivo = !audioActivo;
+
+    audiosRemotos.forEach(a => {
+        a.muted = !audioActivo;
+    });
+
+    alert(audioActivo ? "🔊 Audio ON" : "🔇 Audio OFF");
+}
+
+// 🔗 CONEXIÓN WEBRTC
+function conectarAudio(){
+
+    const config = {
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+    };
+
+    peer = new RTCPeerConnection(config);
+
+    localStream.getTracks().forEach(track => {
+        peer.addTrack(track, localStream);
+    });
+
+    // 🎧 RECIBIR AUDIO
+    peer.ontrack = (event) => {
+
+        let audio = document.createElement("audio");
+        audio.srcObject = event.streams[0];
+        audio.autoplay = true;
+        audio.muted = !audioActivo;
+
+        audiosRemotos.push(audio);
+    };
+
+    crearOferta();
+}
+
+// 📤 CREAR OFERTA
+async function crearOferta(){
+
+    let offer = await peer.createOffer();
+    await peer.setLocalDescription(offer);
+
+    await db.collection("audio").doc("room").set({
+        offer: JSON.stringify(offer)
+    });
+
+    escucharRespuesta();
+}
+
+// 📥 ESCUCHAR RESPUESTA
+function escucharRespuesta(){
+
+    db.collection("audio").doc("room").onSnapshot(async doc => {
+
+        let data = doc.data();
+
+        if(data?.answer && !peer.currentRemoteDescription){
+
+            let answer = JSON.parse(data.answer);
+            await peer.setRemoteDescription(answer);
+        }
+    });
+}
+</script>
 </script>
 </body>
 </html> 
