@@ -1,64 +1,39 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-
 const app = express();
-app.use(express.static(__dirname));
-
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
-});
-
 const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
 
-const io = new Server(server, {
-  cors: { origin: "*" }
-});
-
-let users = {};
+let users = {}; 
 
 io.on("connection", (socket) => {
-  console.log("Usuario conectado:", socket.id);
-
-  socket.on("join-room", ({ roomId, name }) => {
-    socket.join(roomId);
-    users[socket.id] = roomId;
-
-    socket.to(roomId).emit("user-connected", {
-      id: socket.id,
-      name
-    });
+  socket.on("join-room", ({ roomId, name, vipLevel, isGhost, clan }) => {
+    if (!isGhost) { // Punto: MODO FANTASMA
+        socket.join(roomId);
+        users[socket.id] = { roomId, name, vipLevel, clan };
+        socket.to(roomId).emit("user-connected", { id: socket.id, name, vipLevel, clan });
+    } else {
+        socket.join(roomId); // Entra pero no avisa a nadie
+        console.log("Entró un fantasma");
+    }
   });
 
-  // 🔥 WEBRTC
-  socket.on("offer", ({ offer, to }) => {
-    socket.to(to).emit("offer", { offer, from: socket.id });
-  });
-
-  socket.on("answer", ({ answer, to }) => {
-    socket.to(to).emit("answer", { answer, from: socket.id });
-  });
-
-  socket.on("ice-candidate", ({ candidate, to }) => {
-    socket.to(to).emit("ice-candidate", { candidate, from: socket.id });
-  });
-
-  // 🎁 regalos
-  socket.on("send-gift", ({ roomId, icon }) => {
-    socket.to(roomId).emit("receive-gift", { icon });
+  // Punto: REGALOS + ANIMACIÓN + RANKING
+  socket.on("send-gift", (data) => {
+    io.to(data.roomId).emit("receive-gift", data);
+    // Punto: EVENTOS GLOBALES (Si el regalo es grande, avisa a toda la app)
+    if(data.precio >= 1000) {
+        io.emit("global-event", { msg: `🔥 ${data.de} del clan ${data.clan} lanzó un regalo masivo!` });
+    }
   });
 
   socket.on("disconnect", () => {
-    const roomId = users[socket.id];
-    if (roomId) {
-      socket.to(roomId).emit("user-disconnected", socket.id);
+    if (users[socket.id]) {
+        socket.to(users[socket.id].roomId).emit("user-disconnected", socket.id);
+        delete users[socket.id];
     }
-    delete users[socket.id];
   });
 });
 
-const PORT = process.env.PORT || 4000;
-
-server.listen(PORT, () => {
-  console.log("Servidor corriendo en puerto " + PORT);
-});
+server.listen(process.env.PORT || 4000, () => console.log("Servidor Pro Corriendo"));
