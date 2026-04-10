@@ -70,18 +70,22 @@ async function cargarUsuario(){
     updateUI();
     escucharSalas();
 }
-
 async function verificarNivelKing() {
-    let nuevoNivelKing = Math.floor(xp / 500000000);
+    // Calcula el nivel basado en 500 Millones de XP por nivel
+    let nuevoNivelKing = Math.floor(xp / 500000000); 
+    
     if (nuevoNivelKing > nivelKing) {
-        let premio = 3000000000; // 3 Billones
+        let premio = 3000000; // ✅ CORREGIDO: Ahora son 3 Millones exactos
         oro += premio;
         nivelKing = nuevoNivelKing;
+        
+        // Guarda el nuevo saldo y nivel en Firebase
         await db.collection("usuarios").doc(nombre).set({
             oro: firebase.firestore.FieldValue.increment(premio),
             nivelKing: nuevoNivelKing
         }, { merge: true });
-        alert(`👑 ¡KING ${nuevoNivelKing}! +3 Billones Pagados`);
+        
+        alert(`👑 ¡NIVEL KING ${nuevoNivelKing}! +3,000,000 ORO PAGADOS`);
         updateUI();
     }
 }
