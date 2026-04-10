@@ -4,11 +4,11 @@ const db=firebase.firestore();
 
 // DATOS INICIALES
 let nombre = prompt("Nombre de Usuario") || "User_" + Math.floor(Math.random()*999);
-let clan = "Navas"; // Clan por defecto
+let clan = "Navas"; 
 
 // VARIABLES DE ESTADO
 let oro=0, xp=0, lvl=1;
-let vip=0, svip=0, aristo=0; // Se cargarán de la base de datos
+let vip=0, svip=0, aristo=0; 
 let verificado=true, esCP=false, modoFantasma=false;
 
 const userRef = db.collection("usuarios").doc(nombre);
@@ -28,23 +28,21 @@ async function cargar(){
     }
     lvl = Math.floor(Math.sqrt(xp/100)) + 1;
     updateUI();
-    escucharSalas();
+    escucharSalas(); // <-- AGREGADO: Escucha a otros usuarios
     entradaAnimada();
 }
 
 function updateUI(){
-    document.getElementById("oro").innerText = oro.toLocaleString();
-    document.getElementById("lvl").innerText = lvl;
+    if(document.getElementById("oro")) document.getElementById("oro").innerText = oro.toLocaleString();
+    if(document.getElementById("lvl")) document.getElementById("lvl").innerText = lvl;
     userRef.set({oro, xp, lvl}, {merge:true});
 }
 
-// 👻 MODO FANTASMA (Punto 1 de tu lista)
 function toggleFantasma(){
     modoFantasma = !modoFantasma;
     alert(modoFantasma ? "👻 Modo Fantasma: ACTIVADO" : "👁️ Modo Fantasma: DESACTIVADO");
 }
 
-// 🪑 SENTARSE EN SALA (Punto: Sala en tiempo real)
 async function sentarse(id){
     if(modoFantasma) return alert("No puedes subir a la silla en Modo Fantasma 👻");
     await db.collection("salas").doc("global").set({
@@ -52,7 +50,6 @@ async function sentarse(id){
     }, {merge:true});
 }
 
-// 🎁 REGALOS, CP Y PREMIOS TOP (Cubre 10 puntos de tu lista)
 async function enviarRegalo(tipo){
     let precio = (tipo === 'leon') ? 1000 : 100;
     if(oro < precio) return alert("Oro insuficiente");
@@ -61,22 +58,20 @@ async function enviarRegalo(tipo){
     xp += precio;
     updateUI();
 
-    // 🏆 Ranking Ricos (Punto: Ranking Ricos)
     await db.collection("eventos").doc("global").set({
         [nombre]: firebase.firestore.FieldValue.increment(precio)
     }, {merge:true});
 
-    // 🎖️ Clanes (Semanal/Mensual)
     await db.collection("evento_clanes").doc("semana").set({
         [clan]: firebase.firestore.FieldValue.increment(precio)
     }, {merge:true});
 
-    // Animación de Regalo (Punto: Regalos + Animación)
     mostrarAnimacion(tipo === 'leon' ? '🦁' : '🌹');
 }
 
 function mostrarAnimacion(emoji){
     let g = document.getElementById("gift");
+    if(!g) return;
     let d = document.createElement("div");
     d.className = "gift";
     d.innerText = emoji;
@@ -87,10 +82,52 @@ function mostrarAnimacion(emoji){
 function entradaAnimada(){
     let d = document.createElement("div");
     d.style = "position:fixed; inset:0; display:flex; justify-content:center; align-items:center; font-size:100px; z-index:10000; pointer-events:none; animation: zoom 2s forwards;";
-    // Lógica de dragón o águila según rango (Punto: Entradas Animadas)
     d.innerText = aristo > 0 ? "🐉" : "🦅";
     document.body.appendChild(d);
     setTimeout(() => d.remove(), 2000);
+}
+
+// --- NUEVAS FUNCIONES AGREGADAS PARA COMPLETAR TU LISTA ---
+
+function crearSillas(){
+    const grid = document.getElementById("grid");
+    if(!grid) return;
+    grid.innerHTML = "";
+    for(let i=1; i<=9; i++) {
+        grid.innerHTML += `
+            <div class="avatar-container" onclick="sentarse(${i})" style="text-align:center;">
+                <div class="avatar" id="s${i}" style="width:70px;height:70px;border-radius:50%;background:#333;margin:auto;display:flex;align-items:center;justify-content:center;border:2px solid #555;">👤</div>
+                <div id="n${i}" style="font-size:10px;margin-top:5px;">VACÍO</div>
+            </div>`;
+    }
+}
+
+function escucharSalas() {
+    db.collection("salas").doc("global").onSnapshot(doc => {
+        const data = doc.data() || {};
+        for(let i=1; i<=9; i++) {
+            const silla = data["s"+i];
+            const el = document.getElementById("s"+i);
+            const txt = document.getElementById("n"+i);
+            if(silla && el) {
+                el.innerHTML = "🎤";
+                el.style.borderColor = silla.aristo > 0 ? "red" : "gold";
+                if(txt) txt.innerText = silla.nombre;
+            }
+        }
+    });
+}
+
+function subirMedia() {
+    alert("📸 Selecciona una foto o Reel para tu perfil");
+    // Aquí puedes disparar el input file
+}
+
+function resetEventos() {
+    if(confirm("¿Resetear puntos semanales?")) {
+        db.collection("eventos").doc("global").delete();
+        alert("🔄 Eventos reseteados");
+    }
 }
 
 // Cargar UI inicial
