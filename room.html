@@ -199,20 +199,29 @@ setInterval(() => {
 // =============================
 // 🎯 BONUS DOMINGO AUTO RESET
 
-let ultimoPagoDomingo = null;
+// =============================
+// 🎯 BONUS DOMINGO PRO (SEGURO)
+// =============================
 
 async function bonusDomingo(){
 
     let hoy = new Date();
 
-    // Solo domingo
+    // solo domingo
     if(hoy.getDay() !== 0) return;
 
-    // Evitar que pague mil veces
     let fechaHoy = hoy.toDateString();
-    if(ultimoPagoDomingo === fechaHoy) return;
 
-    ultimoPagoDomingo = fechaHoy;
+    // 🔒 control global en Firebase (anti duplicados)
+    let controlRef = db.collection("sistema").doc("bonus_domingo");
+    let controlSnap = await controlRef.get();
+
+    if(controlSnap.exists && controlSnap.data().fecha === fechaHoy){
+        return;
+    }
+
+    // guardar que ya se pagó
+    await controlRef.set({fecha: fechaHoy});
 
     let ref = db.collection("eventos").doc("global");
     let snap = await ref.get();
@@ -233,18 +242,18 @@ async function bonusDomingo(){
                 oro: firebase.firestore.FieldValue.increment(bonus)
             }, {merge:true});
 
-            console.log("💰 BONUS DOMINGO:", user, bonus);
+            console.log("💰 BONUS:", user, bonus);
         }
     }
 
-    // 🔥 animación global
+    // animación
     let anim = document.createElement("div");
     anim.className = "gift-anim";
     anim.innerText = "🎁";
     document.getElementById("gift").appendChild(anim);
     setTimeout(() => anim.remove(), 2500);
 
-    alert("🔥 BONUS DOMINGO ENTREGADO");
+    alert("🔥 BONUS DOMINGO PAGADO");
 }
 // =============================
 // 🎯 BONUS DOMINGO PRO FULL
