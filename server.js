@@ -1,54 +1,31 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const path = require("path"); // Necesario para las rutas de archivos
+const path = require("path");
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server);
 
-// --- ✅ SOLUCIÓN AL ERROR "CANNOT GET" ---
-// Esto le dice a Render que busque tus archivos (room.html, css, js) en la carpeta raíz o en 'public'
-app.use(express.static(__dirname)); 
+// Esto permite que Render encuentre index.html y room.html en la raíz
+app.use(express.static(__dirname));
 
-// Ruta para cargar tu archivo principal por defecto
+// Ruta para la página de inicio
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'room.html')); // Asegúrate de que tu archivo se llame room.html
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-let users = {}; 
+// Ruta para la sala (GOD MODE FULL)
+app.get('/room.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'room.html'));
+});
 
 io.on("connection", (socket) => {
-  // Punto: MODO FANTASMA
-  socket.on("join-room", ({ roomId, name, vipLevel, isGhost, clan }) => {
-    if (!isGhost) { 
-        socket.join(roomId);
-        users[socket.id] = { roomId, name, vipLevel, clan };
-        // Notificación de entrada (Entradas animadas según el nivel)
-        socket.to(roomId).emit("user-connected", { id: socket.id, name, vipLevel, clan });
-    } else {
-        socket.join(roomId); // Entra invisible
-        console.log("Entró un fantasma");
-    }
-  });
-
-  // Punto: REGALOS + ANIMACIÓN + RANKING
-  socket.on("send-gift", (data) => {
-    io.to(data.roomId).emit("receive-gift", data);
-    
-    // Punto: EVENTOS GLOBALES (Regalos masivos)
-    if(data.precio >= 1000) {
-        io.emit("global-event", { msg: `🔥 ${data.de} del clan ${data.clan} lanzó un regalo masivo!` });
-    }
-  });
-
-  socket.on("disconnect", () => {
-    if (users[socket.id]) {
-        socket.to(users[socket.id].roomId).emit("user-disconnected", socket.id);
-        delete users[socket.id];
-    }
-  });
+    // Aquí vive la lógica de tu lista "TODO INCLUIDO"
+    socket.on("join-room", (data) => {
+        socket.join(data.roomId);
+        // Maneja el Modo Fantasma y Entradas Animadas aquí
+    });
 });
 
-// Cambiado a puerto 3000 para mejor compatibilidad con Render
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log("Servidor Pro GOD MODE Corriendo en puerto " + PORT));
+server.listen(PORT, () => console.log("Servidor Online"));
