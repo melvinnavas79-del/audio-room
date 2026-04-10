@@ -1,136 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lluvia Live GOD MODE</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+body{margin:0;background:#0b001a;color:white;font-family:sans-serif;overflow-x:hidden;}
+.header{display:flex;justify-content:space-between;padding:15px;background:#000;border-bottom:1px solid #333;}
+.sillas{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;padding:20px;}
+.avatar{width:80px;height:80px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;position:relative;border:1px solid #444;}
+.clan{position:absolute;top:-6px;background:red;font-size:8px;padding:2px 5px;border-radius:5px;z-index:2;}
+.vip{position:absolute;top:-20px;background:gold;color:black;font-size:8px;padding:2px 5px;border-radius:5px;}
+.svip{position:absolute;top:-20px;background:#00ffff;color:black;font-size:8px;padding:2px 5px;border-radius:5px;}
+.aristo{position:absolute;bottom:-12px;background:#ff4500;font-size:8px;padding:2px 5px;border-radius:5px;}
+.cp{position:absolute;left:-5px;bottom:-5px;}
+.ver{position:absolute;right:-5px;bottom:-5px;}
+.bar{position:fixed;bottom:0;width:100%;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;background:#000;padding:10px;z-index:100;}
+button{border:none;border-radius:10px;padding:6px;background:#333;color:white;font-size:11px;cursor:pointer;}
+#gift{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;pointer-events:none;z-index:999;}
+.gift{font-size:90px;animation:zoom 2s forwards;}
+@keyframes zoom{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(0)}}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div>💰 <span id="oro">0</span> | Lv.<span id="lvl">1</span></div>
+    <div style="font-weight:bold;">LLUVIA LIVE</div>
+    <button onclick="panelAgente()">🤝 AGENTE</button>
+</div>
+
+<div id="gift"></div>
+<div class="sillas" id="grid"></div>
+
+<div class="bar">
+    <button onclick="sentarse(1)">🪑</button>
+    <button onclick="enviarRegalo('rosa')">🌹</button>
+    <button onclick="enviarRegalo('leon')">🦁</button>
+    <button onclick="ranking()">🏆</button>
+    <button onclick="rankingRicos()">💰</button>
+    <button onclick="toggleFantasma()">👻</button>
+    <button onclick="subirMedia()">📸</button>
+    <button onclick="resetEventos()">🔄</button>
+</div>
+
+<input type="file" id="file" hidden onchange="procesarArchivo(event)">
+
 <script>
-firebase.initializeApp({projectId:"lluvia-live-69a05"});
-const db=firebase.firestore();
+// 🔥 REPARACIÓN: ASEGURAR IDENTIDAD (Lo que se había borrado)
+let nombre = localStorage.getItem("username") || prompt("Nombre") || "User_" + Math.floor(Math.random()*999);
+localStorage.setItem("username", nombre);
+let clan = localStorage.getItem("userclan") || prompt("Clan") || "Clan";
+localStorage.setItem("userclan", clan);
 
-// DATOS INICIALES
-let nombre = prompt("Nombre de Usuario") || "User_" + Math.floor(Math.random()*999);
-let clan = "Navas"; 
+// 🔥 REPARACIÓN: FIREBASE SEGURO
+try {
+    firebase.initializeApp({projectId:"lluvia-live-69a05"});
+    var db = firebase.firestore();
+} catch(e) { 
+    console.error("Error al iniciar Firebase:", e); 
+}
 
-// VARIABLES DE ESTADO
-let oro=0, xp=0, lvl=1;
-let vip=0, svip=0, aristo=0; 
-let verificado=true, esCP=false, modoFantasma=false;
+// SISTEMAS (GOD MODE)
+let oro=5000, xp=0, lvl=1;
+let vip=5, svip=3, aristo=7; // Puesto en 7 para que pruebes el Dragón 🐉
+let verificado=true;
+let esCP=false, nivelCP=1;
+let modoFantasma=false;
 
 const userRef = db.collection("usuarios").doc(nombre);
+const eventosRef = db.collection("eventos").doc("global");
+
+// 🔥 REPARACIÓN: CARGA AUTOMÁTICA BLINDADA
+window.onload = function() {
+    crear();
+    cargar();
+    console.log("✅ Sistema GOD MODE Iniciado");
+};
 
 async function cargar(){
-    let d = await userRef.get();
-    if(d.exists){
-        let data = d.data();
-        oro = data.oro || 5000;
-        xp = data.xp || 0;
-        vip = data.vip || 0;
-        svip = data.svip || 0;
-        aristo = data.aristo || 0;
-    } else {
-        oro = 5000;
-        await userRef.set({oro, xp, clan, verificado: true});
-    }
-    lvl = Math.floor(Math.sqrt(xp/100)) + 1;
-    updateUI();
-    escucharSalas(); // <-- AGREGADO: Escucha a otros usuarios
-    entradaAnimada();
+    try {
+        let d = await userRef.get();
+        if(d.exists){
+            oro = d.data().oro || 0;
+            xp = d.data().xp || 0;
+        }
+        lvl = Math.floor(Math.sqrt(xp/100)) + 1;
+        update();
+        escuchar();
+        entrada();
+    } catch(e) { console.log("Error en carga:", e); }
 }
 
-function updateUI(){
-    if(document.getElementById("oro")) document.getElementById("oro").innerText = oro.toLocaleString();
-    if(document.getElementById("lvl")) document.getElementById("lvl").innerText = lvl;
-    userRef.set({oro, xp, lvl}, {merge:true});
+function update(){
+    const elOro = document.getElementById("oro");
+    const elLvl = document.getElementById("lvl");
+    if(elOro) elOro.innerText = oro;
+    if(elLvl) elLvl.innerText = lvl;
+    userRef.set({oro, xp, clan, lvl}, {merge:true});
 }
 
+// 👻 MODO FANTASMA
 function toggleFantasma(){
     modoFantasma = !modoFantasma;
-    alert(modoFantasma ? "👻 Modo Fantasma: ACTIVADO" : "👁️ Modo Fantasma: DESACTIVADO");
+    alert(modoFantasma ? "👻 Invisible" : "👁️ Visible");
+}
+
+// 🪑 SILLAS
+function crear(){
+    let g = document.getElementById("grid");
+    if(!g) return;
+    g.innerHTML = "";
+    for(let i=1; i<=9; i++){
+        g.innerHTML += `<div onclick="sentarse(${i})"><div class="avatar" id="s${i}">👤</div></div>`;
+    }
 }
 
 async function sentarse(id){
-    if(modoFantasma) return alert("No puedes subir a la silla en Modo Fantasma 👻");
+    if(modoFantasma) return alert("👻 Invisible");
     await db.collection("salas").doc("global").set({
-        ["s"+id]: {nombre, clan, vip, svip, aristo, lvl, verificado}
+        ["s"+id]: {nombre, clan, vip, svip, aristo, verificado, esCP, lvl}
     }, {merge:true});
 }
 
-async function enviarRegalo(tipo){
-    let precio = (tipo === 'leon') ? 1000 : 100;
-    if(oro < precio) return alert("Oro insuficiente");
-
-    oro -= precio;
-    xp += precio;
-    updateUI();
-
-    await db.collection("eventos").doc("global").set({
-        [nombre]: firebase.firestore.FieldValue.increment(precio)
-    }, {merge:true});
-
-    await db.collection("evento_clanes").doc("semana").set({
-        [clan]: firebase.firestore.FieldValue.increment(precio)
-    }, {merge:true});
-
-    mostrarAnimacion(tipo === 'leon' ? '🦁' : '🌹');
-}
-
-function mostrarAnimacion(emoji){
-    let g = document.getElementById("gift");
-    if(!g) return;
-    let d = document.createElement("div");
-    d.className = "gift";
-    d.innerText = emoji;
-    g.appendChild(d);
-    setTimeout(() => d.remove(), 2000);
-}
-
-function entradaAnimada(){
-    let d = document.createElement("div");
-    d.style = "position:fixed; inset:0; display:flex; justify-content:center; align-items:center; font-size:100px; z-index:10000; pointer-events:none; animation: zoom 2s forwards;";
-    d.innerText = aristo > 0 ? "🐉" : "🦅";
-    document.body.appendChild(d);
-    setTimeout(() => d.remove(), 2000);
-}
-
-// --- NUEVAS FUNCIONES AGREGADAS PARA COMPLETAR TU LISTA ---
-
-function crearSillas(){
-    const grid = document.getElementById("grid");
-    if(!grid) return;
-    grid.innerHTML = "";
-    for(let i=1; i<=9; i++) {
-        grid.innerHTML += `
-            <div class="avatar-container" onclick="sentarse(${i})" style="text-align:center;">
-                <div class="avatar" id="s${i}" style="width:70px;height:70px;border-radius:50%;background:#333;margin:auto;display:flex;align-items:center;justify-content:center;border:2px solid #555;">👤</div>
-                <div id="n${i}" style="font-size:10px;margin-top:5px;">VACÍO</div>
-            </div>`;
-    }
-}
-
-function escucharSalas() {
+// REALTIME
+function escuchar(){
     db.collection("salas").doc("global").onSnapshot(doc => {
-        const data = doc.data() || {};
-        for(let i=1; i<=9; i++) {
-            const silla = data["s"+i];
-            const el = document.getElementById("s"+i);
-            const txt = document.getElementById("n"+i);
-            if(silla && el) {
-                el.innerHTML = "🎤";
-                el.style.borderColor = silla.aristo > 0 ? "red" : "gold";
-                if(txt) txt.innerText = silla.nombre;
+        let data = doc.data() || {};
+        for(let i=1; i<=9; i++){
+            let s = data["s"+i];
+            let el = document.getElementById("s"+i);
+            if(s && el){
+                el.innerHTML = `
+                    <div class="clan">${s.clan}</div>
+                    ${s.vip ? '<div class="vip">VIP '+s.vip+'</div>' : ''}
+                    ${s.svip ? '<div class="svip">SVIP '+s.svip+'</div>' : ''}
+                    ${s.aristo ? '<div class="aristo">👑 '+s.aristo+'</div>' : ''}
+                    ${s.esCP ? '<div class="cp">💞</div>' : ''}
+                    ${s.verificado ? '<div class="ver">✔</div>' : ''}
+                    <span style="font-size:20px;">🎤</span>`;
             }
         }
     });
 }
 
-function subirMedia() {
-    alert("📸 Selecciona una foto o Reel para tu perfil");
-    // Aquí puedes disparar el input file
+// 🎁 REGALOS + PREMIOS 15M/45M
+async function enviarRegalo(tipo){
+    let precio = tipo === "leon" ? 1000 : 100;
+    if(oro < precio) return alert("No tienes oro");
+
+    oro -= precio;
+    xp += precio;
+    lvl = Math.floor(Math.sqrt(xp/100)) + 1;
+    update();
+
+    await eventosRef.set({ [nombre]: firebase.firestore.FieldValue.increment(precio) }, {merge:true});
+    await db.collection("evento_clanes").doc("semana").set({ [clan]: firebase.firestore.FieldValue.increment(precio) }, {merge:true});
+
+    // 🍼 PREMIO BEBÉ (25M -> 15M)
+    eventosRef.get().then(doc => {
+        let total = Object.values(doc.data() || {}).reduce((a, b) => a + b, 0);
+        if(total >= 25000000) {
+            userRef.set({oro: firebase.firestore.FieldValue.increment(15000000)}, {merge:true});
+            alert("🍼 ¡RECOMPENSA BEBÉ +15M!");
+        }
+    });
+
+    // ANIMACIÓN
+    let g = document.getElementById("gift");
+    let d = document.createElement("div");
+    d.className = "gift";
+    d.innerText = tipo === "leon" ? "🦁" : "🌹";
+    g.appendChild(d);
+    setTimeout(() => d.remove(), 2000);
 }
 
-function resetEventos() {
-    if(confirm("¿Resetear puntos semanales?")) {
-        db.collection("eventos").doc("global").delete();
-        alert("🔄 Eventos reseteados");
+// 🏆 RANKINGS
+async function ranking(){
+    let snap = await db.collection("usuarios").orderBy("oro", "desc").limit(5).get();
+    let txt = "🏆 TOP RICOS\n";
+    snap.forEach((d, i) => txt += (i+1) + ". " + d.id + " (" + (d.data().oro || 0) + ")\n");
+    alert(txt);
+}
+function rankingRicos() { ranking(); }
+
+// 🔄 RESET
+function resetEventos(){
+    if(confirm("¿Resetear contador global?")) db.collection("eventos").doc("global").set({});
+}
+
+// 🤝 AGENTE
+async function panelAgente(){
+    if(prompt("Clave de Agente") !== "1234") return;
+    let u = prompt("ID Usuario:");
+    let m = parseInt(prompt("Cantidad de Oro:"));
+    if(!isNaN(m)) {
+        await db.collection("usuarios").doc(u).set({ oro: firebase.firestore.FieldValue.increment(m) }, {merge:true});
+        alert("✅ Oro cargado");
     }
 }
 
-// Cargar UI inicial
-crearSillas();
-cargar();
+// 📸 MEDIA
+function subirMedia(){ document.getElementById("file").click(); }
+function procesarArchivo(e){ alert("📸 Subiendo archivo..."); }
+
+// 🐉 ENTRADA ESPECIAL
+function entrada(){
+    let d = document.createElement("div");
+    d.style.cssText = "position:fixed;inset:0;display:flex;justify-content:center;align-items:center;font-size:100px;z-index:1000;pointer-events:none;";
+    d.innerText = aristo >= 7 ? "🐉" : svip >= 5 ? "🔥" : "🦅";
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 2500);
+}
+
+// 🔥 FIX UI AUTOMÁTICO (Reparación)
+setInterval(() => {
+    try {
+        if(document.getElementById("oro")) document.getElementById("oro").innerText = oro;
+    } catch(e) {}
+}, 1000);
+
 </script>
+</body>
+</html>
