@@ -1,40 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lluvia Live GOD MODE FULL</title>
-
+<title>Lluvia Live MEGA PRO GOD MODE</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
 <style>
     body{margin:0;background:#0b001a;color:white;font-family:sans-serif;overflow-x:hidden;}
     .header{display:flex;justify-content:space-between;padding:15px;background:#000;border-bottom:2px solid #333;}
     .sillas{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;padding:20px;margin-bottom:100px;}
     .avatar{width:85px;height:85px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;position:relative;border:2px solid #444;}
+    .avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover;border:1px solid #00ffff;}
     .clan{position:absolute;top:-6px;background:red;font-size:9px;padding:2px 5px;border-radius:5px;z-index:10;}
-    .vip{position:absolute;top:-22px;background:gold;color:black;font-size:9px;font-weight:bold;padding:2px 5px;border-radius:5px;}
-    .svip{position:absolute;top:-22px;background:#00ffff;color:black;font-size:9px;font-weight:bold;padding:2px 5px;border-radius:5px;}
     .aristo{position:absolute;bottom:-12px;background:#ff4500;font-size:9px;padding:2px 5px;border-radius:5px;}
     .badge-top{position:absolute;top:-35px;background:linear-gradient(gold, orange);color:black;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:bold;box-shadow:0 0 10px gold;}
-    .cp-icon{position:absolute;left:-5px;bottom:-5px;font-size:18px;}
-    .verif{position:absolute;right:-5px;bottom:-5px;background:#1da1f2;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:10px;}
     .bar{position:fixed;bottom:0;width:100%;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;background:rgba(0,0,0,0.9);padding:15px;z-index:100;}
-    button{border:none;border-radius:10px;padding:8px 12px;background:#333;color:white;font-size:12px;font-weight:bold;}
+    button{border:none;border-radius:10px;padding:8px 12px;background:#333;color:white;font-size:12px;font-weight:bold;cursor:pointer;}
     #gift{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;pointer-events:none;z-index:999;}
     .gift-anim{font-size:100px;animation:zoom 2.5s forwards;}
-    @keyframes zoom{0%{transform:scale(0);opacity:0}20%{transform:scale(1.2);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(0);opacity:0}}
+    @keyframes zoom{0%{transform:scale(0);opacity:0}20%{transform:scale(1.2);opacity:1}100%{transform:scale(0);opacity:0}}
+    #chatBox::-webkit-scrollbar {width: 5px;}
+    #chatBox::-webkit-scrollbar-thumb {background: #444; border-radius: 5px;}
 </style>
 </head>
 <body>
+
 <div class="header">
     <div>💰 <span id="oro">0</span> | Lv.<span id="lvl">1</span></div>
-    <div style="letter-spacing:2px;font-weight:bold;color:#ff00ff;">LLUVIA LIVE</div>
-
-    <div style="display:flex;gap:5px;">
-        <button onclick="loginGoogle()" style="background:#00ffff;color:black;">🔐 LOGIN</button>
-        <button onclick="panelAgente()" style="background:gold;color:black;">🤝 AGENTE</button>
-    </div>
+    <div style="font-weight:bold;color:#ff00ff;">LLUVIA LIVE MEGA PRO</div>
+    <button onclick="loginGoogle()" style="background:#00ffff;color:black;border-radius:10px;padding:5px 10px;">🔐 LOGIN</button>
 </div>
 
 <div id="gift"></div>
@@ -45,213 +41,156 @@
     <button onclick="enviarRegalo('rosa')">🌹</button>
     <button onclick="enviarRegalo('leon')">🦁</button>
     <button onclick="rankingPro()">🏆 TOP</button>
-    <button onclick="toggleFantasma()">👻</button>
-    <button onclick="subirMedia()">📸</button>
-    <button onclick="resetEventos()" style="background:#500;">🔄 RESET</button>
 </div>
 
-<input type="file" id="file" hidden onchange="procesarArchivo(event)">
-
 <script>
-// --- 🛡️ CONFIGURACIÓN CORE ---
-let nombre = localStorage.getItem("username") || prompt("Nombre") || "User_" + Math.floor(Math.random()*999);
-localStorage.setItem("username", nombre);
-let clan = localStorage.getItem("userclan") || prompt("Clan") || "Clan";
-localStorage.setItem("userclan", clan);
+// --- CONFIGURACIÓN CORE ---
+let nombre = localStorage.getItem("username") || "User_" + Math.floor(Math.random()*999);
+let uid_safe = localStorage.getItem("uid") || nombre;
+let foto_safe = localStorage.getItem("userfoto") || null;
+let clan = localStorage.getItem("userclan") || "Clan";
 
-// FIREBASE
-try {
-    firebase.initializeApp({projectId:"lluvia-live-69a05"});
-    var db = firebase.firestore();
-} catch(e) { console.error("Firebase Error", e); }
+firebase.initializeApp({projectId:"lluvia-live-69a05"});
+const db = firebase.firestore();
 
-// VARIABLES DE SISTEMA
-let oro=5000, xp=0, lvl=1;
-let vip=5, svip=3, aristo=7, verificado=true, campeon=false;
-let esCP=false, nivelCP=1, modoFantasma=false;
+let oro=5000, xp=0, lvl=1, aristo=7, campeon=false;
 
-const userRef = db.collection("usuarios").doc(nombre);
-const eventosRef = db.collection("eventos").doc("global");
+window.onload = () => { 
+    crearSillas(); 
+    cargarUsuario();
+    crearChatUI();
+    escucharChat();
+    agregarBotonesExtra();
+};
 
-// --- 🚀 INICIO ---
-window.onload = () => { crearSillas(); cargarUsuario(); };
-
+// --- SISTEMAS DE PREMIOS (USUARIOS Y CLANES) ---
 async function cargarUsuario(){
-    let d = await userRef.get();
+    let d = await db.collection("usuarios").doc(nombre).get();
     if(d.exists){
         oro = d.data().oro || 0;
         xp = d.data().xp || 0;
         campeon = d.data().campeon || false;
-        esCP = d.data().esCP || false;
-        nivelCP = d.data().nivelCP || 1;
+        foto_safe = d.data().foto || null;
     }
     lvl = Math.floor(Math.sqrt(xp/100)) + 1;
     updateUI();
     escucharSalas();
-    animacionEntrada();
 }
 
+async function verificarTopAutomatico(){
+    let snap = await db.collection("eventos").doc("global").get();
+    let data = snap.data() || {};
+    let lista = Object.entries(data).sort((a,b)=>b[1]-a[1]);
+    if(lista.length >= 3){
+        let premios = [45000000, 35000000, 25000000];
+        for(let i=0; i<3; i++){
+            if(lista[i]) await db.collection("usuarios").doc(lista[i][0]).set({oro: firebase.firestore.FieldValue.increment(premios[i]), campeon: true}, {merge:true});
+        }
+    }
+}
+
+async function verificarClanesSemanales() {
+    let snap = await db.collection("evento_clanes").doc("semana").get();
+    let data = snap.data() || {};
+    let lista = Object.entries(data).sort((a, b) => b[1] - a[1]);
+    if (lista.length > 0) {
+        let premiosClan = [50000000, 30000000, 20000000];
+        for (let i = 0; i < Math.min(lista.length, 3); i++) {
+            console.log(`Clan ${lista[i][0]} gana ${premiosClan[i]}`);
+        }
+    }
+}
+
+function gestionSemanalAutomatica() {
+    let hoy = new Date();
+    if (hoy.getDay() === 1) {
+        verificarClanesSemanales();
+        db.collection("evento_clanes").doc("semana").set({});
+    }
+}
+
+// --- CHAT, CP Y CASINO ---
+function crearChatUI(){
+    let div = document.createElement("div");
+    div.style.cssText = "position:fixed;right:10px;bottom:140px;z-index:90;";
+    div.innerHTML = `<div id="chatBox" style="width:200px;height:180px;background:rgba(0,0,0,0.8);border:1px solid #444;border-radius:10px;overflow-y:auto;font-size:11px;padding:5px;margin-bottom:5px;"></div>
+        <div style="display:flex;gap:2px;"><input id="chatInput" style="width:130px;background:#222;color:white;border:1px solid #444;border-radius:5px;padding:3px;">
+        <button onclick="enviarMensaje(document.getElementById('chatInput').value)" style="padding:3px 8px;background:#00ffff;color:black;font-size:10px;">Send</button></div>`;
+    document.body.appendChild(div);
+}
+
+async function enviarMensaje(txt){
+    if(!txt) return;
+    await db.collection("chat").add({ nombre, txt, time: Date.now() });
+    document.getElementById("chatInput").value = "";
+}
+
+function escucharChat(){
+    db.collection("chat").orderBy("time","desc").limit(20).onSnapshot(snap => {
+        let chat = document.getElementById("chatBox");
+        if(!chat) return;
+        chat.innerHTML = snap.docs.reverse().map(d => `<div><b style="color:#00ffff">${d.data().nombre}:</b> ${d.data().txt}</div>`).join("");
+        chat.scrollTop = chat.scrollHeight;
+    });
+}
+
+function agregarBotonesExtra(){
+    const bar = document.querySelector(".bar");
+    const btns = [{t: "🏷️ CLAN", f: rankingClanes}, {t: "💞 CP", f: crearCP}, {t: "🎡", f: ruleta}, {t: "🎰", f: slots}];
+    btns.forEach(b => {
+        let btn = document.createElement("button");
+        btn.innerText = b.t; btn.onclick = b.f; bar.appendChild(btn);
+    });
+}
+
+async function crearCP(){
+    let p = prompt("Pareja:");
+    if(p) await db.collection("cp").doc(nombre).set({ pareja:p, nivel:1, puntos:0 }, {merge:true});
+}
+
+function ruleta(){
+    let p = Math.random();
+    if(p < 0.5) alert("😢"); else { oro += p < 0.8 ? 500 : 2000; updateUI(); }
+}
+
+function slots(){
+    let r = Math.floor(Math.random()*3);
+    if(r > 0) { oro += r === 1 ? 300 : 1500; updateUI(); }
+}
+
+// --- CORE UI ---
 function updateUI(){
     document.getElementById("oro").innerText = oro;
-    document.getElementById("lvl").innerText = lvl;
-    userRef.set({oro, xp, clan, lvl, nombre, campeon, esCP, nivelCP}, {merge:true});
+    db.collection("usuarios").doc(nombre).set({oro, xp, nombre, foto: foto_safe, uid: uid_safe}, {merge:true});
 }
 
-function crearSillas(){
-    let g = document.getElementById("grid");
-    g.innerHTML = "";
-    for(let i=1; i<=9; i++) g.innerHTML += `<div onclick="sentarse(${i})"><div class="avatar" id="s${i}">👤</div></div>`;
-}
-
-// 🪑 SENTARSE TIEMPO REAL
 async function sentarse(id){
-    if(modoFantasma) return alert("👻 Estás en Modo Fantasma");
-    await db.collection("salas").doc("global").set({
-        ["s"+id]: {nombre, clan, vip, svip, aristo, verificado, esCP, lvl, campeon}
-    }, {merge:true});
+    await db.collection("salas").doc("global").set({ ["s"+id]: {nombre, clan, aristo, foto: foto_safe, campeon} }, {merge:true});
 }
 
 function escucharSalas(){
     db.collection("salas").doc("global").onSnapshot(doc => {
         let data = doc.data() || {};
         for(let i=1; i<=9; i++){
-            let s = data["s"+i];
-            let el = document.getElementById("s"+i);
+            let s = data["s"+i], el = document.getElementById("s"+i);
             if(s && el){
-                el.innerHTML = `
-                    <div class="clan">${s.clan}</div>
-                    ${s.campeon ? '<div class="badge-top">👑 CAMPEÓN</div>' : ''}
-                    ${s.vip ? '<div class="vip">VIP '+s.vip+'</div>' : ''}
-                    ${s.svip ? '<div class="svip">SVIP '+s.svip+'</div>' : ''}
-                    <div class="aristo">👑 Aristocracia ${s.aristo || 1}</div>
-                    ${s.esCP ? '<div class="cp-icon">💞</div>' : ''}
-                    ${s.verificado ? '<div class="verif">✔</div>' : ''}
-                    <span style="font-size:25px;">🎤</span>
-                    <div style="font-size:10px;margin-top:45px;color:cyan;">${s.nombre}</div>`;
+                el.innerHTML = `<div class="clan">${s.clan}</div>${s.campeon ? '<div class="badge-top">👑</div>' : ''}<div class="aristo">A.${s.aristo}</div>${s.foto ? `<img src="${s.foto}">` : '👤'}<div style="font-size:9px;margin-top:45px;">${s.nombre}</div>`;
                 el.style.border = "2px solid #00ffff";
             }
         }
     });
 }
 
-// 🎁 REGALOS + PREMIO BEBÉ + TOP 1-2-3
-async function enviarRegalo(tipo){
-    let precio = tipo === "leon" ? 1000 : 100;
-    if(oro < precio) return alert("Sin oro");
-    oro -= precio; xp += precio;
-    lvl = Math.floor(Math.sqrt(xp/100)) + 1;
-    
-    // RECOMPENSA CP NIVEL 6-7
-    if(esCP && (nivelCP === 6 || nivelCP === 7)){
-        oro += 5000000; // Pago automático
-        console.log("💞 Bono CP aplicado");
-    }
-
-    updateUI();
-
-    // Eventos Globales y Clanes
-    await eventosRef.set({ [nombre]: firebase.firestore.FieldValue.increment(precio) }, {merge:true});
-    await db.collection("evento_clanes").doc("semana").set({ [clan]: firebase.firestore.FieldValue.increment(precio) }, {merge:true});
-
-    // 🍼 PREMIO BEBÉ AUTOMÁTICO (Simulado a 25M de gasto global)
-    eventosRef.get().then(doc => {
-        let total = Object.values(doc.data() || {}).reduce((a, b) => a + b, 0);
-        if(total >= 25000000) {
-            userRef.update({oro: firebase.firestore.FieldValue.increment(15000000)});
-            alert("🍼 ¡PREMIO BEBÉ ACTIVO! +15,000,000 ORO");
-        }
-    });
-
-    // Animación
-    let anim = document.createElement("div");
-    anim.className = "gift-anim";
-    anim.innerText = tipo === "leon" ? "🦁" : "🌹";
-    document.getElementById("gift").appendChild(anim);
-    setTimeout(() => anim.remove(), 2500);
-}
-
-// 🧠 SISTEMA PRO AUTOMÁTICO (BADGE + TOP)
-async function verificarTopAutomatico(){
-    let snap = await eventosRef.get();
-    let data = snap.data() || {};
-    let lista = Object.entries(data).sort((a,b)=>b[1]-a[1]);
-    
-    if(lista.length >= 3){
-        let premios = [45000000, 35000000, 25000000];
-        for(let i=0; i<3; i++){
-            if(lista[i]) await db.collection("usuarios").doc(lista[i][0]).set({
-                oro: firebase.firestore.FieldValue.increment(premios[i]),
-                campeon: true
-            }, {merge:true});
-        }
-    }
-}
-
-// 🏆 RANKING RICOS
-async function rankingPro(){
-    let snap = await db.collection("usuarios").orderBy("oro","desc").limit(10).get();
-    let txt = "🏆 RANKING GLOBAL\n";
-    snap.forEach((d,i)=> txt += `${i+1}. ${d.id} - 💰${d.data().oro}\n`);
-    alert(txt);
-}
-
-// 🐉 ENTRADAS ANIMADAS
-function animacionEntrada(){
-    let d = document.createElement("div");
-    d.style.cssText = "position:fixed;inset:0;display:flex;justify-content:center;align-items:center;font-size:120px;z-index:1000;pointer-events:none;";
-    d.innerText = aristo >= 7 ? "🐉" : svip >= 5 ? "🔥" : "🦅";
-    document.body.appendChild(d);
-    setTimeout(() => d.remove(), 3000);
-}
-
-// 🤝 AGENTE DE RECARGA
-async function panelAgente(){
-    if(prompt("CLAVE AGENTE") !== "1234") return alert("Acceso Denegado");
-    let u = prompt("ID de Usuario:"), m = parseInt(prompt("Cantidad a Recargar:"));
-    if(!isNaN(m)) await db.collection("usuarios").doc(u).set({oro: firebase.firestore.FieldValue.increment(m)}, {merge:true});
-}
-
-// OTROS
-function toggleFantasma(){ modoFantasma = !modoFantasma; alert(modoFantasma ? "👻 Modo Fantasma: ACTIVADO" : "👁️ Modo Fantasma: DESACTIVADO"); }
-function resetEventos(){ if(confirm("¿Resetear todos los eventos globales?")) eventosRef.set({}); }
-function subirMedia(){ document.getElementById("file").click(); }
-function procesarArchivo(e){ alert("📸 Subiendo Foto/GIF/Reel..."); }
-
-// LOOP PRO (Cada 30 seg)
-setInterval(verificarTopAutomatico, 30000);
-// 🔐 LOGIN GOOGLE REAL
 function loginGoogle(){
     const provider = new firebase.auth.GoogleAuthProvider();
-
-    firebase.auth().signInWithPopup(provider)
-    .then(result => {
-        const user = result.user;
-
-        nombre = user.displayName || "User";
-        localStorage.setItem("username", nombre);
-
-        db.collection("usuarios").doc(nombre).set({
-            nombre: user.displayName,
-            email: user.email,
-            foto: user.photoURL
-        }, {merge:true});
-
-        alert("Bienvenido " + nombre);
+    firebase.auth().signInWithPopup(provider).then(result => {
+        nombre = result.user.displayName; foto_safe = result.user.photoURL; uid_safe = result.user.uid;
+        localStorage.setItem("username", nombre); localStorage.setItem("userfoto", foto_safe); localStorage.setItem("uid", uid_safe);
         location.reload();
-    })
-    .catch(err => {
-        console.log(err);
-        alert("Error login");
     });
 }
 
-// 🔄 AUTO LOGIN
-firebase.auth().onAuthStateChanged(user => {
-    if(user){
-        nombre = user.displayName || "User";
-        localStorage.setItem("username", nombre);
-    }
-});
+setInterval(() => { verificarTopAutomatico(); gestionSemanalAutomatica(); }, 30000);
 </script>
 </body>
 </html>
