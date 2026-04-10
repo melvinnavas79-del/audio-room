@@ -1,11 +1,12 @@
-<!DOCTYPE html>
-<html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lluvia Live GOD MODE FULL</title>
+
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
 <style>
     body{margin:0;background:#0b001a;color:white;font-family:sans-serif;overflow-x:hidden;}
     .header{display:flex;justify-content:space-between;padding:15px;background:#000;border-bottom:2px solid #333;}
@@ -26,11 +27,14 @@
 </style>
 </head>
 <body>
-
 <div class="header">
     <div>💰 <span id="oro">0</span> | Lv.<span id="lvl">1</span></div>
     <div style="letter-spacing:2px;font-weight:bold;color:#ff00ff;">LLUVIA LIVE</div>
-    <button onclick="panelAgente()" style="background:gold;color:black;">🤝 AGENTE</button>
+
+    <div style="display:flex;gap:5px;">
+        <button onclick="loginGoogle()" style="background:#00ffff;color:black;">🔐 LOGIN</button>
+        <button onclick="panelAgente()" style="background:gold;color:black;">🤝 AGENTE</button>
+    </div>
 </div>
 
 <div id="gift"></div>
@@ -215,6 +219,39 @@ function procesarArchivo(e){ alert("📸 Subiendo Foto/GIF/Reel..."); }
 
 // LOOP PRO (Cada 30 seg)
 setInterval(verificarTopAutomatico, 30000);
+// 🔐 LOGIN GOOGLE REAL
+function loginGoogle(){
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    firebase.auth().signInWithPopup(provider)
+    .then(result => {
+        const user = result.user;
+
+        nombre = user.displayName || "User";
+        localStorage.setItem("username", nombre);
+
+        db.collection("usuarios").doc(nombre).set({
+            nombre: user.displayName,
+            email: user.email,
+            foto: user.photoURL
+        }, {merge:true});
+
+        alert("Bienvenido " + nombre);
+        location.reload();
+    })
+    .catch(err => {
+        console.log(err);
+        alert("Error login");
+    });
+}
+
+// 🔄 AUTO LOGIN
+firebase.auth().onAuthStateChanged(user => {
+    if(user){
+        nombre = user.displayName || "User";
+        localStorage.setItem("username", nombre);
+    }
+});
 </script>
 </body>
 </html>
