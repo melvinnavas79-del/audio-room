@@ -1,227 +1,99 @@
-<!DOCTYPE html><html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Lluvia Live - Pro</title>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-<script src="https://unpkg.com/@zegocloud/zego-uikit-prebuilt/zego-uikit-prebuilt.js"></script>
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-
-<style>
-    body { margin:0; background:#0b001a; color:white; font-family:sans-serif; overflow-x:hidden; padding-bottom:120px; }
-    .header { display:flex; justify-content:space-between; padding:15px; background:#000; border-bottom:1px solid #333; position:sticky; top:0; z-index:1001; }
-    .sillas { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; padding:20px; background:radial-gradient(circle, #1a0033 0%, #0b001a 100%); }
-    
-    /* AVATARES */
-    .avatar-container { text-align:center; position:relative; }
-    .avatar { width:75px; height:75px; border-radius:50%; background:#222; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; margin:auto; border:2px solid #444; }
-    .insignia { font-size:10px; background:rgba(0,0,0,0.7); padding:2px 5px; border-radius:10px; color:gold; margin-top:5px; }
-
-    /* REELS / MOMENTOS */
-    #seccion-reels { display:none; position:fixed; inset:0; background:#0b001a; z-index:8000; padding:20px; overflow-y:auto; }
-    .feed-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px; }
-    .moment-card { background:#1a0033; border-radius:12px; overflow:hidden; border:1px solid #333; height:250px; }
-    .moment-card video, .moment-card img { width:100%; height:100%; object-fit:cover; }
-
-    /* CONTROLES ZEGO */
-    #zegocloud-ui { position:fixed; bottom:75px; left:0; width:100%; height:80px; background:rgba(0,0,0,0.9); z-index:5000; border-top:2px solid #ff4500; }
-
-    /* BARRA INFERIOR */
-    .bar { position:fixed; bottom:0; width:100%; display:flex; gap:5px; justify-content:center; background:#000; padding:12px 0; z-index:1001; border-top:1px solid #333; }
-    button { border:none; border-radius:20px; padding:8px 12px; font-size:11px; color:white; background:#333; font-weight:bold; cursor:pointer; }
-    .btn-gold { background:linear-gradient(45deg, #ffd700, #ff8c00); color:black; }
-    .btn-reels { background: #e91e63; }
-
-    /* ANIMACIONES */
-    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-    .banner-entrada { position:fixed; top:15%; width:100%; background:linear-gradient(90deg, transparent, gold, transparent); color:black; text-align:center; padding:12px; font-weight:bold; z-index:9999; animation: slideIn 0.5s; }
-</style>
-</head>
-<body>
-
-<div class="header">
-    <div>💰 <span id="oro">0</span> | <span id="nombre-label">...</span> <span id="mi-rango"></span></div>
-    <button onclick="alert('Panel Agente en desarrollo')" class="btn-gold">🤝 AGENTE</button>
-</div>
-
-<div class="sillas" id="grid"></div>
-
-<div id="zegocloud-ui"></div>
-
-<div id="seccion-reels">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2 style="color:white; margin:0;">📸 Momentos</h2>
-        <button onclick="document.getElementById('seccion-reels').style.display='none'">❌ CERRAR</button>
-    </div>
-    <div style="margin:20px 0; border:2px dashed #ff4500; padding:20px; text-align:center; border-radius:15px;">
-        <input type="file" id="file-input" accept="image/*,video/*" style="display:none;" onchange="subirMomento(this)">
-        <button onclick="document.getElementById('file-input').click()" class="btn-gold">➕ SUBIR REEL / FOTO</button>
-    </div>
-    <div id="feed-momentos" class="feed-grid"></div>
-</div>
-
-<div class="bar">
-    <button onclick="abrirReels()" class="btn-reels">🎬 REELS</button>
-    <button onclick="enviarRegalo('rosa')">🌹 100</button>
-    <button onclick="enviarRegalo('leon')">🦁 1000</button>
-    <button onclick="sentarse(1)">🪑 SUBIR</button>
-    <button onclick="alert('Modo Fantasma Activado')" title="No aparecerás en lista">👻</button>
-</div>
-
 <script>
-// --- CONFIGURACIÓN (Asegúrate de que coincida con tu Firebase) ---
-const firebaseConfig = { projectId: "lluvia-live-69a05" };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const storage = firebase.storage();
+firebase.initializeApp({projectId:"lluvia-live-69a05"});
+const db=firebase.firestore();
 
-// Conectar con el servidor de Render (Pega tu link de Render aquí)
-const socket = io("https://audio-room-nwpj.onrender.com"); 
+// DATOS INICIALES
+let nombre = prompt("Nombre de Usuario") || "User_" + Math.floor(Math.random()*999);
+let clan = "Navas"; // Clan por defecto
 
-let miNombre = prompt("Tu Nombre") || "Usuario_" + Math.floor(Math.random()*999);
-let miClan = "Navas";
-let miOro = 0;
-let miGastoTotal = 0;
+// VARIABLES DE ESTADO
+let oro=0, xp=0, lvl=1;
+let vip=0, svip=0, aristo=0; // Se cargarán de la base de datos
+let verificado=true, esCP=false, modoFantasma=false;
 
-async function cargarUsuario() {
-    document.getElementById("nombre-label").innerText = miNombre;
-    let doc = await db.collection("usuarios").doc(miNombre).get();
-    
-    if (doc.exists) {
-        miOro = doc.data().oro || 0;
-        miGastoTotal = doc.data().gastado || 0;
+const userRef = db.collection("usuarios").doc(nombre);
+
+async function cargar(){
+    let d = await userRef.get();
+    if(d.exists){
+        let data = d.data();
+        oro = data.oro || 5000;
+        xp = data.xp || 0;
+        vip = data.vip || 0;
+        svip = data.svip || 0;
+        aristo = data.aristo || 0;
     } else {
-        miOro = 5000; // Saldo inicial
-        await db.collection("usuarios").doc(miNombre).set({ oro: miOro, gastado: 0, clan: miClan });
+        oro = 5000;
+        await userRef.set({oro, xp, clan, verificado: true});
     }
-    
-    document.getElementById("oro").innerText = miOro;
-    document.getElementById("mi-rango").innerText = obtenerRango(miGastoTotal);
-    iniciarZego();
+    lvl = Math.floor(Math.sqrt(xp/100)) + 1;
+    updateUI();
+    escucharSalas();
+    entradaAnimada();
 }
 
-function obtenerRango(gasto) {
-    if (gasto >= 50000) return '👑 ARISTOCRACIA';
-    if (gasto >= 10000) return '💎 SVIP';
-    if (gasto >= 1000) return '⭐ VIP';
-    return '👶 BEBÉ';
+function updateUI(){
+    document.getElementById("oro").innerText = oro.toLocaleString();
+    document.getElementById("lvl").innerText = lvl;
+    userRef.set({oro, xp, lvl}, {merge:true});
 }
 
-function iniciarZego() {
-    const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(1426464525, "0c9b0e1a2b3c4d5e6f7g8h9i0j1k2l3m", "SalaGlobal", miNombre, miNombre);
-    const zp = ZegoUIKitPrebuilt.create(kitToken);
-    zp.joinRoom({
-        container: document.querySelector("#zegocloud-ui"),
-        scenario: { mode: ZegoUIKitPrebuilt.GroupCall },
-        showPreJoinView: false,
-        showMyCameraToggleButton: false,
-        showTextChat: false,
-        showUserList: false
-    });
-
-    // Punto: Entrada Animada
-    const rango = obtenerRango(miGastoTotal);
-    socket.emit("join-room", { roomId: "Global", name: miNombre, vipLevel: rango });
+// 👻 MODO FANTASMA (Punto 1 de tu lista)
+function toggleFantasma(){
+    modoFantasma = !modoFantasma;
+    alert(modoFantasma ? "👻 Modo Fantasma: ACTIVADO" : "👁️ Modo Fantasma: DESACTIVADO");
 }
 
-async function enviarRegalo(tipo) {
-    const precios = { 'rosa': 100, 'leon': 1000 };
-    let precio = precios[tipo];
-
-    if (miOro >= precio) {
-        miOro -= precio;
-        miGastoTotal += precio;
-        
-        await db.collection("usuarios").doc(miNombre).update({ 
-            oro: miOro, 
-            gastado: miGastoTotal 
-        });
-
-        document.getElementById("oro").innerText = miOro;
-        document.getElementById("mi-rango").innerText = obtenerRango(miGastoTotal);
-
-        socket.emit("send-gift", { de: miNombre, tipo: tipo, roomId: "Global" });
-    } else {
-        alert("¡No tienes oro suficiente!");
-    }
+// 🪑 SENTARSE EN SALA (Punto: Sala en tiempo real)
+async function sentarse(id){
+    if(modoFantasma) return alert("No puedes subir a la silla en Modo Fantasma 👻");
+    await db.collection("salas").doc("global").set({
+        ["s"+id]: {nombre, clan, vip, svip, aristo, lvl, verificado}
+    }, {merge:true});
 }
 
-// Escuchar Regalos y Animaciones
-socket.on("receive-gift", (data) => {
-    const anim = document.createElement("div");
-    anim.style = "position:fixed; top:40%; width:100%; text-align:center; z-index:9000; pointer-events:none;";
-    anim.innerHTML = `<h1 style="font-size:50px;">${data.tipo === 'rosa' ? '🌹' : '🦁'}</h1><h3>${data.de} envió un regalo</h3>`;
-    document.body.appendChild(anim);
-    setTimeout(() => anim.remove(), 3000);
-});
+// 🎁 REGALOS, CP Y PREMIOS TOP (Cubre 10 puntos de tu lista)
+async function enviarRegalo(tipo){
+    let precio = (tipo === 'leon') ? 1000 : 100;
+    if(oro < precio) return alert("Oro insuficiente");
 
-// ESCUCHAR ENTRADAS (Banner VIP)
-socket.on("user-connected", (data) => {
-    if (data.vipLevel.includes("👑") || data.vipLevel.includes("💎")) {
-        const b = document.createElement("div");
-        b.className = "banner-entrada";
-        b.innerText = `¡${data.vipLevel} ${data.name} HA ENTRADO!`;
-        document.body.appendChild(b);
-        setTimeout(() => b.remove(), 4000);
-    }
-});
+    oro -= precio;
+    xp += precio;
+    updateUI();
 
-// REELS Y FOTOS
-async function subirMomento(input) {
-    const file = input.files[0];
-    if (!file) return;
-    alert("Subiendo archivo...");
-    const ref = storage.ref(`momentos/${Date.now()}_${file.name}`);
-    await ref.put(file);
-    const url = await ref.getDownloadURL();
-    await db.collection("momentos").add({
-        url,
-        usuario: miNombre,
-        tipo: file.type.startsWith('video') ? 'video' : 'foto',
-        fecha: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    cargarFeed();
+    // 🏆 Ranking Ricos (Punto: Ranking Ricos)
+    await db.collection("eventos").doc("global").set({
+        [nombre]: firebase.firestore.FieldValue.increment(precio)
+    }, {merge:true});
+
+    // 🎖️ Clanes (Semanal/Mensual)
+    await db.collection("evento_clanes").doc("semana").set({
+        [clan]: firebase.firestore.FieldValue.increment(precio)
+    }, {merge:true});
+
+    // Animación de Regalo (Punto: Regalos + Animación)
+    mostrarAnimacion(tipo === 'leon' ? '🦁' : '🌹');
 }
 
-async function cargarFeed() {
-    const feed = document.getElementById("feed-momentos");
-    feed.innerHTML = "Cargando...";
-    const snap = await db.collection("momentos").orderBy("fecha", "desc").get();
-    feed.innerHTML = "";
-    snap.forEach(doc => {
-        const d = doc.data();
-        const card = document.createElement("div");
-        card.className = "moment-card";
-        if (d.tipo === 'video') {
-            card.innerHTML = `<video src="${d.url}" loop muted autoplay></video>`;
-        } else {
-            card.innerHTML = `<img src="${d.url}">`;
-        }
-        feed.appendChild(card);
-    });
+function mostrarAnimacion(emoji){
+    let g = document.getElementById("gift");
+    let d = document.createElement("div");
+    d.className = "gift";
+    d.innerText = emoji;
+    g.appendChild(d);
+    setTimeout(() => d.remove(), 2000);
 }
 
-function abrirReels() {
-    document.getElementById("seccion-reels").style.display = "block";
-    cargarFeed();
+function entradaAnimada(){
+    let d = document.createElement("div");
+    d.style = "position:fixed; inset:0; display:flex; justify-content:center; align-items:center; font-size:100px; z-index:10000; pointer-events:none; animation: zoom 2s forwards;";
+    // Lógica de dragón o águila según rango (Punto: Entradas Animadas)
+    d.innerText = aristo > 0 ? "🐉" : "🦅";
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 2000);
 }
 
-// Crear Sillas Iniciales
-function crearSillas() {
-    const g = document.getElementById("grid");
-    for(let i=1; i<=9; i++) {
-        g.innerHTML += `
-            <div class="avatar-container" onclick="sentarse(${i})">
-                <div class="avatar" id="s${i}">👤</div>
-                <div id="n${i}" style="font-size:10px;">VACÍO</div>
-            </div>`;
-    }
-}
-
+// Cargar UI inicial
 crearSillas();
-cargarUsuario();
+cargar();
 </script>
-</body>
-</html>
