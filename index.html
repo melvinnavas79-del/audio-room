@@ -1,40 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Lluvia Live - Entrada</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lluvia Live - Inicio</title>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        body {
+            background: #0b001a;
+            color: white;
+            text-align: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid #ff4500;
+            margin: auto;
+            width: 80%;
+            max-width: 400px;
+        }
+        h1 { color: #ff4500; font-size: 32px; margin-bottom: 20px; }
+        input {
+            width: 90%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+            text-align: center;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff4500, #ff8c00);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.4);
+        }
+        button:active { transform: scale(0.98); }
+    </style>
 </head>
+<body>
 
-<body style="background:black; color:white; text-align:center; padding-top:100px; font-family: Arial;">
-
-    <h1 style="color: #00ff00;">☔ Lluvia Live</h1>
+<div class="container">
+    <h1>☔ LLUVIA LIVE</h1>
+    <p>Ingresa para activar tu Billetera y Rango</p>
     
-    <input type="text" id="name" placeholder="Tu nombre" style="padding:10px; border-radius:5px;"><br><br>
+    <input type="text" id="name" placeholder="Escribe tu Nombre o Nick">
+    
+    <button onclick="entrarApp()">ENTRAR A LA APP 🚀</button>
+</div>
 
-    <button onclick="crear()" style="padding:10px 20px; background:green; color:white; border:none; border-radius:5px;">Crear sala</button>
-    <button onclick="entrar()" style="padding:10px 20px; background:blue; color:white; border:none; border-radius:5px;">Entrar</button>
+<script>
+    // CONEXIÓN A TU SERVIDOR DE RENDER
+    const socket = io("https://audio-room-1.onrender.com");
 
-    <script>
-        // CONEXIÓN A TU RENDER (ESTO ES LO IMPORTANTE)
-        const socket = io("https://audio-room-1.onrender.com");
-
-        function crear() {
-            const name = document.getElementById("name").value;
-            if (!name) return alert("Escribe tu nombre");
-            
-            localStorage.setItem("username", name);
-            const room = Math.random().toString(36).substring(7);
-            window.location.href = "room.html?room=" + room;
+    function entrarApp() {
+        const nameInput = document.getElementById("name").value;
+        
+        if (!nameInput) {
+            return alert("¡Oye! Necesitas un nombre para que el sistema te asigne tu oro y nivel.");
         }
 
-        function entrar() {
-            const name = document.getElementById("name").value;
-            const room = prompt("ID de sala");
-            if (!name || !room) return;
+        // GUARDAMOS EL NOMBRE EN EL NAVEGADOR (Paso clave)
+        localStorage.setItem("username", nameInput);
+        
+        // REDIRIGIMOS A ROOM.HTML (Donde pegaste el código grande)
+        window.location.href = "room.html";
+    }
 
-            localStorage.setItem("username", name);
-            window.location.href = "room.html?room=" + room;
+    // Por si el usuario presiona "Enter" en el teclado
+    document.getElementById("name").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            entrarApp();
         }
-    </script>
+    });
+</script>
+
 </body>
 </html>
