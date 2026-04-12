@@ -16,6 +16,7 @@
     <div>💰 <span id="oro">0</span> | Lv.<span id="lvl">1</span> | <span id="tagKing" style="color:gold; font-weight:bold;"></span></div>
     <div style="font-weight:bold;color:#ff00ff;">LLUVIA LIVE MEGA PRO</div>
     <button onclick="loginGoogle()" style="background:#00ffff;color:black;border-radius:10px;padding:5px 10px;">🔐 LOGIN</button>
+    <button onclick="mostrarToken()" style="background:#9b59b6;color:white;border-radius:10px;padding:5px 10px;">🔑 MI TOKEN</button>
 </div>
 
 <div id="gift"></div>
@@ -212,6 +213,28 @@ async function crearOferta(){
         let d = doc.data();
         if(d?.answer && !peer.currentRemoteDescription) await peer.setRemoteDescription(JSON.parse(d.answer));
     });
+}
+
+function loginGoogle(){
+    const p = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(p).then(r => {
+        localStorage.setItem("username", r.user.displayName);
+        localStorage.setItem("uid", r.user.uid);
+        location.reload();
+    });
+}
+
+function mostrarToken(){
+    const uid = localStorage.getItem("uid");
+    if(uid){
+        if(navigator.clipboard){
+            navigator.clipboard.writeText(uid).then(() => alert("🔑 Token copiado al portapapeles:\n" + uid));
+        } else {
+            alert("🔑 Tu Token (UID):\n" + uid);
+        }
+    } else {
+        alert("⚠️ Inicia sesión primero con 🔐 LOGIN para obtener tu token.");
+    }
 }
 </script>
 </body>
