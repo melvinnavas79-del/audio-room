@@ -1,51 +1,83 @@
-<div class="login-container">
-    <div class="logo">☔</div>
-    <h1>Lluvia Live</h1>
-    <div class="slogan">Conecta, Chatea, Vive</div>
-    
-    <input type="text" id="userEmail" class="fake-input" placeholder="Correo electrónico" style="color:white; outline:none;">
-    <input type="password" id="userPass" class="fake-input" placeholder="Contraseña" style="color:white; outline:none;">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lluvia Live - Bienvenida</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif;
+            background: radial-gradient(circle at center, #3547b9 0%, #1e267b 100%);
+            display: flex; justify-content: center; align-items: center; color: white; overflow: hidden; }
+        .login-container { text-align: center; width: 90%; max-width: 350px; display: flex; flex-direction: column; align-items: center; }
+        .logo { font-size: 70px; margin-bottom: 10px; }
+        h1 { font-size: 32px; margin: 0; font-weight: bold; }
+        .slogan { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 30px; }
+        
+        /* Cajas para escribir */
+        input { width: 100%; height: 48px; background: rgba(255,255,255,0.1); border: 2px solid #ff00ff; border-radius: 25px; margin-bottom: 15px; padding: 0 20px; box-sizing: border-box; color: white; font-size: 16px; outline: none; }
+        input::placeholder { color: rgba(255,255,255,0.5); }
 
-    <button class="btn-login" onclick="loginGoogle()" style="margin-bottom:10px;">🚀 INGRESAR CON GOOGLE</button>
-    
-    <div style="display:flex; gap:10px;">
-        <button onclick="loginManual()" style="flex:1; background:#444; color:white; border-radius:20px; padding:10px; border:none; font-size:12px;">ENTRAR</button>
-        <button onclick="registroManual()" style="flex:1; background:#ff00ff; color:white; border-radius:20px; padding:10px; border:none; font-size:12px;">REGISTRARSE</button>
+        /* Botón de Google Rosa */
+        .btn-google { width: 100%; height: 50px; background: linear-gradient(to right, #ff4081, #f50057); border: none; border-radius: 25px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(245,0,87,0.4); }
+        
+        /* Botones de Entrar/Registrar */
+        .row { display: flex; width: 100%; gap: 10px; margin-bottom: 20px; }
+        .btn-sec { flex: 1; height: 40px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .btn-reg { flex: 1; height: 40px; background: #ff00ff; border: none; border-radius: 20px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
+        
+        .footer-link { font-size: 13px; color: rgba(255,255,255,0.6); text-decoration: none; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">☔</div>
+        <h1>Lluvia Live</h1>
+        <div class="slogan">Conecta, Chatea, Vive</div>
+        
+        <input type="text" id="email" placeholder="Correo o Usuario">
+        <input type="password" id="pass" placeholder="Contraseña">
+
+        <button class="btn-google" onclick="loginGoogle()">🚀 INGRESAR CON GOOGLE</button>
+        
+        <div class="row">
+            <button class="btn-sec" onclick="loginManual()">ENTRAR</button>
+            <button class="btn-reg" onclick="registroManual()">REGISTRARSE</button>
+        </div>
+
+        <a href="#" class="footer-link">¿No tienes cuenta? Regístrate gratis</a>
     </div>
 
-    <p style="font-size:12px; margin-top:20px; color:rgba(255,255,255,0.6);">¿Olvidaste tu contraseña?</p>
-</div>
+    <script>
+        firebase.initializeApp({projectId:"lluvia-live-69a05"});
 
-<script>
-// --- FUNCIONES DE ACCESO ---
+        function loginGoogle() {
+            const p = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(p).then(r => {
+                localStorage.setItem("username", r.user.displayName);
+                window.location.href = "room.html";
+            }).catch(e => alert("Error Google: " + e.message));
+        }
 
-function loginGoogle() {
-    const p = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(p).then(r => {
-        localStorage.setItem("username", r.user.displayName);
-        window.location.href = "room.html";
-    });
-}
+        function registroManual() {
+            const e = document.getElementById("email").value;
+            const p = document.getElementById("pass").value;
+            if(!e || !p) return alert("Escribe un correo y contraseña");
+            firebase.auth().createUserWithEmailAndPassword(e, p)
+                .then(() => alert("¡Cuenta creada! Ya puedes entrar."))
+                .catch(err => alert("Error: " + err.message));
+        }
 
-function registroManual() {
-    const email = document.getElementById("userEmail").value;
-    const pass = document.getElementById("userPass").value;
-    if(!email || !pass) return alert("Llena los campos");
-    
-    firebase.auth().createUserWithEmailAndPassword(email, pass)
-        .then(() => alert("¡Cuenta creada! Ahora puedes entrar."))
-        .catch(e => alert("Error: " + e.message));
-}
-
-function loginManual() {
-    const email = document.getElementById("userEmail").value;
-    const pass = document.getElementById("userPass").value;
-    
-    firebase.auth().signInWithEmailAndPassword(email, pass)
-        .then(r => {
-            localStorage.setItem("username", email.split('@')[0]);
-            window.location.href = "room.html";
-        })
-        .catch(e => alert("Error: " + e.message));
-}
-</script>
+        function loginManual() {
+            const e = document.getElementById("email").value;
+            const p = document.getElementById("pass").value;
+            if(!e || !p) return alert("Escribe tus datos");
+            firebase.auth().signInWithEmailAndPassword(e, p).then(res => {
+                localStorage.setItem("username", e.split('@')[0]);
+                window.location.href = "room.html";
+            }).catch(err => alert("Datos incorrectos"));
+        }
+    </script>
+</body>
+</html>
