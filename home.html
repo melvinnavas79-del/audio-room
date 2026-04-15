@@ -3,16 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live - Home</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Lluvia Live - Panel ProMax</title>
     <style>
-        body { background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: white; font-family: sans-serif; }
-        .room-card { background: rgba(255, 255, 255, 0.05); border-radius: 15px; overflow: hidden; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); transition: transform 0.2s; }
-        .room-card:active { transform: scale(0.95); }
-        .category-pill { background: #3b82f6; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+        body { margin: 0; background: #0a0e27; color: white; font-family: 'Segoe UI', sans-serif; }
+        .header { padding: 25px; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); border-bottom: 1px solid #3f51b5; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .avatar { width: 45px; height: 45px; background: #3949ab; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid #00ffff; }
+        .status-top { display: flex; flex-direction: column; }
+        .coins { color: #ffeb3b; font-weight: bold; font-size: 18px; text-shadow: 0 0 10px rgba(255,235,59,0.4); }
+        .aristocracy-tag { font-size: 10px; background: linear-gradient(to right, #ffd700, #ffa000); padding: 2px 8px; border-radius: 10px; color: black; font-weight: bold; margin-top: 4px; text-align: center; }
+        
+        .main-content { padding: 20px; text-align: center; }
+        .rooms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .room-card { background: linear-gradient(145deg, #1e267b, #131955); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 8px 15px rgba(0,0,0,0.3); }
+        
+        .btn-action { background: linear-gradient(45deg, #ff00ff, #7000ff); border: none; padding: 18px; width: 85%; border-radius: 30px; color: white; font-weight: bold; font-size: 16px; margin: 30px auto; display: block; box-shadow: 0 0 20px rgba(255,0,255,0.4); cursor: pointer; }
     </style>
 </head>
 <body>
+    <div class="header">
+        <div class="user-info">
+            <div class="avatar">👤</div>
+            <div class="status-top">
+                <span id="name-display" style="font-weight: bold;">Cargando...</span>
+                <span class="aristocracy-tag">NIVEL DUEÑO</span>
+            </div>
+        </div>
+        <div class="coins">💰 <span id="coin-count">1.0M</span></div>
+    </div>
 
-    
+    <div class="main-content">
+        <h2 style="text-align: left; font-size: 22px;">Salas Populares ☔</h2>
+        
+        <div class="rooms-grid">
+            <div class="room-card">
+                <div style="font-size: 30px;">🎤</div>
+                <p style="margin: 10px 0 0 0; font-weight: bold;">Sala Melvin</p>
+                <small style="color: #4fc3f7;">52 oyentes</small>
+            </div>
+            <div class="room-card">
+                <div style="font-size: 30px;">💎</div>
+                <p style="margin: 10px 0 0 0; font-weight: bold;">VIP Room</p>
+                <small style="color: #4fc3f7;">12 oyentes</small>
+            </div>
+        </div>
+
+        <button class="btn-action" onclick="alert('Iniciando sala...')">🚀 CREAR MI SALA LIVE</button>
+    </div>
+
+    <script>
+        const username = localStorage.getItem("username");
+        document.getElementById("name-display").innerText = username || "Melvin";
+
+        // Conexión para verificar el rango de Aristocracia (Dragón/León)
+        async function checkStatus() {
+            try {
+                const res = await fetch(`https://audio-room-1.onrender.com/api/entry-animation/admin`);
+                const data = await res.json();
+                console.log("Sistema listo:", data.msg);
+            } catch (e) {
+                console.log("Conectando con el servidor de audio...");
+            }
+        }
+        checkStatus();
+    </script>
+</body>
+</html>
