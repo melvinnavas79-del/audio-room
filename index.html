@@ -42,7 +42,7 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN DE TU PROYECTO REAL (Sacada de tus fotos)
+        // CONFIGURACIÓN DE TU PROYECTO REAL
         const firebaseConfig = {
             apiKey: "AIzaSyA9sdOfg7f55DX7Ej_TK_BJHrNFTmtr5J4",
             authDomain: "lluvia-live-69a05.firebaseapp.com",
@@ -57,26 +57,32 @@
             firebase.initializeApp(firebaseConfig);
         }
 
+        // Función Login con Google
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             firebase.auth().signInWithPopup(provider).then(result => {
                 localStorage.setItem("username", result.user.displayName);
                 window.location.href = "home.html";
             }).catch(error => {
+                console.error(error);
                 alert("Error Google: " + error.message);
             });
         }
 
+        // Función Registro Manual
         function registroManual() {
             const email = document.getElementById("email").value;
             const pass = document.getElementById("pass").value;
             if(!email || !pass) return alert("Por favor escribe un correo y contraseña");
 
             firebase.auth().createUserWithEmailAndPassword(email, pass)
-                .then(() => alert("¡Cuenta creada! Ahora dale a ENTRAR."))
+                .then(() => {
+                    alert("¡Cuenta creada con éxito! Ahora puedes darle a ENTRAR.");
+                })
                 .catch(err => alert("Error al registrar: " + err.message));
         }
 
+        // Función Login Manual
         function loginManual() {
             const email = document.getElementById("email").value;
             const pass = document.getElementById("pass").value;
