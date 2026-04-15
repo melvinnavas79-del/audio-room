@@ -2,113 +2,124 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live - Pro Discovery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lluvia Live - Sala Pro</title>
     <style>
-        :root { --accent: #00f2ff; --bg: #f5f7fa; }
-        body { margin: 0; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: #333; padding-bottom: 80px; }
+        /* Ajuste total para Android y iPhone */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: radial-gradient(circle at center, #1e267b 0%, #050510 100%); 
+            font-family: 'Segoe UI', sans-serif; overflow: hidden; color: white;
+        }
         
-        /* Header con pestañas */
-        .top-nav { display: flex; justify-content: space-around; padding: 15px; background: white; font-weight: bold; color: #999; position: sticky; top: 0; z-index: 100; }
-        .top-nav .active { color: #333; border-bottom: 3px solid var(--accent); }
+        .room-header { 
+            padding: 20px; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
 
-        /* Banner Monthly Star */
-        .monthly-card { margin: 15px; background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 20px; color: white; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-        .star-grid { display: flex; justify-content: space-around; margin-top: 15px; }
-        .star-item { display: flex; flex-direction: column; align-items: center; font-size: 12px; transition: 0.2s; cursor: pointer; }
-        .circle-icon { width: 55px; height: 55px; border-radius: 50%; border: 3px solid gold; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(255,255,255,0.1); }
+        /* Rejilla de asientos ProMax */
+        .seats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            padding: 40px 15px;
+            justify-items: center;
+        }
 
-        /* Tarjetas de Categoría */
-        .cat-grid { display: flex; gap: 10px; padding: 0 15px; overflow-x: auto; margin-bottom: 15px; }
-        .cat-card { min-width: 100px; padding: 15px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; }
-        .lista { background: #e0f7fa; color: #006064; }
-        .pareja { background: #fce4ec; color: #880e4f; }
-        .clan { background: #e8eaf6; color: #1a237e; }
+        .seat {
+            width: 85px; height: 85px; /* Más grandes para Android */
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 2px dashed rgba(0, 242, 255, 0.3);
+            color: #00f2ff; font-size: 11px; transition: 0.3s;
+            cursor: pointer; position: relative;
+        }
 
-        /* Lista de Salas (Tu perfil) */
-        .room-list { padding: 15px; }
-        .user-card { background: white; border-radius: 20px; padding: 15px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; }
-        .user-card:active { transform: scale(0.97); }
-        .profile-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--accent); background: #eee; }
-        .user-info h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 5px; }
-        .tag-friends { background: #ff5722; color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
+        .seat.active { 
+            border: 3px solid #00f2ff; 
+            background: rgba(0, 242, 255, 0.2); 
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.5);
+            color: white; 
+        }
 
-        /* Menú Inferior (Floating Bar) */
-        .bottom-bar { position: fixed; bottom: 0; width: 100%; height: 70px; background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #666; cursor: pointer; transition: 0.2s; }
-        .nav-item.main { background: linear-gradient(45deg, #00f2ff, #007bff); width: 55px; height: 55px; border-radius: 50%; margin-top: -35px; color: white; justify-content: center; box-shadow: 0 5px 15px rgba(0,242,255,0.4); font-size: 24px; }
+        .seat img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+
+        /* Controles inferiores de lujo */
+        .bottom-controls {
+            position: fixed; bottom: 0; width: 100%; height: 80px;
+            display: flex; justify-content: space-around; align-items: center;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-round {
+            width: 50px; height: 50px; border-radius: 50%; border: none;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: pointer; transition: 0.2s;
+        }
+
+        .btn-mic { background: #4caf50; color: white; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.4); }
+        .btn-gift { background: #e91e63; color: white; box-shadow: 0 4px 10px rgba(233, 30, 99, 0.4); }
+        .btn-exit { background: #333; color: white; }
     </style>
 </head>
 <body>
 
-    <div class="top-nav">
-        <span>Mío</span>
-        <span class="active">Popular</span>
-        <span>Descubrir</span>
-        <span>Event</span>
-        <span>🔔</span>
+<div class="room-header">
+    <div>☔ <b>LLUVIA LIVE</b></div>
+    <div style="color: #ffeb3b; font-weight: bold;">💰 <span id="coins">1.5M</span></div>
+</div>
+
+<div class="seats-container" id="seats-box">
     </div>
 
-    <div class="monthly-card">
-        <span style="color: gold; font-weight: bold; letter-spacing: 1px;">MONTHLY STAR ☔</span>
-        <div class="star-grid">
-            <div class="star-item" onclick="alert('Cargando Clanes...')"><div class="circle-icon">🏰</div>Clan</div>
-            <div class="star-item" onclick="alert('Top Recargas...')"><div class="circle-icon" style="border-color: #ff8a65;">🦁</div>Recarga</div>
-            <div class="star-item" onclick="alert('Ranking Parejas...')"><div class="circle-icon" style="border-color: #f06292;">💖</div>Pareja</div>
-        </div>
-    </div>
+<div class="bottom-controls">
+    <button class="btn-round btn-exit" onclick="window.location.href='home.html'">🚪</button>
+    <button class="btn-round btn-mic" id="mic-toggle">🎤</button>
+    <button class="btn-round btn-gift" onclick="alert('¡Regalo enviado! 🎁')">🎁</button>
+    <button class="btn-round" style="background:#2196f3">💬</button>
+</div>
 
-    <div class="cat-grid">
-        <div class="cat-card lista" onclick="alert('Top 3 Lista')">🏆 TOP 3<br><small>lista</small></div>
-        <div class="cat-card pareja" onclick="alert('Sección Pareja')">👑 PAREJA<br><small>Pareja</small></div>
-        <div class="cat-card clan" onclick="alert('Top 2 Clan')">👑 TOP 2<br><small>Clan</small></div>
-    </div>
+<script>
+    const seatsBox = document.getElementById('seats-box');
+    const savedName = localStorage.getItem("username") || "Melvin";
+    let miAsiento = null;
 
-    <div class="room-list">
-        <div class="user-card" id="my-room-btn">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Melvin" class="profile-img">
-            <div class="user-info">
-                <h3 id="display-name">🦋 Melvin_Live 🦋 <span class="tag-friends">OWNER</span></h3>
-                <p style="margin: 5px 0; font-size: 12px; color: #777;">🇨🇴 🏆 👑 Bienvenido a Lluvia Live...</p>
-                <span style="color: #007bff; font-weight: bold;">📊 2.6B</span>
-            </div>
-        </div>
-    </div>
+    // Generar 9 asientos dinámicos
+    for (let i = 1; i <= 9; i++) {
+        const seat = document.createElement('div');
+        seat.className = 'seat';
+        seat.innerHTML = `<span>${i}</span>`;
+        seat.onclick = () => ocuparAsiento(i, seat);
+        seatsBox.appendChild(seat);
+    }
 
-    <div class="bottom-bar">
-        <div class="nav-item" onclick="alert('Abriendo Juegos...')">🎮<br>Juegos</div>
-        <div class="nav-item" onclick="alert('Momento Social')">🎬<br>Momento</div>
-        <div class="nav-item main" id="main-mic-btn">🎤</div>
-        <div class="nav-item" onclick="alert('Galería de Fotos')">📸<br>Fotos</div>
-        <div class="nav-item" onclick="alert('Mi Perfil')">👤<br>Yo</div>
-    </div>
-
-    <script>
-        // 1. Ponemos tu nombre real guardado en el login
-        const savedUser = localStorage.getItem("username") || "Melvin";
-        document.getElementById("display-name").innerHTML = `🦋 ${savedUser}_Live 🦋 <span class="tag-friends">OWNER</span>`;
-
-        // 2. Función para saltar a la sala de audio
-        function irASala() {
-            // Efecto visual de carga
-            document.body.style.opacity = "0.5";
-            setTimeout(() => {
-                window.location.href = "room.html";
-            }, 500);
+    function ocuparAsiento(num, element) {
+        if (miAsiento === num) {
+            // Bajarse del asiento
+            element.classList.remove('active');
+            element.innerHTML = `<span>${num}</span>`;
+            miAsiento = null;
+        } else if (miAsiento === null) {
+            // Subirse al asiento
+            element.classList.add('active');
+            element.innerHTML = `<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${savedName}">`;
+            miAsiento = num;
+        } else {
+            alert("Ya estás ocupando un lugar.");
         }
+    }
 
-        // 3. Conectamos los botones de entrada
-        document.getElementById("my-room-btn").onclick = irASala;
-        document.getElementById("main-mic-btn").onclick = irASala;
+    // Botón de Micrófono
+    const micBtn = document.getElementById('mic-toggle');
+    let micOn = false;
+    micBtn.onclick = () => {
+        micOn = !micOn;
+        micBtn.style.background = micOn ? "#2196f3" : "#4caf50";
+        micBtn.innerHTML = micOn ? "🔊" : "🎤";
+    };
+</script>
 
-        // 4. Animación simple de botones
-        const btns = document.querySelectorAll('.cat-card, .star-item, .nav-item');
-        btns.forEach(b => {
-            b.addEventListener('click', () => {
-                b.style.transform = "scale(0.9)";
-                setTimeout(() => b.style.transform = "scale(1)", 100);
-            });
-        });
-    </script>
 </body>
 </html>
