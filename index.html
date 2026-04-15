@@ -21,7 +21,6 @@
         .row { display: flex; width: 100%; gap: 10px; }
         .btn-entrar { flex: 1; height: 45px; background: #5c6bc0; border: none; border-radius: 22px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-reg { flex: 1; height: 45px; background: #ff00ff; border: none; border-radius: 22px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-entrar:active, .btn-reg:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -43,14 +42,14 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN DE FIREBASE (Reemplaza con tus datos reales)
+        // CONFIGURACIÓN DE TU PROYECTO REAL (Sacada de tus fotos)
         const firebaseConfig = {
-            apiKey: "TU_API_KEY_AQUÍ", 
+            apiKey: "AIzaSyA9sdOfg7f55DX7Ej_TK_BJHrNFTmtr5J4",
             authDomain: "lluvia-live-69a05.firebaseapp.com",
             projectId: "lluvia-live-69a05",
-            storageBucket: "lluvia-live-69a05.appspot.com",
-            messagingSenderId: "TU_SENDER_ID",
-            appId: "TU_APP_ID"
+            storageBucket: "lluvia-live-69a05.firebasestorage.app",
+            messagingSenderId: "909704512499",
+            appId: "1:909704512499:web:95c5dd9ac567a452610886"
         };
 
         // Inicializar Firebase
@@ -58,33 +57,26 @@
             firebase.initializeApp(firebaseConfig);
         }
 
-        // LOGIN CON GOOGLE
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             firebase.auth().signInWithPopup(provider).then(result => {
                 localStorage.setItem("username", result.user.displayName);
-                // Ahora te manda a HOME en lugar de ir directo a la sala
                 window.location.href = "home.html";
             }).catch(error => {
-                console.error(error);
                 alert("Error Google: " + error.message);
             });
         }
 
-        // REGISTRO MANUAL
         function registroManual() {
             const email = document.getElementById("email").value;
             const pass = document.getElementById("pass").value;
             if(!email || !pass) return alert("Por favor escribe un correo y contraseña");
 
             firebase.auth().createUserWithEmailAndPassword(email, pass)
-                .then(() => {
-                    alert("¡Cuenta creada con éxito! Ahora puedes darle a ENTRAR.");
-                })
+                .then(() => alert("¡Cuenta creada! Ahora dale a ENTRAR."))
                 .catch(err => alert("Error al registrar: " + err.message));
         }
 
-        // LOGIN MANUAL
         function loginManual() {
             const email = document.getElementById("email").value;
             const pass = document.getElementById("pass").value;
@@ -93,7 +85,6 @@
             firebase.auth().signInWithEmailAndPassword(email, pass)
                 .then(res => {
                     localStorage.setItem("username", email.split('@')[0]);
-                    // Ahora te manda a HOME
                     window.location.href = "home.html";
                 })
                 .catch(err => alert("Correo o contraseña incorrectos"));
