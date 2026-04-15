@@ -49,10 +49,8 @@
 </div>
 
 <script>
-// --- CONEXIÓN SOCKET ---
 const socket = io(); 
 
-// --- CONFIG CORE ---
 let nombre = localStorage.getItem("username") || "User_" + Math.floor(Math.random()*999);
 let uid_safe = localStorage.getItem("uid") || nombre;
 let foto_safe = localStorage.getItem("userfoto") || null;
@@ -68,13 +66,7 @@ window.onload = () => {
     cargarUsuario();
     crearChatUI();
     agregarBotonesExtra();
-    socket.emit("join-room", {
-        roomId: "global",
-        name: nombre,
-        vipLevel: 0,
-        isGhost: false,
-        clan: clan
-    });
+    socket.emit("join-room", { roomId: "global", name: nombre, vipLevel: 0, isGhost: false, clan: clan });
 };
 
 function crearSillas(){
@@ -89,25 +81,24 @@ function crearSillas(){
 }
 
 async function sentarse(numSilla) {
+    // Si no se ha logueado, no dejarlo sentar
+    if(nombre.startsWith("User_")) return alert("Primero haz LOGIN con Google");
+
     const sillaRef = db.collection("salas").doc("global");
     const doc = await sillaRef.get();
     const data = doc.data() || {};
 
-    if (data["s" + numSilla]) {
-        return alert("⚠️ Esta silla ya está ocupada.");
-    }
+    if (data["s" + numSilla]) return alert("⚠️ Esta silla ya está ocupada.");
 
     let actualizaciones = {};
-    // Buscar si ya estoy en otra silla para borrarme de ella
+    // ELIMINAR CLONES: Borra el nombre de cualquier otra silla donde aparezca
     for (let i = 1; i <= 9; i++) {
         if (data["s" + i] === nombre) {
             actualizaciones["s" + i] = firebase.firestore.FieldValue.delete();
         }
     }
 
-    // Ponerme en la nueva
     actualizaciones["s" + numSilla] = nombre;
-
     await sillaRef.set(actualizaciones, { merge: true });
 }
 
@@ -117,8 +108,6 @@ async function cargarUsuario(){
         let data = d.data();
         oro = data.oro || 0;
         xp = data.xp || 0;
-        campeon = data.campeon || false;
-        foto_safe = data.foto || null;
         nivelKing = data.nivelKing || 0;
     }
     lvl = Math.floor(Math.sqrt(xp/100)) + 1;
@@ -127,29 +116,12 @@ async function cargarUsuario(){
     escucharSalas();
 }
 
-async function verificarNivelKing() {
-    let nuevoNivelKing = Math.floor(xp / 500000000); 
-    if (nuevoNivelKing > nivelKing) {
-        let premio = 3000000; 
-        oro += premio;
-        nivelKing = nuevoNivelKing;
-        await db.collection("usuarios").doc(nombre).set({
-            oro: firebase.firestore.FieldValue.increment(premio),
-            nivelKing: nuevoNivelKing
-        }, { merge: true });
-        alert(`👑 ¡NIVEL KING ${nuevoNivelKing}! +3,000,000 ORO`);
-        updateUI();
-    }
-}
-
 async function enviarRegalo(tipo){
     let precio = tipo === "leon" ? 1000 : 100;
     if(oro < precio) return alert("Sin oro");
     oro -= precio; xp += precio;
     updateUI();
-    verificarNivelKing();
     await db.collection("eventos").doc("global").set({ [nombre]: firebase.firestore.FieldValue.increment(precio) }, {merge:true});
-    subirCP(precio / 10); 
     animarRegalo(tipo);
 }
 
@@ -161,33 +133,17 @@ function animarRegalo(tipo){
     setTimeout(() => anim.remove(), 2500);
 }
 
-async function subirCP(pts){
-    let ref = db.collection("cp").doc(nombre);
-    let d = await ref.get();
-    if(d.exists){
-        let data = d.data();
-        let nuevoTotal = (data.puntos || 0) + pts;
-        let nuevoNivel = Math.floor(nuevoTotal / 1000) + 1;
-        if(nuevoNivel >= 6 && (data.nivel || 1) < 6){
-            oro += 5000000;
-            alert("💞 CP Nivel 6! +5M Recompensa");
-        }
-        await ref.set({puntos: nuevoTotal, nivel: nuevoNivel}, {merge:true});
-    }
-}
-
 function crearChatUI(){
     let div = document.createElement("div");
     div.style.cssText = "position:fixed;right:10px;bottom:140px;z-index:90;";
-    div.innerHTML = `<div id="chatBox"></div>
-        <div style="display:flex;gap:2px;"><input id="chatInput" style="width:130px;background:#222;color:white;border:1px solid #444;border-radius:5px;padding:3px;">
-        <button onclick="enviarMensaje(document.getElementById('chatInput').value)" style="padding:3px 8px;background:#00ffff;color:black;font-size:10px;">Send</button></div>`;
+    div.innerHTML = `<div id="chatBox"></div>`;
     document.body.appendChild(div);
 }
 
 function updateUI(){
     document.getElementById("oro").innerText = oro.toLocaleString();
-    db.collection("usuarios").doc(nombre).set({oro, xp, nombre, foto: foto_safe, nivelKing}, {merge:true});
+    document.getElementById("lvl").innerText = lvl;
+    db.collection("usuarios").doc(nombre).set({oro, xp, nombre, nivelKing}, {merge:true});
 }
 
 function agregarBotonesExtra(){
@@ -206,7 +162,7 @@ async function iniciarAudio(){
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         alert("🎤 Micrófono Activado");
         conectarAudio();
-    }catch(e){ alert("Error al activar micro. Revisa permisos."); }
+    }catch(e){ alert("Error al activar micro."); }
 }
 function toggleAudio(){
     audioActivo = !audioActivo;
@@ -246,9 +202,11 @@ function escucharSalas(){
             let s = data["s"+i];
             let el = document.getElementById("s"+i);
             if(s){ 
+                // Si la silla es tuya, brilla en ORO, si es de otro en CIAN
+                let color = (s === nombre) ? "gold" : "#00ffff";
                 el.innerHTML = `⭐<div class="user-name">${s.substring(0,8)}</div>`;
-                el.style.border = "2px solid #00ffff";
-                el.style.boxShadow = "0 0 10px #00ffff";
+                el.style.border = `2px solid ${color}`;
+                el.style.boxShadow = `0 0 10px ${color}`;
             } else {
                 el.innerHTML = "👤";
                 el.style.border = "2px solid #444";
