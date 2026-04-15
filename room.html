@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lluvia Live MEGA PRO GOD MODE</title>
-    
+
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -14,7 +14,7 @@
         body{margin:0;background:#0b001a;color:white;font-family:sans-serif;overflow-x:hidden;}
         .header{display:flex;justify-content:space-between;padding:15px;background:#000;border-bottom:2px solid #333;align-items:center;}
         .sillas{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;padding:20px;margin-bottom:100px;}
-        .avatar{width:85px;height:85px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;position:relative;border:2px solid #444;}
+        .avatar{width:85px;height:85px;border-radius:50%;background:#222;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;border:2px solid #444;transition: 0.3s; font-size: 10px; text-align: center; overflow: hidden;}
         .bar{position:fixed;bottom:0;width:100%;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;background:rgba(0,0,0,0.9);padding:15px;z-index:100;}
         button{border:none;border-radius:10px;padding:8px 12px;background:#333;color:white;font-size:12px;font-weight:bold;cursor:pointer;}
         #gift{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;pointer-events:none;z-index:999;}
@@ -22,6 +22,7 @@
         @keyframes zoom{0%{transform:scale(0);opacity:0}20%{transform:scale(1.2);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(0);opacity:0}}
         #chatBox{width:200px;height:180px;background:rgba(0,0,0,0.8);border:1px solid #444;border-radius:10px;overflow-y:auto;font-size:11px;padding:5px;margin-bottom:5px;}
         .tag-king{color:gold; font-weight:bold; text-shadow: 0 0 5px gold;}
+        .user-name{font-size: 9px; margin-top: 4px; color: #00ffff; font-weight: bold;}
     </style>
 </head>
 <body>
@@ -36,7 +37,7 @@
 <div class="sillas" id="grid"></div>
 
 <div class="bar" id="bottomBar">
-    <button onclick="sentarse(1)">🪑</button>
+    <div id="controlesSillas" style="display:flex; gap:5px;"></div>
     <button onclick="enviarRegalo('rosa')">🌹</button>
     <button onclick="enviarRegalo('leon')">🦁</button>
     <button onclick="rankingPro()">🏆 TOP</button>
@@ -78,10 +79,36 @@ window.onload = () => {
 
 function crearSillas(){
     let g = document.getElementById("grid");
+    let c = document.getElementById("controlesSillas");
     g.innerHTML = "";
+    c.innerHTML = "";
     for(let i=1; i<=9; i++){
         g.innerHTML += `<div class="avatar" id="s${i}">👤</div>`;
+        c.innerHTML += `<button onclick="sentarse(${i})">${i}</button>`;
     }
+}
+
+async function sentarse(numSilla) {
+    const sillaRef = db.collection("salas").doc("global");
+    const doc = await sillaRef.get();
+    const data = doc.data() || {};
+
+    if (data["s" + numSilla]) {
+        return alert("⚠️ Esta silla ya está ocupada.");
+    }
+
+    let actualizaciones = {};
+    // Buscar si ya estoy en otra silla para borrarme de ella
+    for (let i = 1; i <= 9; i++) {
+        if (data["s" + i] === nombre) {
+            actualizaciones["s" + i] = firebase.firestore.FieldValue.delete();
+        }
+    }
+
+    // Ponerme en la nueva
+    actualizaciones["s" + numSilla] = nombre;
+
+    await sillaRef.set(actualizaciones, { merge: true });
 }
 
 async function cargarUsuario(){
@@ -165,7 +192,7 @@ function updateUI(){
 
 function agregarBotonesExtra(){
     const bar = document.getElementById("bottomBar");
-    const btns = [{t: "🏷️ CLAN", f: () => alert("Ranking Clanes Proximamente")}, {t: "💞 CP", f: () => alert("Sección CP")}, {t: "🎡", f: () => alert("Ruleta")}, {t: "🎰", f: () => alert("Slots")}];
+    const btns = [{t: "🏷️ CLAN", f: () => alert("Ranking Clanes")}, {t: "🎡", f: () => alert("Ruleta")}, {t: "🎰", f: () => alert("Slots")}];
     btns.forEach(b => {
         let btn = document.createElement("button");
         btn.innerText = b.t; btn.onclick = b.f; bar.appendChild(btn);
@@ -218,7 +245,15 @@ function escucharSalas(){
         for(let i=1; i<=9; i++){
             let s = data["s"+i];
             let el = document.getElementById("s"+i);
-            if(s && el) el.style.border = "2px solid #00ffff";
+            if(s){ 
+                el.innerHTML = `⭐<div class="user-name">${s.substring(0,8)}</div>`;
+                el.style.border = "2px solid #00ffff";
+                el.style.boxShadow = "0 0 10px #00ffff";
+            } else {
+                el.innerHTML = "👤";
+                el.style.border = "2px solid #444";
+                el.style.boxShadow = "none";
+            }
         }
     });
 }
