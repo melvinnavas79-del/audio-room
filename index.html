@@ -11,14 +11,17 @@
             background: radial-gradient(circle at center, #3547b9 0%, #1e267b 100%);
             display: flex; justify-content: center; align-items: center; color: white; overflow: hidden; }
         .login-container { text-align: center; width: 90%; max-width: 350px; display: flex; flex-direction: column; align-items: center; }
-        .logo { font-size: 70px; margin-bottom: 10px; }
-        h1 { font-size: 32px; margin: 0; font-weight: bold; }
+        .logo { font-size: 70px; margin-bottom: 10px; text-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        h1 { font-size: 32px; margin: 0; font-weight: bold; letter-spacing: 2px; }
         .slogan { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 30px; }
-        input { width: 100%; height: 48px; background: rgba(255,255,255,0.1); border: 2px solid #ff00ff; border-radius: 25px; margin-bottom: 15px; padding: 0 20px; box-sizing: border-box; color: white; font-size: 16px; outline: none; }
-        .btn-google { width: 100%; height: 50px; background: linear-gradient(to right, #ff4081, #f50057); border: none; border-radius: 25px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(245,0,87,0.4); }
+        input { width: 100%; height: 48px; background: rgba(255,255,255,0.1); border: 2px solid #ff00ff; border-radius: 25px; margin-bottom: 15px; padding: 0 20px; box-sizing: border-box; color: white; font-size: 16px; outline: none; transition: 0.3s; }
+        input:focus { border-color: #00ffff; background: rgba(255,255,255,0.2); }
+        .btn-google { width: 100%; height: 50px; background: linear-gradient(to right, #ff4081, #f50057); border: none; border-radius: 25px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(245,0,87,0.4); transition: 0.2s; }
+        .btn-google:active { transform: scale(0.98); }
         .row { display: flex; width: 100%; gap: 10px; }
-        .btn-entrar { flex: 1; height: 45px; background: #5c6bc0; border: none; border-radius: 22px; color: white; font-weight: bold; cursor: pointer; }
-        .btn-reg { flex: 1; height: 45px; background: #ff00ff; border: none; border-radius: 22px; color: white; font-weight: bold; cursor: pointer; }
+        .btn-entrar { flex: 1; height: 45px; background: #5c6bc0; border: none; border-radius: 22px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-reg { flex: 1; height: 45px; background: #ff00ff; border: none; border-radius: 22px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-entrar:active, .btn-reg:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -26,12 +29,12 @@
         <div class="logo">☔</div>
         <h1>Lluvia Live</h1>
         <div class="slogan">Conecta, Chatea, Vive</div>
-        
+
         <input type="text" id="email" placeholder="Correo electrónico">
         <input type="password" id="pass" placeholder="Contraseña">
 
         <button class="btn-google" onclick="loginGoogle()">🚀 INGRESAR CON GOOGLE</button>
-        
+
         <div class="row">
             <button class="btn-entrar" onclick="loginManual()">ENTRAR</button>
             <button class="btn-reg" onclick="registroManual()">REGISTRARSE</button>
@@ -40,42 +43,61 @@
     </div>
 
     <script>
-        // Configuración de tu proyecto Lluvia Live
-        firebase.initializeApp({projectId:"lluvia-live-69a05"});
+        // CONFIGURACIÓN DE FIREBASE (Reemplaza con tus datos reales)
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY_AQUÍ", 
+            authDomain: "lluvia-live-69a05.firebaseapp.com",
+            projectId: "lluvia-live-69a05",
+            storageBucket: "lluvia-live-69a05.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
 
-        function loginGoogle() {
-            const p = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(p).then(r => {
-                localStorage.setItem("username", r.user.displayName);
-                window.location.href = "room.html";
-            }).catch(e => alert("Error Google: " + e.message));
+        // Inicializar Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
 
-        function registroManual() {
-            const e = document.getElementById("email").value;
-            const p = document.getElementById("pass").value;
-            if(!e || !p) return alert("Por favor escribe un correo y contraseña");
+        // LOGIN CON GOOGLE
+        function loginGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider).then(result => {
+                localStorage.setItem("username", result.user.displayName);
+                // Ahora te manda a HOME en lugar de ir directo a la sala
+                window.location.href = "home.html";
+            }).catch(error => {
+                console.error(error);
+                alert("Error Google: " + error.message);
+            });
+        }
 
-            firebase.auth().createUserWithEmailAndPassword(e, p)
+        // REGISTRO MANUAL
+        function registroManual() {
+            const email = document.getElementById("email").value;
+            const pass = document.getElementById("pass").value;
+            if(!email || !pass) return alert("Por favor escribe un correo y contraseña");
+
+            firebase.auth().createUserWithEmailAndPassword(email, pass)
                 .then(() => {
-                    alert("¡Cuenta creada con éxito! Ahora dale a ENTRAR.");
+                    alert("¡Cuenta creada con éxito! Ahora puedes darle a ENTRAR.");
                 })
                 .catch(err => alert("Error al registrar: " + err.message));
         }
 
+        // LOGIN MANUAL
         function loginManual() {
-            const e = document.getElementById("email").value;
-            const p = document.getElementById("pass").value;
-            if(!e || !p) return alert("Ingresa tus datos");
+            const email = document.getElementById("email").value;
+            const pass = document.getElementById("pass").value;
+            if(!email || !pass) return alert("Ingresa tus datos");
 
-            firebase.auth().signInWithEmailAndPassword(e, p)
+            firebase.auth().signInWithEmailAndPassword(email, pass)
                 .then(res => {
-                    // Usamos la parte del correo antes del @ como nombre
-                    localStorage.setItem("username", e.split('@')[0]);
-                    window.location.href = "room.html";
+                    localStorage.setItem("username", email.split('@')[0]);
+                    // Ahora te manda a HOME
+                    window.location.href = "home.html";
                 })
                 .catch(err => alert("Correo o contraseña incorrectos"));
         }
     </script>
 </body>
-</html> 
+</html>
