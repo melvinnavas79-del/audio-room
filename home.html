@@ -9,33 +9,34 @@
         body { margin: 0; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: #333; padding-bottom: 80px; }
         
         /* Header con pestañas */
-        .top-nav { display: flex; justify-content: space-around; padding: 15px; background: white; font-weight: bold; color: #999; }
+        .top-nav { display: flex; justify-content: space-around; padding: 15px; background: white; font-weight: bold; color: #999; position: sticky; top: 0; z-index: 100; }
         .top-nav .active { color: #333; border-bottom: 3px solid var(--accent); }
 
         /* Banner Monthly Star */
-        .monthly-card { margin: 15px; background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 20px; color: white; text-align: center; }
+        .monthly-card { margin: 15px; background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 20px; padding: 20px; color: white; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         .star-grid { display: flex; justify-content: space-around; margin-top: 15px; }
-        .star-item { display: flex; flex-direction: column; align-items: center; font-size: 12px; }
+        .star-item { display: flex; flex-direction: column; align-items: center; font-size: 12px; transition: 0.2s; cursor: pointer; }
         .circle-icon { width: 55px; height: 55px; border-radius: 50%; border: 3px solid gold; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(255,255,255,0.1); }
 
         /* Tarjetas de Categoría */
-        .cat-grid { display: flex; gap: 10px; padding: 0 15px; overflow-x: auto; }
-        .cat-card { min-width: 100px; padding: 15px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 12px; }
+        .cat-grid { display: flex; gap: 10px; padding: 0 15px; overflow-x: auto; margin-bottom: 15px; }
+        .cat-card { min-width: 100px; padding: 15px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s; }
         .lista { background: #e0f7fa; color: #006064; }
         .pareja { background: #fce4ec; color: #880e4f; }
         .clan { background: #e8eaf6; color: #1a237e; }
 
         /* Lista de Salas (Tu perfil) */
         .room-list { padding: 15px; }
-        .user-card { background: white; border-radius: 20px; padding: 15px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .profile-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--accent); }
-        .user-info h3 { margin: 0; font-size: 16px; }
-        .tag-friends { background: #ff8a65; color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
+        .user-card { background: white; border-radius: 20px; padding: 15px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; }
+        .user-card:active { transform: scale(0.97); }
+        .profile-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--accent); background: #eee; }
+        .user-info h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 5px; }
+        .tag-friends { background: #ff5722; color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
 
         /* Menú Inferior (Floating Bar) */
         .bottom-bar { position: fixed; bottom: 0; width: 100%; height: 70px; background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #666; }
-        .nav-item.main { background: linear-gradient(45deg, #00f2ff, #007bff); width: 50px; height: 50px; border-radius: 50%; margin-top: -35px; color: white; justify-content: center; box-shadow: 0 5px 15px rgba(0,242,255,0.4); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #666; cursor: pointer; transition: 0.2s; }
+        .nav-item.main { background: linear-gradient(45deg, #00f2ff, #007bff); width: 55px; height: 55px; border-radius: 50%; margin-top: -35px; color: white; justify-content: center; box-shadow: 0 5px 15px rgba(0,242,255,0.4); font-size: 24px; }
     </style>
 </head>
 <body>
@@ -49,42 +50,65 @@
     </div>
 
     <div class="monthly-card">
-        <span style="color: gold; font-weight: bold;">Monthly Star</span>
+        <span style="color: gold; font-weight: bold; letter-spacing: 1px;">MONTHLY STAR ☔</span>
         <div class="star-grid">
-            <div class="star-item"><div class="circle-icon">🏰</div>Clan</div>
-            <div class="star-item"><div class="circle-icon" style="border-color: #ff8a65;">🦁</div>Recarga</div>
-            <div class="star-item"><div class="circle-icon" style="border-color: #f06292;">💖</div>Pareja</div>
+            <div class="star-item" onclick="alert('Cargando Clanes...')"><div class="circle-icon">🏰</div>Clan</div>
+            <div class="star-item" onclick="alert('Top Recargas...')"><div class="circle-icon" style="border-color: #ff8a65;">🦁</div>Recarga</div>
+            <div class="star-item" onclick="alert('Ranking Parejas...')"><div class="circle-icon" style="border-color: #f06292;">💖</div>Pareja</div>
         </div>
     </div>
 
     <div class="cat-grid">
-        <div class="cat-card lista">🏆 TOP 3<br><small>lista</small></div>
-        <div class="cat-card pareja">👑 PAREJA<br><small>Pareja</small></div>
-        <div class="cat-card clan">👑 TOP 2<br><small>Clan</small></div>
+        <div class="cat-card lista" onclick="alert('Top 3 Lista')">🏆 TOP 3<br><small>lista</small></div>
+        <div class="cat-card pareja" onclick="alert('Sección Pareja')">👑 PAREJA<br><small>Pareja</small></div>
+        <div class="cat-card clan" onclick="alert('Top 2 Clan')">👑 TOP 2<br><small>Clan</small></div>
     </div>
 
     <div class="room-list">
-        <div class="user-card" onclick="window.location.href='room.html'">
+        <div class="user-card" id="my-room-btn">
             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Melvin" class="profile-img">
             <div class="user-info">
-                <h3>🦋 Melvin_Live 🦋 <span class="tag-friends">FRIENDS</span></h3>
-                <p style="margin: 5px 0; font-size: 12px; color: #777;">🇨🇴 🏆 👑 Nunca hagas c...</p>
+                <h3 id="display-name">🦋 Melvin_Live 🦋 <span class="tag-friends">OWNER</span></h3>
+                <p style="margin: 5px 0; font-size: 12px; color: #777;">🇨🇴 🏆 👑 Bienvenido a Lluvia Live...</p>
                 <span style="color: #007bff; font-weight: bold;">📊 2.6B</span>
             </div>
         </div>
     </div>
 
     <div class="bottom-bar">
-        <div class="nav-item main">🎤<br>Sala</div>
-        <div class="nav-item">🎮<br>Juegos</div>
-        <div class="nav-item">🎬<br>Momento</div>
-        <div class="nav-item">📸<br>Fotos</div>
-        <div class="nav-item">👤<br>Yo</div>
+        <div class="nav-item" onclick="alert('Abriendo Juegos...')">🎮<br>Juegos</div>
+        <div class="nav-item" onclick="alert('Momento Social')">🎬<br>Momento</div>
+        <div class="nav-item main" id="main-mic-btn">🎤</div>
+        <div class="nav-item" onclick="alert('Galería de Fotos')">📸<br>Fotos</div>
+        <div class="nav-item" onclick="alert('Mi Perfil')">👤<br>Yo</div>
     </div>
 
     <script>
-        const user = localStorage.getItem("username");
-        if(user) document.querySelector('h3').innerHTML = `🦋 ${user}_Live 🦋 <span class="tag-friends">OWNER</span>`;
+        // 1. Ponemos tu nombre real guardado en el login
+        const savedUser = localStorage.getItem("username") || "Melvin";
+        document.getElementById("display-name").innerHTML = `🦋 ${savedUser}_Live 🦋 <span class="tag-friends">OWNER</span>`;
+
+        // 2. Función para saltar a la sala de audio
+        function irASala() {
+            // Efecto visual de carga
+            document.body.style.opacity = "0.5";
+            setTimeout(() => {
+                window.location.href = "room.html";
+            }, 500);
+        }
+
+        // 3. Conectamos los botones de entrada
+        document.getElementById("my-room-btn").onclick = irASala;
+        document.getElementById("main-mic-btn").onclick = irASala;
+
+        // 4. Animación simple de botones
+        const btns = document.querySelectorAll('.cat-card, .star-item, .nav-item');
+        btns.forEach(b => {
+            b.addEventListener('click', () => {
+                b.style.transform = "scale(0.9)";
+                setTimeout(() => b.style.transform = "scale(1)", 100);
+            });
+        });
     </script>
 </body>
 </html>
