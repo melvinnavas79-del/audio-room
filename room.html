@@ -2,207 +2,152 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live MEGA PRO GOD MODE</title>
-
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>  
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Lluvia Live - Sala Pro Events</title>
     <style>
-        body{margin:0;background:#0b001a;color:white;font-family:sans-serif;overflow-x:hidden;}
-        .header{display:flex;justify-content:space-between;padding:15px;background:#000;border-bottom:2px solid #333;align-items:center;}
-        .sillas{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;padding:20px;margin-bottom:120px;}
-        .avatar{width:85px;height:85px;border-radius:50%;background:#222;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;border:2px solid #444;transition: 0.3s; font-size: 10px; text-align: center; overflow: hidden;}
-        .bar{position:fixed;bottom:0;width:100%;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;background:rgba(0,0,0,0.9);padding:15px;z-index:100;}
-        button{border:none;border-radius:10px;padding:8px 12px;background:#333;color:white;font-size:12px;font-weight:bold;cursor:pointer;}
-        #gift{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;pointer-events:none;z-index:999;}
-        .gift-anim{font-size:100px;animation:zoom 2.5s forwards;}
-        @keyframes zoom{0%{transform:scale(0);opacity:0}20%{transform:scale(1.2);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(0);opacity:0}}
-        #chatBox{width:200px;height:120px;background:rgba(0,0,0,0.8);border:1px solid #444;border-radius:10px;overflow-y:auto;font-size:11px;padding:5px;margin-bottom:5px;}
-        .tag-king{color:gold; font-weight:bold; text-shadow: 0 0 5px gold;}
-        .user-name{font-size: 9px; margin-top: 4px; color: #00ffff; font-weight: bold;}
-        .btn-bajar{background:#ff4444 !important;}
+        :root { 
+            --safe-top: env(safe-area-inset-top, 20px); 
+            --safe-bottom: env(safe-area-inset-bottom, 20px); 
+            --accent: #00f2ff;
+        }
+        
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: radial-gradient(circle at top, #1e1b4b 0%, #050510 100%); 
+            font-family: 'Segoe UI', Roboto, sans-serif; overflow: hidden; color: white;
+        }
+
+        .app-container { display: flex; flex-direction: column; height: 100vh; padding-top: var(--safe-top); }
+
+        /* HEADER CON PREMIOS SEMANALES */
+        .header { 
+            padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* BANNER DE EVENTOS (Los que decías de 25M, 35M, 45M) */
+        .event-bar {
+            background: linear-gradient(90deg, #b45309, #78350f);
+            margin: 10px; padding: 8px 15px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 12px; font-weight: bold; border: 1px solid rgba(255,215,0,0.3);
+        }
+
+        .seats-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 15px; padding: 15px; flex: 1; align-content: start;
+        }
+
+        .seat {
+            aspect-ratio: 1/1; background: rgba(255,255,255,0.05);
+            border-radius: 20px; border: 1.5px dashed rgba(0, 242, 255, 0.2);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 14px; color: var(--accent); transition: 0.3s; position: relative;
+        }
+
+        .seat.active { border: 2px solid var(--accent); background: rgba(0, 242, 255, 0.1); }
+        .seat img { width: 100%; height: 100%; border-radius: 18px; object-fit: cover; }
+
+        /* PANEL DE EVENTOS RAPIDOS */
+        .quick-events {
+            display: flex; gap: 10px; padding: 0 15px; overflow-x: auto; margin-bottom: 10px;
+        }
+        .ev-card {
+            min-width: 100px; padding: 8px; border-radius: 10px; text-align: center;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1);
+        }
+        .ev-king { background: rgba(234, 179, 8, 0.2); border-color: #eab308; color: #fde047; }
+
+        /* FOOTER NAV */
+        .footer-nav {
+            background: rgba(0,0,0,0.9); padding: 15px 10px calc(15px + var(--safe-bottom));
+            display: flex; justify-content: space-around; border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-circle {
+            width: 50px; height: 50px; border-radius: 50%; border: none;
+            display: flex; align-items: center; justify-content: center; font-size: 22px;
+        }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div>💰 <span id="oro">0</span> | Lv.<span id="lvl">1</span> | <span id="tagKing" class="tag-king"></span></div>
-    <div style="font-weight:bold;color:#ff00ff;letter-spacing:1px;">LLUVIA LIVE PRO</div>
-    <button onclick="loginGoogle()" style="background:#00ffff;color:black;">🔐 LOGIN</button>
-</div>
+<div class="app-container">
+    <div class="header">
+        <div>☔ <b>LLUVIA LIVE</b></div>
+        <div style="color: #fbbf24; font-weight: bold;">💰 <span id="balance">1.5M</span></div>
+    </div>
 
-<div id="gift"></div>
-<div class="sillas" id="grid"></div>
+    <div class="event-bar">
+        <span>🏆 EVENTO SEMANAL</span>
+        <span style="color: #fde047;">META: 45M / 100M</span>
+    </div>
 
-<div class="bar" id="bottomBar">
-    <div id="controlesSillas" style="display:flex; gap:5px; overflow-x:auto;"></div>
-    <button class="btn-bajar" onclick="bajarDeSilla()">🚪 BAJAR</button>
-    <button onclick="enviarRegalo('rosa')">🌹</button>
-    <button onclick="enviarRegalo('leon')">🦁</button>
-    <button onclick="rankingPro()">🏆 TOP</button>
-</div>
+    <div class="quick-events">
+        <div class="ev-card ev-king">👑 KING<br><small>45,000,000</small></div>
+        <div class="ev-card" style="color: #60a5fa; border-color: #60a5fa;">🥈 PRO<br><small>35,000,000</small></div>
+        <div class="ev-card" style="color: #f472b6; border-color: #f472b6;">💖 CP<br><small>25,000,000</small></div>
+    </div>
 
-<div style="position:fixed;bottom:100px;right:10px;z-index:200;display:flex;flex-direction:column;gap:10px;">
-    <button onclick="iniciarAudio()" style="background:green;">🎤 MIC</button>
-    <button onclick="toggleAudio()" style="background:blue;">🔊 AUDIO</button>
+    <div class="seats-grid" id="seats-box"></div>
+
+    <div class="footer-nav">
+        <button class="btn-circle" style="background: #374151;" onclick="window.location.href='home.html'">🚪</button>
+        <button class="btn-circle" style="background: #eab308;" onclick="abrirTienda()">🛒</button>
+        <button class="btn-circle" style="background: #10b981;" id="mic-btn">🎤</button>
+        <button class="btn-circle" style="background: #ec4899;" onclick="solicitarPremio()">🎁</button>
+        <button class="btn-circle" style="background: #8b5cf6;" onclick="abrirJuegos()">🎮</button>
+    </div>
 </div>
 
 <script>
-// --- CONFIG CORE ---
-firebase.initializeApp({projectId:"lluvia-live-69a05"});
-const db = firebase.firestore();
-const socket = io(); 
+    const box = document.getElementById('seats-box');
+    const myName = localStorage.getItem("username") || "Melvin";
+    let currentSeat = null;
 
-let nombre = localStorage.getItem("username") || "User_" + Math.floor(Math.random()*999);
-let oro=5000, xp=0, lvl=1, nivelKing=0;
-
-window.onload = () => { 
-    crearSillas(); 
-    cargarUsuario();
-    crearChatUI();
-    escucharSalas();
-};
-
-function crearSillas(){
-    let g = document.getElementById("grid");
-    let c = document.getElementById("controlesSillas");
-    g.innerHTML = ""; c.innerHTML = "";
-    for(let i=1; i<=9; i++){
-        g.innerHTML += `<div class="avatar" id="s${i}">👤</div>`;
-        c.innerHTML += `<button onclick="sentarse(${i})">${i}</button>`;
-    }
-}
-
-async function sentarse(numSilla) {
-    if(nombre.startsWith("User_")) return alert("Login primero");
-    const sillaRef = db.collection("salas").doc("global");
-    const doc = await sillaRef.get();
-    const data = doc.data() || {};
-    if (data["s" + numSilla]) return alert("Ocupada");
-
-    let actualizaciones = {};
+    // Crear asientos
     for (let i = 1; i <= 9; i++) {
-        if (data["s" + i] === nombre) actualizaciones["s" + i] = firebase.firestore.FieldValue.delete();
-    }
-    actualizaciones["s" + numSilla] = nombre;
-    await sillaRef.set(actualizaciones, { merge: true });
-}
-
-async function bajarDeSilla() {
-    const sillaRef = db.collection("salas").doc("global");
-    const doc = await sillaRef.get();
-    const data = doc.data() || {};
-    let actualizaciones = {};
-    for (let i = 1; i <= 9; i++) {
-        if (data["s" + i] === nombre) actualizaciones["s" + i] = firebase.firestore.FieldValue.delete();
-    }
-    await sillaRef.set(actualizaciones, { merge: true });
-}
-
-function escucharSalas(){
-    db.collection("salas").doc("global").onSnapshot(doc => {
-        let data = doc.data() || {};
-        for(let i=1; i<=9; i++){
-            let s = data["s"+i];
-            let el = document.getElementById("s"+i);
-            if(s){ 
-                let color = (s === nombre) ? "gold" : "#00ffff";
-                el.innerHTML = `⭐<div class="user-name">${s.substring(0,8)}</div>`;
-                el.style.border = `2px solid ${color}`;
-                el.style.boxShadow = `0 0 10px ${color}`;
-            } else {
-                el.innerHTML = "👤";
-                el.style.border = "2px solid #444";
-                el.style.boxShadow = "none";
+        const s = document.createElement('div');
+        s.className = 'seat';
+        s.innerHTML = `<span>${i}</span>`;
+        s.onclick = () => {
+            if (currentSeat === i) {
+                s.classList.remove('active'); s.innerHTML = `<span>${i}</span>`; currentSeat = null;
+            } else if (currentSeat === null) {
+                s.classList.add('active');
+                s.innerHTML = `<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${myName}">`;
+                currentSeat = i;
             }
+        };
+        box.appendChild(s);
+    }
+
+    // Lógica de Premios y Eventos
+    function solicitarPremio() {
+        const monto = prompt("¿De cuánto es el evento? (25, 35 o 45)");
+        if (monto == "45") {
+            alert("🔥 ¡Evento KING activado! Meta: 45,000,000. ¡A por ello!");
+        } else if (monto == "35") {
+            alert("⚡ ¡Evento PRO activado! Meta: 35,000,000.");
+        } else if (monto == "25") {
+            alert("💖 ¡Evento CP activado! Meta: 25,000,000.");
+        } else {
+            alert("Panel de regalos abierto");
         }
-    });
-}
-
-async function cargarUsuario(){
-    let d = await db.collection("usuarios").doc(nombre).get();
-    if(d.exists){
-        let data = d.data();
-        oro = data.oro || 0;
-        xp = data.xp || 0;
-        nivelKing = data.nivelKing || 0;
     }
-    lvl = Math.floor(Math.sqrt(xp/100)) + 1;
-    document.getElementById("tagKing").innerText = nivelKing > 0 ? `King ${nivelKing}` : "";
-    updateUI();
-}
 
-async function enviarRegalo(tipo){
-    let precio = tipo === "leon" ? 1000 : 100;
-    if(oro < precio) return alert("Sin oro");
-    oro -= precio; xp += precio;
-    updateUI();
-    verificarNivelKing();
-    animarRegalo(tipo);
-}
+    function abrirJuegos() { alert("Cargando Tragamonedas y Ludo..."); }
+    function abrirTienda() { alert("Tienda de Aristocracia: VIP, Rey, Dueño"); }
 
-async function verificarNivelKing() {
-    let nuevoNivelKing = Math.floor(xp / 500000000); 
-    if (nuevoNivelKing > nivelKing) {
-        oro += 3000000;
-        nivelKing = nuevoNivelKing;
-        alert(`👑 ¡NIVEL KING ${nuevoNivelKing}! +3M ORO`);
-        updateUI();
-    }
-}
-
-function animarRegalo(tipo){
-    let anim = document.createElement("div");
-    anim.className = "gift-anim";
-    anim.innerText = tipo === "leon" ? "🦁" : "🌹";
-    document.getElementById("gift").appendChild(anim);
-    setTimeout(() => anim.remove(), 2500);
-}
-
-function updateUI(){
-    document.getElementById("oro").innerText = oro.toLocaleString();
-    document.getElementById("lvl").innerText = lvl;
-    db.collection("usuarios").doc(nombre).set({oro, xp, nombre, nivelKing}, {merge:true});
-}
-
-function crearChatUI(){
-    let div = document.createElement("div");
-    div.style.cssText = "position:fixed;right:10px;bottom:150px;z-index:90;";
-    div.innerHTML = `<div id="chatBox"></div>`;
-    document.body.appendChild(div);
-}
-
-// --- AUDIO ---
-let localStream, peer, audioActivo = true, audiosRemotos = [];
-async function iniciarAudio(){
-    try{
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        alert("🎤 Micrófono ON");
-    }catch(e){ alert("Error mic"); }
-}
-function toggleAudio(){
-    audioActivo = !audioActivo;
-    alert(audioActivo ? "🔊 ON" : "🔇 OFF");
-}
-
-function loginGoogle(){
-    const p = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(p).then(r => {
-        localStorage.setItem("username", r.user.displayName);
-        location.reload();
-    });
-}
-
-function rankingPro(){
-    db.collection("usuarios").orderBy("oro","desc").limit(5).get().then(snap => {
-        let r = "🏆 TOP RICOS:\n";
-        snap.forEach((d, i) => r += `${i+1}. ${d.id}: 💰${d.data().oro.toLocaleString()}\n`);
-        alert(r);
-    });
-}
+    const mic = document.getElementById('mic-btn');
+    let isOn = false;
+    mic.onclick = () => {
+        if(!currentSeat) return alert("Súbete a un asiento");
+        isOn = !isOn;
+        mic.style.background = isOn ? "#ef4444" : "#10b981";
+        mic.innerHTML = isOn ? "🔇" : "🎤";
+    };
 </script>
+
 </body>
 </html>
