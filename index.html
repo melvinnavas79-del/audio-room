@@ -14,20 +14,11 @@
         .logo { font-size: 70px; margin-bottom: 10px; }
         h1 { font-size: 32px; margin: 0; font-weight: bold; }
         .slogan { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 30px; }
-        
-        /* Cajas para escribir */
         input { width: 100%; height: 48px; background: rgba(255,255,255,0.1); border: 2px solid #ff00ff; border-radius: 25px; margin-bottom: 15px; padding: 0 20px; box-sizing: border-box; color: white; font-size: 16px; outline: none; }
-        input::placeholder { color: rgba(255,255,255,0.5); }
-
-        /* Botón de Google Rosa */
         .btn-google { width: 100%; height: 50px; background: linear-gradient(to right, #ff4081, #f50057); border: none; border-radius: 25px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(245,0,87,0.4); }
-        
-        /* Botones de Entrar/Registrar */
-        .row { display: flex; width: 100%; gap: 10px; margin-bottom: 20px; }
-        .btn-sec { flex: 1; height: 40px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
-        .btn-reg { flex: 1; height: 40px; background: #ff00ff; border: none; border-radius: 20px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
-        
-        .footer-link { font-size: 13px; color: rgba(255,255,255,0.6); text-decoration: none; margin-top: 10px; }
+        .row { display: flex; width: 100%; gap: 10px; }
+        .btn-entrar { flex: 1; height: 45px; background: #5c6bc0; border: none; border-radius: 22px; color: white; font-weight: bold; cursor: pointer; }
+        .btn-reg { flex: 1; height: 45px; background: #ff00ff; border: none; border-radius: 22px; color: white; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -36,20 +27,20 @@
         <h1>Lluvia Live</h1>
         <div class="slogan">Conecta, Chatea, Vive</div>
         
-        <input type="text" id="email" placeholder="Correo o Usuario">
+        <input type="text" id="email" placeholder="Correo electrónico">
         <input type="password" id="pass" placeholder="Contraseña">
 
         <button class="btn-google" onclick="loginGoogle()">🚀 INGRESAR CON GOOGLE</button>
         
         <div class="row">
-            <button class="btn-sec" onclick="loginManual()">ENTRAR</button>
+            <button class="btn-entrar" onclick="loginManual()">ENTRAR</button>
             <button class="btn-reg" onclick="registroManual()">REGISTRARSE</button>
         </div>
-
-        <a href="#" class="footer-link">¿No tienes cuenta? Regístrate gratis</a>
+        <p style="font-size:12px; margin-top:15px; color:rgba(255,255,255,0.5);">¿No tienes cuenta? Regístrate gratis</p>
     </div>
 
     <script>
+        // Configuración de tu proyecto Lluvia Live
         firebase.initializeApp({projectId:"lluvia-live-69a05"});
 
         function loginGoogle() {
@@ -63,20 +54,27 @@
         function registroManual() {
             const e = document.getElementById("email").value;
             const p = document.getElementById("pass").value;
-            if(!e || !p) return alert("Escribe un correo y contraseña");
+            if(!e || !p) return alert("Por favor escribe un correo y contraseña");
+
             firebase.auth().createUserWithEmailAndPassword(e, p)
-                .then(() => alert("¡Cuenta creada! Ya puedes entrar."))
-                .catch(err => alert("Error: " + err.message));
+                .then(() => {
+                    alert("¡Cuenta creada con éxito! Ahora dale a ENTRAR.");
+                })
+                .catch(err => alert("Error al registrar: " + err.message));
         }
 
         function loginManual() {
             const e = document.getElementById("email").value;
             const p = document.getElementById("pass").value;
-            if(!e || !p) return alert("Escribe tus datos");
-            firebase.auth().signInWithEmailAndPassword(e, p).then(res => {
-                localStorage.setItem("username", e.split('@')[0]);
-                window.location.href = "room.html";
-            }).catch(err => alert("Datos incorrectos"));
+            if(!e || !p) return alert("Ingresa tus datos");
+
+            firebase.auth().signInWithEmailAndPassword(e, p)
+                .then(res => {
+                    // Usamos la parte del correo antes del @ como nombre
+                    localStorage.setItem("username", e.split('@')[0]);
+                    window.location.href = "room.html";
+                })
+                .catch(err => alert("Correo o contraseña incorrectos"));
         }
     </script>
 </body>
