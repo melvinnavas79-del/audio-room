@@ -13,23 +13,24 @@
     <style>
         body{margin:0;background:#0b001a;color:white;font-family:sans-serif;overflow-x:hidden;}
         .header{display:flex;justify-content:space-between;padding:15px;background:#000;border-bottom:2px solid #333;align-items:center;}
-        .sillas{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;padding:20px;margin-bottom:100px;}
+        .sillas{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;padding:20px;margin-bottom:120px;}
         .avatar{width:85px;height:85px;border-radius:50%;background:#222;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;border:2px solid #444;transition: 0.3s; font-size: 10px; text-align: center; overflow: hidden;}
         .bar{position:fixed;bottom:0;width:100%;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;background:rgba(0,0,0,0.9);padding:15px;z-index:100;}
         button{border:none;border-radius:10px;padding:8px 12px;background:#333;color:white;font-size:12px;font-weight:bold;cursor:pointer;}
         #gift{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;pointer-events:none;z-index:999;}
         .gift-anim{font-size:100px;animation:zoom 2.5s forwards;}
         @keyframes zoom{0%{transform:scale(0);opacity:0}20%{transform:scale(1.2);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(0);opacity:0}}
-        #chatBox{width:200px;height:180px;background:rgba(0,0,0,0.8);border:1px solid #444;border-radius:10px;overflow-y:auto;font-size:11px;padding:5px;margin-bottom:5px;}
+        #chatBox{width:200px;height:120px;background:rgba(0,0,0,0.8);border:1px solid #444;border-radius:10px;overflow-y:auto;font-size:11px;padding:5px;margin-bottom:5px;}
         .tag-king{color:gold; font-weight:bold; text-shadow: 0 0 5px gold;}
         .user-name{font-size: 9px; margin-top: 4px; color: #00ffff; font-weight: bold;}
+        .btn-bajar{background:#ff4444 !important;}
     </style>
 </head>
 <body>
 
 <div class="header">
     <div>💰 <span id="oro">0</span> | Lv.<span id="lvl">1</span> | <span id="tagKing" class="tag-king"></span></div>
-    <div style="font-weight:bold;color:#ff00ff;letter-spacing:1px;">LLUVIA LIVE MEGA PRO</div>
+    <div style="font-weight:bold;color:#ff00ff;letter-spacing:1px;">LLUVIA LIVE PRO</div>
     <button onclick="loginGoogle()" style="background:#00ffff;color:black;">🔐 LOGIN</button>
 </div>
 
@@ -37,43 +38,38 @@
 <div class="sillas" id="grid"></div>
 
 <div class="bar" id="bottomBar">
-    <div id="controlesSillas" style="display:flex; gap:5px;"></div>
+    <div id="controlesSillas" style="display:flex; gap:5px; overflow-x:auto;"></div>
+    <button class="btn-bajar" onclick="bajarDeSilla()">🚪 BAJAR</button>
     <button onclick="enviarRegalo('rosa')">🌹</button>
     <button onclick="enviarRegalo('leon')">🦁</button>
     <button onclick="rankingPro()">🏆 TOP</button>
 </div>
 
-<div style="position:fixed;bottom:90px;right:10px;z-index:200;display:flex;flex-direction:column;gap:10px;">
-    <button onclick="iniciarAudio()" style="background:green;">🎤 ACTIVA MIC</button>
-    <button onclick="toggleAudio()" style="background:blue;">🔊 AUDIO ON/OFF</button>
+<div style="position:fixed;bottom:100px;right:10px;z-index:200;display:flex;flex-direction:column;gap:10px;">
+    <button onclick="iniciarAudio()" style="background:green;">🎤 MIC</button>
+    <button onclick="toggleAudio()" style="background:blue;">🔊 AUDIO</button>
 </div>
 
 <script>
+// --- CONFIG CORE ---
+firebase.initializeApp({projectId:"lluvia-live-69a05"});
+const db = firebase.firestore();
 const socket = io(); 
 
 let nombre = localStorage.getItem("username") || "User_" + Math.floor(Math.random()*999);
-let uid_safe = localStorage.getItem("uid") || nombre;
-let foto_safe = localStorage.getItem("userfoto") || null;
-let clan = localStorage.getItem("userclan") || "Clan";
-
-firebase.initializeApp({projectId:"lluvia-live-69a05"});
-const db = firebase.firestore();
-
-let oro=5000, xp=0, lvl=1, aristocracia=7, campeon=false, nivelKing=0;
+let oro=5000, xp=0, lvl=1, nivelKing=0;
 
 window.onload = () => { 
     crearSillas(); 
     cargarUsuario();
     crearChatUI();
-    agregarBotonesExtra();
-    socket.emit("join-room", { roomId: "global", name: nombre, vipLevel: 0, isGhost: false, clan: clan });
+    escucharSalas();
 };
 
 function crearSillas(){
     let g = document.getElementById("grid");
     let c = document.getElementById("controlesSillas");
-    g.innerHTML = "";
-    c.innerHTML = "";
+    g.innerHTML = ""; c.innerHTML = "";
     for(let i=1; i<=9; i++){
         g.innerHTML += `<div class="avatar" id="s${i}">👤</div>`;
         c.innerHTML += `<button onclick="sentarse(${i})">${i}</button>`;
@@ -81,25 +77,49 @@ function crearSillas(){
 }
 
 async function sentarse(numSilla) {
-    // Si no se ha logueado, no dejarlo sentar
-    if(nombre.startsWith("User_")) return alert("Primero haz LOGIN con Google");
-
+    if(nombre.startsWith("User_")) return alert("Login primero");
     const sillaRef = db.collection("salas").doc("global");
     const doc = await sillaRef.get();
     const data = doc.data() || {};
-
-    if (data["s" + numSilla]) return alert("⚠️ Esta silla ya está ocupada.");
+    if (data["s" + numSilla]) return alert("Ocupada");
 
     let actualizaciones = {};
-    // ELIMINAR CLONES: Borra el nombre de cualquier otra silla donde aparezca
     for (let i = 1; i <= 9; i++) {
-        if (data["s" + i] === nombre) {
-            actualizaciones["s" + i] = firebase.firestore.FieldValue.delete();
-        }
+        if (data["s" + i] === nombre) actualizaciones["s" + i] = firebase.firestore.FieldValue.delete();
     }
-
     actualizaciones["s" + numSilla] = nombre;
     await sillaRef.set(actualizaciones, { merge: true });
+}
+
+async function bajarDeSilla() {
+    const sillaRef = db.collection("salas").doc("global");
+    const doc = await sillaRef.get();
+    const data = doc.data() || {};
+    let actualizaciones = {};
+    for (let i = 1; i <= 9; i++) {
+        if (data["s" + i] === nombre) actualizaciones["s" + i] = firebase.firestore.FieldValue.delete();
+    }
+    await sillaRef.set(actualizaciones, { merge: true });
+}
+
+function escucharSalas(){
+    db.collection("salas").doc("global").onSnapshot(doc => {
+        let data = doc.data() || {};
+        for(let i=1; i<=9; i++){
+            let s = data["s"+i];
+            let el = document.getElementById("s"+i);
+            if(s){ 
+                let color = (s === nombre) ? "gold" : "#00ffff";
+                el.innerHTML = `⭐<div class="user-name">${s.substring(0,8)}</div>`;
+                el.style.border = `2px solid ${color}`;
+                el.style.boxShadow = `0 0 10px ${color}`;
+            } else {
+                el.innerHTML = "👤";
+                el.style.border = "2px solid #444";
+                el.style.boxShadow = "none";
+            }
+        }
+    });
 }
 
 async function cargarUsuario(){
@@ -113,7 +133,6 @@ async function cargarUsuario(){
     lvl = Math.floor(Math.sqrt(xp/100)) + 1;
     document.getElementById("tagKing").innerText = nivelKing > 0 ? `King ${nivelKing}` : "";
     updateUI();
-    escucharSalas();
 }
 
 async function enviarRegalo(tipo){
@@ -121,8 +140,18 @@ async function enviarRegalo(tipo){
     if(oro < precio) return alert("Sin oro");
     oro -= precio; xp += precio;
     updateUI();
-    await db.collection("eventos").doc("global").set({ [nombre]: firebase.firestore.FieldValue.increment(precio) }, {merge:true});
+    verificarNivelKing();
     animarRegalo(tipo);
+}
+
+async function verificarNivelKing() {
+    let nuevoNivelKing = Math.floor(xp / 500000000); 
+    if (nuevoNivelKing > nivelKing) {
+        oro += 3000000;
+        nivelKing = nuevoNivelKing;
+        alert(`👑 ¡NIVEL KING ${nuevoNivelKing}! +3M ORO`);
+        updateUI();
+    }
 }
 
 function animarRegalo(tipo){
@@ -133,50 +162,30 @@ function animarRegalo(tipo){
     setTimeout(() => anim.remove(), 2500);
 }
 
-function crearChatUI(){
-    let div = document.createElement("div");
-    div.style.cssText = "position:fixed;right:10px;bottom:140px;z-index:90;";
-    div.innerHTML = `<div id="chatBox"></div>`;
-    document.body.appendChild(div);
-}
-
 function updateUI(){
     document.getElementById("oro").innerText = oro.toLocaleString();
     document.getElementById("lvl").innerText = lvl;
     db.collection("usuarios").doc(nombre).set({oro, xp, nombre, nivelKing}, {merge:true});
 }
 
-function agregarBotonesExtra(){
-    const bar = document.getElementById("bottomBar");
-    const btns = [{t: "🏷️ CLAN", f: () => alert("Ranking Clanes")}, {t: "🎡", f: () => alert("Ruleta")}, {t: "🎰", f: () => alert("Slots")}];
-    btns.forEach(b => {
-        let btn = document.createElement("button");
-        btn.innerText = b.t; btn.onclick = b.f; bar.appendChild(btn);
-    });
+function crearChatUI(){
+    let div = document.createElement("div");
+    div.style.cssText = "position:fixed;right:10px;bottom:150px;z-index:90;";
+    div.innerHTML = `<div id="chatBox"></div>`;
+    document.body.appendChild(div);
 }
 
-// --- LÓGICA DE AUDIO ---
+// --- AUDIO ---
 let localStream, peer, audioActivo = true, audiosRemotos = [];
 async function iniciarAudio(){
     try{
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        alert("🎤 Micrófono Activado");
-        conectarAudio();
-    }catch(e){ alert("Error al activar micro."); }
+        alert("🎤 Micrófono ON");
+    }catch(e){ alert("Error mic"); }
 }
 function toggleAudio(){
     audioActivo = !audioActivo;
-    audiosRemotos.forEach(a => a.muted = !audioActivo);
-    alert(audioActivo ? "🔊 Audio Activado" : "🔇 Audio Silenciado");
-}
-function conectarAudio(){
-    peer = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-    localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
-    peer.ontrack = (e) => {
-        let audio = document.createElement("audio");
-        audio.srcObject = e.streams[0]; audio.autoplay = true; audio.muted = !audioActivo;
-        audiosRemotos.push(audio);
-    };
+    alert(audioActivo ? "🔊 ON" : "🔇 OFF");
 }
 
 function loginGoogle(){
@@ -192,27 +201,6 @@ function rankingPro(){
         let r = "🏆 TOP RICOS:\n";
         snap.forEach((d, i) => r += `${i+1}. ${d.id}: 💰${d.data().oro.toLocaleString()}\n`);
         alert(r);
-    });
-}
-
-function escucharSalas(){
-    db.collection("salas").doc("global").onSnapshot(doc => {
-        let data = doc.data() || {};
-        for(let i=1; i<=9; i++){
-            let s = data["s"+i];
-            let el = document.getElementById("s"+i);
-            if(s){ 
-                // Si la silla es tuya, brilla en ORO, si es de otro en CIAN
-                let color = (s === nombre) ? "gold" : "#00ffff";
-                el.innerHTML = `⭐<div class="user-name">${s.substring(0,8)}</div>`;
-                el.style.border = `2px solid ${color}`;
-                el.style.boxShadow = `0 0 10px ${color}`;
-            } else {
-                el.innerHTML = "👤";
-                el.style.border = "2px solid #444";
-                el.style.boxShadow = "none";
-            }
-        }
     });
 }
 </script>
