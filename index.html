@@ -3,48 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lluvia Live - Versión ProMax</title>
+    <title>Lluvia Live</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif;
             background: radial-gradient(circle at center, #1a237e 0%, #000000 100%);
-            display: flex; justify-content: center; align-items: center; color: white; overflow: hidden; }
-        .login-container { text-align: center; width: 90%; max-width: 380px; padding: 30px; background: rgba(255, 255, 255, 0.05); border-radius: 30px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .logo { font-size: 80px; margin-bottom: 5px; filter: drop-shadow(0 0 15px #00ffff); }
-        h1 { font-size: 36px; margin: 0; font-weight: 800; background: linear-gradient(to bottom, #ffffff, #81d4fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .slogan { font-size: 14px; color: #4fc3f7; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; }
-        input { width: 100%; height: 50px; background: rgba(0, 0, 0, 0.3); border: 1px solid #3f51b5; border-radius: 15px; margin-bottom: 15px; padding: 0 20px; box-sizing: border-box; color: white; font-size: 16px; outline: none; transition: 0.3s; }
-        input:focus { border-color: #00ffff; box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); }
-        .btn-google { width: 100%; height: 55px; background: white; border: none; border-radius: 15px; color: #1a237e; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
-        .btn-google:hover { background: #e3f2fd; transform: translateY(-2px); }
-        .row { display: flex; width: 100%; gap: 15px; }
-        .btn-entrar { flex: 1; height: 48px; background: #3949ab; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; }
-        .btn-reg { flex: 1; height: 48px; background: transparent; border: 2px solid #3949ab; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; }
+            display: flex; justify-content: center; align-items: center; color: white; }
+        .login-container { text-align: center; width: 90%; max-width: 380px; padding: 30px; background: rgba(255,255,255,0.05); border-radius: 30px; backdrop-filter: blur(10px); }
+        .logo { font-size: 80px; margin-bottom: 5px; }
+        .btn-google { width: 100%; height: 55px; background: white; border: none; border-radius: 15px; color: #1a237e; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
     </style>
 </head>
 <body>
     <div class="login-container">
         <div class="logo">☔</div>
         <h1>Lluvia Live</h1>
-        <div class="slogan">Premium Social Audio</div>
-
-        <input type="text" id="email" placeholder="Usuario o Correo">
-        <input type="password" id="pass" placeholder="Contraseña">
-
-        <button class="btn-google" onclick="loginGoogle()">
-            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="20" alt="G">
-            INGRESAR CON GOOGLE
-        </button>
-
-        <div class="row">
-            <button class="btn-entrar" onclick="loginManual()">ENTRAR</button>
-            <button class="btn-reg" onclick="registroManual()">REGISTRARSE</button>
-        </div>
-        <p style="font-size:12px; margin-top:20px; color:rgba(255,255,255,0.4);">Acceso Seguro ProMax v2.0</p>
+        <p>Premium Social Audio</p>
+        <button class="btn-google" onclick="loginGoogle()">🚀 INGRESAR CON GOOGLE</button>
     </div>
 
     <script>
+        // Estos datos son necesarios, pero GitHub se queja. 
+        // En la versión final los pondremos en variables de entorno.
         const firebaseConfig = {
             apiKey: "AIzaSyA9sdOfg7f55DX7Ej_TK_BJHrNFTmtr5J4",
             authDomain: "lluvia-live-69a05.firebaseapp.com",
@@ -61,42 +42,11 @@
             try {
                 const result = await firebase.auth().signInWithPopup(provider);
                 localStorage.setItem("username", result.user.displayName);
-                localStorage.setItem("uid", result.user.uid);
-                
-                // Conexión directa con tu nuevo motor de Render
-                await fetch("https://audio-room-1.onrender.com/api/register", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({
-                        username: result.user.displayName,
-                        password: "google_verified"
-                    })
-                });
-
+                // Salto directo al Home para evitar la pantalla azul
                 window.location.href = "home.html";
             } catch (error) {
-                console.error(error);
-                alert("Error de acceso: El servidor de audio-room está despertando, intenta de nuevo.");
+                alert("Servidor despertando... intenta en 10 segundos.");
             }
-        }
-
-        function loginManual() {
-            const email = document.getElementById("email").value;
-            const pass = document.getElementById("pass").value;
-            firebase.auth().signInWithEmailAndPassword(email, pass)
-                .then(() => {
-                    localStorage.setItem("username", email.split('@')[0]);
-                    window.location.href = "home.html";
-                })
-                .catch(err => alert("Datos incorrectos"));
-        }
-
-        function registroManual() {
-            const email = document.getElementById("email").value;
-            const pass = document.getElementById("pass").value;
-            firebase.auth().createUserWithEmailAndPassword(email, pass)
-                .then(() => alert("Cuenta ProMax creada. Ahora dale a ENTRAR."))
-                .catch(err => alert(err.message));
         }
     </script>
 </body>
