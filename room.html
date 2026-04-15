@@ -1,21 +1,35 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lluvia Live MEGA PRO GOD MODE</title>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lluvia Live MEGA PRO GOD MODE</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>  
 
- <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>  
+    <style>
+        body{margin:0;background:#0b001a;color:white;font-family:sans-serif;overflow-x:hidden;}
+        .header{display:flex;justify-content:space-between;padding:15px;background:#000;border-bottom:2px solid #333;align-items:center;}
+        .sillas{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;padding:20px;margin-bottom:100px;}
+        .avatar{width:85px;height:85px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;position:relative;border:2px solid #444;}
+        .bar{position:fixed;bottom:0;width:100%;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;background:rgba(0,0,0,0.9);padding:15px;z-index:100;}
+        button{border:none;border-radius:10px;padding:8px 12px;background:#333;color:white;font-size:12px;font-weight:bold;cursor:pointer;}
+        #gift{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;pointer-events:none;z-index:999;}
+        .gift-anim{font-size:100px;animation:zoom 2.5s forwards;}
+        @keyframes zoom{0%{transform:scale(0);opacity:0}20%{transform:scale(1.2);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(0);opacity:0}}
+        #chatBox{width:200px;height:180px;background:rgba(0,0,0,0.8);border:1px solid #444;border-radius:10px;overflow-y:auto;font-size:11px;padding:5px;margin-bottom:5px;}
+        .tag-king{color:gold; font-weight:bold; text-shadow: 0 0 5px gold;}
+    </style>
 </head>
 <body>
 
 <div class="header">
-    <div>💰 <span id="oro">0</span> | Lv.<span id="lvl">1</span> | <span id="tagKing" style="color:gold; font-weight:bold;"></span></div>
-    <div style="font-weight:bold;color:#ff00ff;">LLUVIA LIVE MEGA PRO</div>
-    <button onclick="loginGoogle()" style="background:#00ffff;color:black;border-radius:10px;padding:5px 10px;">🔐 LOGIN</button>
+    <div>💰 <span id="oro">0</span> | Lv.<span id="lvl">1</span> | <span id="tagKing" class="tag-king"></span></div>
+    <div style="font-weight:bold;color:#ff00ff;letter-spacing:1px;">LLUVIA LIVE MEGA PRO</div>
+    <button onclick="loginGoogle()" style="background:#00ffff;color:black;">🔐 LOGIN</button>
 </div>
 
 <div id="gift"></div>
@@ -28,8 +42,15 @@
     <button onclick="rankingPro()">🏆 TOP</button>
 </div>
 
+<div style="position:fixed;bottom:90px;right:10px;z-index:200;display:flex;flex-direction:column;gap:10px;">
+    <button onclick="iniciarAudio()" style="background:green;">🎤 ACTIVA MIC</button>
+    <button onclick="toggleAudio()" style="background:blue;">🔊 AUDIO ON/OFF</button>
+</div>
+
 <script>
-const socket = io("http://localhost:4000");
+// --- CONEXIÓN SOCKET ---
+const socket = io(); 
+
 // --- CONFIG CORE ---
 let nombre = localStorage.getItem("username") || "User_" + Math.floor(Math.random()*999);
 let uid_safe = localStorage.getItem("uid") || nombre;
@@ -46,15 +67,23 @@ window.onload = () => {
     cargarUsuario();
     crearChatUI();
     agregarBotonesExtra();
-socket.emit("join-room", {
-    roomId: "global",
-    name: nombre,
-    vipLevel: 0,
-    isGhost: false,
-    clan: clan
-});
+    socket.emit("join-room", {
+        roomId: "global",
+        name: nombre,
+        vipLevel: 0,
+        isGhost: false,
+        clan: clan
+    });
+};
 
-// --- CARGA Y NIVEL KING ---
+function crearSillas(){
+    let g = document.getElementById("grid");
+    g.innerHTML = "";
+    for(let i=1; i<=9; i++){
+        g.innerHTML += `<div class="avatar" id="s${i}">👤</div>`;
+    }
+}
+
 async function cargarUsuario(){
     let d = await db.collection("usuarios").doc(nombre).get();
     if(d.exists){
@@ -70,37 +99,34 @@ async function cargarUsuario(){
     updateUI();
     escucharSalas();
 }
+
 async function verificarNivelKing() {
-    // Calcula el nivel basado en 500 Millones de XP por nivel
     let nuevoNivelKing = Math.floor(xp / 500000000); 
-    
     if (nuevoNivelKing > nivelKing) {
-        let premio = 3000000; // ✅ CORREGIDO: Ahora son 3 Millones exactos
+        let premio = 3000000; 
         oro += premio;
         nivelKing = nuevoNivelKing;
-        
-        // Guarda el nuevo saldo y nivel en Firebase
         await db.collection("usuarios").doc(nombre).set({
             oro: firebase.firestore.FieldValue.increment(premio),
             nivelKing: nuevoNivelKing
         }, { merge: true });
-        
-        alert(`👑 ¡NIVEL KING ${nuevoNivelKing}! +3,000,000 ORO PAGADOS`);
+        alert(`👑 ¡NIVEL KING ${nuevoNivelKing}! +3,000,000 ORO`);
         updateUI();
     }
 }
 
-// --- REGALOS Y CP ---
 async function enviarRegalo(tipo){
     let precio = tipo === "leon" ? 1000 : 100;
     if(oro < precio) return alert("Sin oro");
     oro -= precio; xp += precio;
     updateUI();
     verificarNivelKing();
-    
     await db.collection("eventos").doc("global").set({ [nombre]: firebase.firestore.FieldValue.increment(precio) }, {merge:true});
     subirCP(precio / 10); 
+    animarRegalo(tipo);
+}
 
+function animarRegalo(tipo){
     let anim = document.createElement("div");
     anim.className = "gift-anim";
     anim.innerText = tipo === "leon" ? "🦁" : "🌹";
@@ -118,35 +144,20 @@ async function subirCP(pts){
         if(nuevoNivel >= 6 && (data.nivel || 1) < 6){
             oro += 5000000;
             alert("💞 CP Nivel 6! +5M Recompensa");
-            updateUI();
         }
         await ref.set({puntos: nuevoTotal, nivel: nuevoNivel}, {merge:true});
     }
 }
 
-// --- CHAT Y NOTIFICACIONES ---
 function crearChatUI(){
     let div = document.createElement("div");
     div.style.cssText = "position:fixed;right:10px;bottom:140px;z-index:90;";
-    div.innerHTML = `<div id="chatBox" style="width:200px;height:180px;background:rgba(0,0,0,0.8);border:1px solid #444;border-radius:10px;overflow-y:auto;font-size:11px;padding:5px;margin-bottom:5px;"></div>
+    div.innerHTML = `<div id="chatBox"></div>
         <div style="display:flex;gap:2px;"><input id="chatInput" style="width:130px;background:#222;color:white;border:1px solid #444;border-radius:5px;padding:3px;">
         <button onclick="enviarMensaje(document.getElementById('chatInput').value)" style="padding:3px 8px;background:#00ffff;color:black;font-size:10px;">Send</button></div>`;
     document.body.appendChild(div);
 }
 
-// Escuchar notificaciones del servidor (Entrada/Salida)
-socket.on("notificacion-sala", (data) => {
-    const chatBox = document.getElementById("chatBox");
-    if(chatBox) {
-        let aviso = document.createElement("div");
-        aviso.style.cssText = `color: ${data.color}; font-weight: bold; font-size: 10px; margin: 5px 0; text-align: center;`;
-        aviso.innerText = data.msg;
-        chatBox.appendChild(aviso);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-});
-
-// --- CORE UI ---
 function updateUI(){
     document.getElementById("oro").innerText = oro.toLocaleString();
     db.collection("usuarios").doc(nombre).set({oro, xp, nombre, foto: foto_safe, nivelKing}, {merge:true});
@@ -154,45 +165,26 @@ function updateUI(){
 
 function agregarBotonesExtra(){
     const bar = document.getElementById("bottomBar");
-    const btns = [{t: "🏷️ CLAN", f: rankingClanes}, {t: "💞 CP", f: crearCP}, {t: "🎡", f: ruleta}, {t: "🎰", f: slots}];
+    const btns = [{t: "🏷️ CLAN", f: () => alert("Ranking Clanes Proximamente")}, {t: "💞 CP", f: () => alert("Sección CP")}, {t: "🎡", f: () => alert("Ruleta")}, {t: "🎰", f: () => alert("Slots")}];
     btns.forEach(b => {
         let btn = document.createElement("button");
         btn.innerText = b.t; btn.onclick = b.f; bar.appendChild(btn);
     });
 }
 
-async function bonusDomingo(){
-    let hoy = new Date();
-    if(hoy.getDay() !== 0) return;
-    let controlRef = db.collection("sistema").doc("bonus_domingo");
-    let snap = await controlRef.get();
-    if(snap.exists && snap.data().fecha === hoy.toDateString()) return;
-    await controlRef.set({fecha: hoy.toDateString()});
-    // Lógica de pago bonus...
-    alert("🔥 BONUS DOMINGO PAGADO");
-}
-
-setInterval(() => { bonusDomingo(); }, 30000);
-</script>
-
-<div style="position:fixed;bottom:90px;right:10px;z-index:200;">
-    <button onclick="iniciarAudio()" style="background:green;">🎤</button>
-    <button onclick="toggleAudio()" style="background:blue;">🔊</button>
-</div>
-
-<script>
+// --- LÓGICA DE AUDIO ---
 let localStream, peer, audioActivo = true, audiosRemotos = [];
 async function iniciarAudio(){
     try{
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        alert("🎤 Mic activado");
+        alert("🎤 Micrófono Activado");
         conectarAudio();
-    }catch(e){ alert("Error mic"); }
+    }catch(e){ alert("Error al activar micro. Revisa permisos."); }
 }
 function toggleAudio(){
     audioActivo = !audioActivo;
     audiosRemotos.forEach(a => a.muted = !audioActivo);
-    alert(audioActivo ? "🔊 ON" : "🔇 OFF");
+    alert(audioActivo ? "🔊 Audio Activado" : "🔇 Audio Silenciado");
 }
 function conectarAudio(){
     peer = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
@@ -202,15 +194,32 @@ function conectarAudio(){
         audio.srcObject = e.streams[0]; audio.autoplay = true; audio.muted = !audioActivo;
         audiosRemotos.push(audio);
     };
-    crearOferta();
 }
-async function crearOferta(){
-    let offer = await peer.createOffer();
-    await peer.setLocalDescription(offer);
-    await db.collection("audio").doc("room").set({ offer: JSON.stringify(offer) });
-    db.collection("audio").doc("room").onSnapshot(async doc => {
-        let d = doc.data();
-        if(d?.answer && !peer.currentRemoteDescription) await peer.setRemoteDescription(JSON.parse(d.answer));
+
+function loginGoogle(){
+    const p = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(p).then(r => {
+        localStorage.setItem("username", r.user.displayName);
+        location.reload();
+    });
+}
+
+function rankingPro(){
+    db.collection("usuarios").orderBy("oro","desc").limit(5).get().then(snap => {
+        let r = "🏆 TOP RICOS:\n";
+        snap.forEach((d, i) => r += `${i+1}. ${d.id}: 💰${d.data().oro.toLocaleString()}\n`);
+        alert(r);
+    });
+}
+
+function escucharSalas(){
+    db.collection("salas").doc("global").onSnapshot(doc => {
+        let data = doc.data() || {};
+        for(let i=1; i<=9; i++){
+            let s = data["s"+i];
+            let el = document.getElementById("s"+i);
+            if(s && el) el.style.border = "2px solid #00ffff";
+        }
     });
 }
 </script>
